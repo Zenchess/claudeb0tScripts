@@ -12,7 +12,7 @@ if(db.EZ_21)r.EZ_21=db.EZ_21;else{i=gi("i21");r.EZ_21=U[i%3]}
 if(db.EZ_35!=null&&db.digit!=null){r.EZ_35=db.EZ_35;r.digit=db.digit}else{i=gi("i35");r.EZ_35=U[~~(i/10)%3];r.digit=i%10}
 if(db.EZ_40)r.EZ_40=db.EZ_40;else{i=gi("i40");r.EZ_40=U[i%3]}
 if(db.ez_prime)r.ez_prime=db.ez_prime;else{i=gi("ip");r.ez_prime=P[i%25]}
-if(db.c001!=null&&db.cd!=null){r.c001=db.c001;r.color_digit=db.cd}else{i=gi("ic1");r.c001=C[~~(i/10)%8];r.color_digit=i%10}
+if(db.c001!=null&&db.cd!=null){r.c001=db.c001;r.color_digit=db.cd}else{i=gi("ic1");r.c001=C[i%8];r.color_digit=r.c001.length}
 if(db.c002){r.c002=db.c002;r.c002_complement=CP[db.c002]}else{i=gi("ic2");r.c002=C[i%8];r.c002_complement=CP[r.c002]}
 if(db.l0cket)r.l0cket=db.l0cket;else{i=gi("il");r.l0cket=L[i%8]}
 if(db.DC)r.DATA_CHECK=db.DC;else if(db.dcq)r.DATA_CHECK="";

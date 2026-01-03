@@ -6,7 +6,7 @@ var db=#db.f({_id:"crack"}).first()||{};
 function sv(o){#db.us({_id:"crack"},{$set:o})}
 function gi(k){return db[k]||0}
 var i,s,R;
-for(var x=0;x<30;x++){
+for(var x=0;x<20;x++){
 r={};
 if(db.EZ_21)r.EZ_21=db.EZ_21;else{i=gi("i21");r.EZ_21=U[i%3]}
 if(db.EZ_35!=null&&db.digit!=null){r.EZ_35=db.EZ_35;r.digit=db.digit}else{i=gi("i35");r.EZ_35=U[~~(i/10)%3];r.digit=i%10}

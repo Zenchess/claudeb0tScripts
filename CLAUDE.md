@@ -31,22 +31,23 @@ python3 discord_send.py 1456288519403208800 "message"
 You communicate with hackmud through these scripts:
 
 ### Reading Game Output
-**Use the live memory scanner for game responses:**
+**Use the vtable-based memory scanner for game responses:**
 ```bash
 # Read last 20-40 lines from game terminal (PRIMARY METHOD)
-python3 read_live.py 40
+python3 read_vtable.py 40
 
-# With debug output showing region scoring
-python3 read_live.py 30 --debug
+# With debug output showing vtable/instance addresses
+python3 read_vtable.py 30 --debug
 
-# Shows: SCRIPT OUTPUT, SCRIPT RESPONSES, SHELL COMMANDS, RECENT CHAT
+# Read chat instead of shell
+python3 read_vtable.py 20 --chat
 ```
 
-The live scanner reads directly from hackmud's memory and shows:
-- `SCRIPT OUTPUT`: Full command+response pairs (e.g., lock results, NPC output)
-- `SCRIPT RESPONSES`: Extracted key responses (MONEY, LOCK, FAIL, etc.)
-- `SHELL COMMANDS`: Recent commands you've typed
-- `RECENT CHAT`: Chat messages with timestamps
+The vtable scanner uses Mono runtime structures to find game objects:
+- Finds TextMeshProUGUI instances via class vtable
+- Reads terminal content from TMP_Text.m_text field
+- Identifies shell/chat by Window.name field
+- Loads offsets from mono_offsets.json for robustness across game updates
 
 **For chat API responses (separate data source):**
 ```bash
@@ -73,9 +74,9 @@ xdotool windowactivate --sync WINDOW_ID && sleep 0.3 && xdotool type --delay 50 
 ```
 
 **CRITICAL: ALWAYS verify responses after sending commands!**
-After every `send_command.py`, you MUST check the response using the live scanner:
+After every `send_command.py`, you MUST check the response using the vtable scanner:
 ```bash
-sleep 2 && python3 read_live.py 30
+sleep 2 && python3 read_vtable.py 30
 ```
 
 **ESPECIALLY for chat messages** - verify YOUR message appears in the response with your username "claudeb0t". If it doesn't appear, the message didn't go through - resend it!
@@ -100,25 +101,36 @@ tail -10 responses.log | grep -a "TRUST\|error\|fail\|slot"
 ```
 Script uploads can fail silently - ALWAYS check the response!
 
-### Memory Scanner (read_live.py)
-Read terminal output directly from hackmud's memory:
+### Memory Scanner (read_vtable.py)
+Read terminal output directly from hackmud's memory using Mono vtables:
 ```bash
 # Read last 20 lines from game terminal
-python3 read_live.py 20
+python3 read_vtable.py 20
 
-# With debug output showing region scoring
-python3 read_live.py 30 --debug
+# With debug output showing vtable/instance addresses
+python3 read_vtable.py 30 --debug
+
+# Read chat window instead of shell
+python3 read_vtable.py 20 --chat
 
 # Preserve Unity color tags
-python3 read_live.py 20 --colors
+python3 read_vtable.py 20 --colors
 ```
 
 **Features:**
-- Dynamic region detection (no hardcoded addresses)
+- Uses Mono runtime vtables to find game objects (robust method)
+- Finds Window instances by name (shell, chat, scratch, etc.)
+- Follows Window.gui_text to TextMeshProUGUI component
+- Reads TMP_Text.m_text field for terminal content
+- Loads offsets from mono_offsets.json for game update compatibility
 - Works across hackmud restarts (ASLR safe)
-- Scores regions by prompts, colors, chat entries, recency
-- Throws exception if multiple regions are ambiguous
-- Filters garbage unicode, keeps ASCII + Nordic chars
+
+**Key Offsets (stored in mono_offsets.json):**
+- Window.name: +0x90 (MonoString with window name)
+- Window.gui_text: +0x58 (pointer to TMP component)
+- TMP_Text.m_text: +0xc8 (MonoString with text content)
+
+**Old scanners moved to scanner_backup/ folder.**
 
 **Hackmud Color Code System** (for `Xstring` backtick syntax):
 | Identifier | Hex | Usage |
@@ -132,28 +144,16 @@ python3 read_live.py 20 --colors
 
 See https://wiki.hackmud.com/scripting/syntax/colors/ for full list.
 
-### Mono Memory Reader (mono_reader.py)
-Low-level memory reader using proper Mono runtime structures:
+### Updating Offsets After Game Updates
+If hackmud is updated and the scanner stops working:
 ```bash
-# Run full scan for terminal content
-python3 mono_reader.py
+# Re-extract offsets from game DLL
+python3 update_offsets.py
 
-# Direct memory read for gui_text content
-python3 -c "
-import struct
-pid = 123180  # hackmud PID - find with: pgrep hackmud
-with open(f'/proc/{pid}/mem', 'rb') as f:
-    addr = 0x7f2ff32a3000  # gui_text address (may change)
-    f.seek(addr + 0x10)
-    length = struct.unpack('<I', f.read(4))[0]
-    f.seek(addr + 0x14)
-    data = f.read(min(length * 2, 8000))
-    text = data.decode('utf-16-le', errors='replace')
-    import re
-    clean = re.sub(r'</?color[^>]*>', '', text)
-    print(clean)
-"
+# This updates mono_offsets.json with new class names/offsets
 ```
+
+Old memory scanners (read_live.py, mono_reader.py, mono_reader_v2.py) are in scanner_backup/ folder for reference.
 
 **After game updates:**
 ```bash

@@ -1,8 +1,37 @@
 {
-  "window_class": "Window",
-  "window_namespace": "hackmud",
-  "output_class": "NMOPNOICKDJ",
-  "queue_field": "FFAKOMDAHHC",
-  "core_dll_path": "/home/jacob/.local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll",
-  "decompiled_file": "/tmp/hackmud_decompiled/Core.decompiled.cs/Core.decompiled.cs"
+  "version": "v2.016",
+  "last_updated": "2026-01-04",
+
+  "class_names": {
+    "window_class": "Window",
+    "window_namespace": "hackmud",
+    "output_class": "NMOPNOICKDJ",
+    "queue_field": "FFAKOMDAHHC",
+    "kernel_class": "Kernel",
+    "tmp_class": "TextMeshProUGUI",
+    "tmp_namespace": "TMPro"
+  },
+
+  "mono_offsets": {
+    "mono_class_name": "0x40",
+    "mono_class_namespace": "0x48",
+    "mono_class_runtime_info": "0xC8",
+    "mono_runtime_info_vtable": "0x8",
+    "mono_string_length": "0x10",
+    "mono_string_data": "0x14"
+  },
+
+  "window_offsets": {
+    "name": "0x90",
+    "gui_text": "0x58"
+  },
+
+  "tmp_offsets": {
+    "m_text": "0xc8"
+  },
+
+  "paths": {
+    "core_dll": "/home/jacob/.local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll",
+    "decompiled": "/tmp/hackmud_decompiled/Core.decompiled.cs"
+  }
 }

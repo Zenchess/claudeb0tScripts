@@ -3,3 +3,16 @@
 *.pyc
 __pycache__/
 claude_memory.txt
+
+# Discord bot files - removed from repo
+discord_bot.py
+discord_bot.log
+discord_colors.py
+discord_profile.py
+discord_read.py
+discord_send.py
+discord_send_direct.py
+discord_inbox.json
+discord_outbox.json
+discord_images/
+discord_venv/

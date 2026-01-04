@@ -2,3 +2,4 @@
 .github_token
 *.pyc
 __pycache__/
+claude_memory.txt

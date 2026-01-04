@@ -13,7 +13,7 @@ SCREENSHOT_DIR = Path("/tmp")
 # Region definitions as percentage of window (x%, y%, width%, height%)
 # These are approximate and may need tuning based on window size
 REGIONS = {
-    'chat': (63, 43, 32, 45),      # Right side, chat area
+    'chat': (64, 43, 30, 46),      # Right side, chat area (trimmed 2px all sides)
     'scratch': (70, 5, 30, 25),    # Right side, top area (scratch area)
     'terminal': (0, 0, 65, 100),   # Left portion of window (main terminal)
     'full': (0, 0, 100, 100),      # Full window

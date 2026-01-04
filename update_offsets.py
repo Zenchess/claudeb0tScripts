@@ -63,27 +63,30 @@ def find_window_class(code: str) -> dict:
     """Find the Window class and its output field type"""
     offsets = {}
 
-    # Find the Window class with gui_text field
+    # Look for hackmud.Window class specifically
+    # Pattern: namespace hackmud { ... public class Window : MonoBehaviour ... }
     window_match = re.search(
-        r'public class (\w+)\s*:\s*MonoBehaviour.*?public TextMeshProUGUI gui_text;.*?public (\w+) output;',
+        r'namespace hackmud\s*\{[^}]*?public class Window\s*:\s*MonoBehaviour.*?public TextMeshProUGUI gui_text;.*?public (\w+) output;',
         code, re.DOTALL
     )
 
     if window_match:
-        offsets['window_class'] = window_match.group(1)
-        offsets['output_class'] = window_match.group(2)
-        print(f"Found Window class: {offsets['window_class']}")
+        offsets['window_class'] = 'Window'
+        offsets['window_namespace'] = 'hackmud'
+        offsets['output_class'] = window_match.group(1)
+        print(f"Found Window class: hackmud.Window")
         print(f"Found output type: {offsets['output_class']}")
     else:
-        # Try alternative pattern
-        gui_text_match = re.search(r'public TextMeshProUGUI gui_text;', code)
+        # Alternative: Find any class with gui_text field
+        gui_text_match = re.search(
+            r'public class (\w+)\s*:\s*MonoBehaviour.*?public TextMeshProUGUI gui_text;.*?public (\w+) output;',
+            code, re.DOTALL
+        )
         if gui_text_match:
-            # Find the class containing it
-            start = code.rfind('public class ', 0, gui_text_match.start())
-            class_match = re.search(r'public class (\w+)', code[start:start+100])
-            if class_match:
-                offsets['window_class'] = class_match.group(1)
-                print(f"Found Window class: {offsets['window_class']}")
+            offsets['window_class'] = gui_text_match.group(1)
+            offsets['output_class'] = gui_text_match.group(2)
+            print(f"Found Window class: {offsets['window_class']}")
+            print(f"Found output type: {offsets['output_class']}")
 
     return offsets
 

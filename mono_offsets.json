@@ -1,5 +1,6 @@
 {
-  "window_class": "VersionScript",
+  "window_class": "Window",
+  "window_namespace": "hackmud",
   "output_class": "NMOPNOICKDJ",
   "queue_field": "FFAKOMDAHHC",
   "core_dll_path": "/home/jacob/.local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll",

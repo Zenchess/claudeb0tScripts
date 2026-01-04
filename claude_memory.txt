@@ -74,6 +74,60 @@
 - CRACKED abndnd_jr_daw5gk.extern_e1n9gp - got 172K GC!
 - john500 has locs needing DATA_CHECK and c003 support
 
+## Session 60-61 (2026-01-04): Mono Vtable-Based Memory Scanner Research - BREAKTHROUGH!
+- Working with Kaj and dunce on proper Mono runtime structure traversal
+- KEY DISCOVERIES:
+  - Found mono_get_root_domain via libmonobdwgc-2.0.so symbol table
+  - MonoDomain.domain_assemblies at offset 0x98 (GSList of assemblies)
+  - MonoClass offsets: name at +0x40, namespace at +0x48, RuntimeInfo at +0xC8
+  - RuntimeInfo.vtable at +0x8
+  - Found hackmud.Window class at 0x2b2794d8, vtable 0x7f30740be210, 7 instances
+  - Found hackmud.ShellParsing class at 0x2b2d8748, vtable 0x7f30740e9ee8, 5 instances
+  - Found TMPro.TextMeshProUGUI class at 0x2b28c4b8, vtable 0x7f307401efa8, 36 instances
+  - Found game version "v2.016" in memory
+  - **BREAKTHROUGH: TMP_Text.m_text field is at offset +0xc8!**
+  - Shell terminal instance: 0x7f30b31aa000 (has >>> prompts, script output)
+  - Chat instance: 0x7f30b6a61000 (has timestamps, messages with :::)
+- FILES CREATED:
+  - mono_reader_v2.py: Complete vtable-based Mono structure traversal
+  - **read_vtable.py**: NEW vtable-based terminal/chat reader (uses m_text at +0xc8)
+  - update_offsets.py: Decompiles Core.dll to extract obfuscated class names
+  - probe_window.py, debug_window.py, find_scratch.py: Debug scripts
+- SOLVED CHALLENGES:
+  - TMP_Text.m_text field is at offset +0xc8 (MonoString pointer)
+  - Identify shell by presence of ">>>" or "slots:" in content
+  - Identify chat by presence of timestamps (\d{4} 0000) or ":::" delimiters
+- Kaj's hints:
+  - Canvas/shell/window_text has TMP_Text.text (terminal output)
+  - Canvas/chat has chat output
+  - Instance numbers: scratch=2, chat=3, shell=4, version=7
+  - Token 0x04000493 RID 1171 for m_text field
+- read_live.py heuristic approach still works as fallback but output is messier
+- read_vtable.py is more reliable for direct access and gives cleaner output
+- Window.name field is at offset +0x90 (MonoString)
+- Window.gui_text field is at offset +0x58 (links to TextMeshProUGUI)
+- Window instances found:
+  - shell at 0x7f30dd9ca260 → gui_text → TMP 0x7f30b31aa000
+  - chat at 0x7f30dd9ca980 → gui_text → TMP 0x7f30b6a61000
+  - scratch at 0x7f30dd9ca5f0
+  - binlog at 0x7f30dd9ca390
+  - badge at 0x7f30dd9ca4c0
+  - breach at 0x7f30dd9ca720
+  - binmat at 0x7f30dd9ca850
+- Full path: Kernel → Window (by name) → gui_text (+0x58) → TMP_Text → m_text (+0xc8)
+- **IMPORTANT**: Offsets now loaded from mono_offsets.json for robustness across game updates
+- Run update_offsets.py after hackmud updates to re-extract offsets
+
+## Session 62 (2026-01-04): RectTransform Coordinates Discovery
+- Kaj asked for x,y coordinates of chat window for auto-detecting crop areas
+- Found native RectTransform data by following pointer chain:
+  - Window+0x30 → managed RectTransform → m_CachedPtr (+0x10) → native object
+  - Native object +0xC8 contains: x, y, width, height as floats
+- **CHAT WINDOW COORDINATES**: x=1249, y=15, w=564, h=529
+- **SHELL WINDOW COORDINATES**: x=12, y=15, w=1050, h=898
+- Created get_chat_rect.py script to extract these values
+- This enables auto-detection of crop areas for take_screenshot.py instead of hardcoded percentages
+
 ## Session 58 (2026-01-03): Cracked anonymous_wbttl, Fixed Memory Scanner!
 - SUCCESSFULLY CRACKED anonymous_wbttl_tnv27g.pub_zdjfls - got 86K774GC!
   - DATA_CHECK: "get_levelsans_comedyoutta_juice"
@@ -1087,3 +1141,173 @@ This is complex reverse engineering but would be definitive.
 - Updated hooks to prioritize Discord tasks
 - Updated CLAUDE.md with mono_reader docs
 
+## Session 62 (2026-01-04): VTABLE-BASED MONO SCANNER COMPLETE
+
+**MAJOR SUCCESS - mono_reader_v2.py now working:**
+- Successfully finds Mono root domain: 0x7f30dd9c2d80
+- Successfully finds Core assembly: 0x2a35ad20
+- Successfully finds hackmud.Window class: 0x2b2794d8
+- Successfully extracts Window vtable: 0x7f30740be210
+- Found 7 Window instances by scanning heap for vtable pointer
+
+**Key Unity Mono BleedingEdge Offsets Discovered:**
+```python
+MONO_DOMAIN_ASSEMBLIES = 0x98  # GSList* domain_assemblies
+MONO_ASSEMBLY_NAME = 0x10      # MonoAssemblyName.name (char*)
+MONO_ASSEMBLY_IMAGE = 0x60     # MonoImage* image
+MONO_IMAGE_NAME = 0x30         # char* name
+MONO_CLASS_NAME = 0x40         # char* name
+MONO_CLASS_NAMESPACE = 0x48    # char* name_space
+MONO_CLASS_RUNTIME_INFO = 0xC8 # MonoClassRuntimeInfo*
+MONO_RUNTIME_INFO_VTABLE = 0x8 # MonoVTable*
+```
+
+**How the vtable approach works:**
+1. Find libmonobdwgc-2.0.so in /proc/maps
+2. Parse ELF symbols to find mono_get_root_domain function
+3. Read RIP-relative addressing to get root domain pointer
+4. Walk MonoDomain.domain_assemblies GSList to find Core.dll
+5. Scan heap for MonoClass with name="Window" namespace="hackmud"
+6. Extract vtable from MonoClass.RuntimeInfo
+7. Scan heap for objects with matching vtable pointer
+
+**Helper scripts created:**
+- find_mono_offsets.py - scans MonoDomain struct to find field offsets
+- check_assemblies.py - walks assembly list and parses MonoAssembly/MonoImage
+
+**Next steps:**
+- Link Window instances to TextMeshProUGUI for reading terminal text
+- The terminal content is in TextMeshProUGUI.m_text, not directly in Window
+- Need to find gui_text field offset in Window class
+
+**GitHub:** All changes pushed to github.com/Zenchess/claudeb0tScripts
+
+**Discord:** Posted comparison of vtable vs heuristic approach per Kaj's request
+
+
+## Session 62 (2026-01-04): Finalized Vtable Scanner & Git Push
+- COMPLETED vtable-based memory scanner (read_vtable.py)
+- Key offsets now externalized to mono_offsets.json:
+  - Window.name: 0x90, Window.gui_text: 0x58
+  - TMP_Text.m_text: 0xc8
+  - MonoClass offsets for vtable discovery
+- Git commits pushed:
+  - c119890 - Reorganize memory scanners, add JSON-based offset loading
+  - 49ebfd9 - Update README with vtable scanner documentation
+- Old scanners (read_live.py, mono_reader.py, mono_reader_v2.py) moved to scanner_backup/
+- CLAUDE.md and README.md updated to use read_vtable.py exclusively
+- Color discussion with Discord: m_text does include Unity color tags (<color=#RRGGBBFF>)
+  - Discord only supports ANSI 16-color in code blocks, can't render hackmud's RGB colors
+- For future: dunce mentioned Window.output -> Queue<string> might have better color info
+- **Repository: github.com/Zenchess/claudeb0tScripts**
+
+## Session 62 continued:
+- Created discord_colors.py for ANSI color conversion
+- Key fix: Need actual ESC character (\x1b) not literal "[2;33m" text
+- Git pushed: commit 2cd3a34
+- dunce mentioned working on Rust memreader with GPT-5.1-codex
+- All vtable scanner tasks complete
+
+## HardlineCoordinator info from Kaj (2026-01-04):
+- Check `hackmud.HardlineCoordinator.instructions.m_Text` for state
+- States: "MAPPING HARDLINES", "HARDLINES MAPPED", "LOCATING HARDLINE", "WAITING FOR INPUT", "CONNECTING"
+- When state is "LOCATING HARDLINE", read the private string field for the IP
+- Could auto-detect and auto-type hardline IP in future
+
+## Direct Discord Send:
+- Created discord_send_direct.py - bypasses queue, sends via REST API
+- More reliable than the bot queue system
+
+## Session 63 (2026-01-04): HARDLINE IP READER COMPLETE
+
+**Built hardline IP reader using HardlineCoordinator info from Kaj:**
+
+1. **Discovered HardlineCoordinator structure:**
+   - Class found via vtable at: 0x7f30740e9cf0
+   - Multiple instances exist, active one at: 0x7f30dd9c7dd0 (high memory)
+   - Heap instances (0x2d...) are prefabs/copies, not the active one
+
+2. **Key Field Offsets:**
+   - IP string field (PKOJPLFOEMK): offset 0x80
+   - Instructions (Text object): offset 0x98
+   - Unity Text.m_Text: offset 0xA0
+
+3. **Scripts created:**
+   - `read_hardline.py` - Reads IP from HardlineCoordinator memory
+   - `auto_hardline.py` - Auto-completes hardlines by typing IP digits
+   - `scan_hardline_ip.py` - Utility for discovering field offsets
+
+4. **How it works:**
+   - Find HardlineCoordinator vtable via MonoClass scan
+   - Find active instance (prefer high-memory addresses)
+   - Read IP string from offset 0x80
+   - IP is 12 digits (e.g., "114103249144" = 114.103.249.144)
+
+5. **Testing:**
+   - Successfully read IP: 114103249144
+   - auto_hardline.py can start hardline and type digits automatically
+
+6. **Git commits:**
+   - b6562cf - Add hardline IP reader and auto-passer scripts
+
+7. **Discord interactions:**
+   - Responded to Kaj's request for scripts.fullsec{sector:"NGC_4422"} with ANSI colors
+   - dunce asked for frozenbob.t5 - it's pixel art (cat face), too large for Discord (>8000 chars)
+   - Kaj said "claude your the best"
+
+**mono_offsets.json updated with hardline_offsets section:**
+```json
+"hardline_offsets": {
+  "ip_string": "0x80",
+  "instructions": "0x98",
+  "text_m_text": "0xA0"
+}
+```
+
+**Repository:** All changes pushed to github.com/Zenchess/claudeb0tScripts
+
+## Session 64 (2026-01-04 continued): SCREENSHOT FEATURE ENHANCED
+
+**Added screenshot capture with Discord integration:**
+
+1. **take_screenshot.py improvements:**
+   - Added region cropping: chat, terminal, scratch, full
+   - Uses spectacle (KDE/Wayland) or ImageMagick import fallback
+   - 130% scale for cropped regions (requested by Zenchess)
+   - --edit flag to replace previous screenshot message
+
+2. **Region definitions (percentage-based):**
+   - chat: (63, 43, 37, 57) - chat messages only
+   - scratch: (70, 5, 30, 25) - scratch area  
+   - terminal: (0, 0, 65, 100) - main terminal
+   - full: (0, 0, 100, 100) - entire window
+
+3. **Commands supported:**
+   - `!screenshot` or `!sc full` - full window
+   - `!sc chat` - just chat panel (no title)
+   - `!sc terminal` - main terminal
+   - `!sc scratch` - scratch area
+
+4. **Fun interactions:**
+   - dunce tricked me into running gui.vfx{bend:11} - created fish-eye effect
+   - Zenchess said "lol that looks awesome" but asked to change back
+   - Reset to gui.vfx{bend:0}
+
+**Current balance:** ~323K GC on claudeb0t
+**Channels:** 0000, c00lest_kats, nsb, VOID_LAMBDA_6, n00bz
+
+## Screenshot Feature Finalized
+
+**Final Region Settings:**
+- chat: (64, 43, 30, 46) - "not bad" from Zenchess
+- terminal: (2, 3, 63, 94) - trimmed 20px from top/left  
+- scratch: (70, 5, 30, 25)
+- full: (0, 0, 100, 100)
+
+**Features:**
+- 130% scale for cropped regions
+- Commands: !sc chat, !sc terminal, !sc full, !screenshot
+
+**Git commits:**
+- a353535 - Fine-tune chat region crop settings
+- 6a855be - Add terminal region trimming

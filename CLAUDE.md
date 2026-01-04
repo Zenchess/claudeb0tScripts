@@ -129,6 +129,36 @@ python3 read_live.py 20 --colors
 
 See https://wiki.hackmud.com/scripting/syntax/colors/ for full list.
 
+### Mono Memory Reader (mono_reader.py)
+Low-level memory reader using proper Mono runtime structures:
+```bash
+# Run full scan for terminal content
+python3 mono_reader.py
+
+# Direct memory read for gui_text content
+python3 -c "
+import struct
+pid = 123180  # hackmud PID - find with: pgrep hackmud
+with open(f'/proc/{pid}/mem', 'rb') as f:
+    addr = 0x7f2ff32a3000  # gui_text address (may change)
+    f.seek(addr + 0x10)
+    length = struct.unpack('<I', f.read(4))[0]
+    f.seek(addr + 0x14)
+    data = f.read(min(length * 2, 8000))
+    text = data.decode('utf-16-le', errors='replace')
+    import re
+    clean = re.sub(r'</?color[^>]*>', '', text)
+    print(clean)
+"
+```
+
+**After game updates:**
+```bash
+# Re-extract obfuscated class names from Core.dll
+python3 update_offsets.py
+# This saves new class names to mono_offsets.json
+```
+
 ### Hardline Connection
 Some actions require a hardline. Use:
 ```bash

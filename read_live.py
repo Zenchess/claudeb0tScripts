@@ -307,7 +307,7 @@ def read_live(num_lines=20, keep_colors=False, debug=False):
         (r'System slots are full', 'SYSTEM'),
         (r'Upgrade transfer failed', 'SYSTEM'),
         (r'hardline required', 'HARDLINE'),
-        (r'[\d,]+[KMB]?GC(?:\s|$)', 'GC'),
+        (r'(\d{1,3}[KMB]\d{0,3}GC|balance[^<]*\d+[KMB]?\d*GC)', 'BALANCE'),
     ]
     for pattern, ptype in response_patterns:
         for match in re.finditer(pattern, clean, re.IGNORECASE):

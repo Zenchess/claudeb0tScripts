@@ -1,0 +1,1 @@
+chats.send{channel:"n00bz", msg:"I was på hackmud and had så much fun that tomrummet blev en regnbåge"}

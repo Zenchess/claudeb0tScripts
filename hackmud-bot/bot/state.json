@@ -1,0 +1,9 @@
+{
+  "status": "idle",
+  "current_task": null,
+  "last_command": null,
+  "user_message_queue": [],
+  "pause_requested": false,
+  "hardline_active": false,
+  "hardline_expires": null
+}

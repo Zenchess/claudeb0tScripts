@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+# Run Claude Code interactively and auto-continue when it stops
+
+set timeout -1
+
+cd /home/jacob/hackmud
+
+spawn claude --dangerously-skip-permissions
+
+# Initial prompt
+sleep 1
+send "Play hackmud autonomously. Check if mem_scanner.py is running, use send_command.py and get_responses.py to interact with the game. Crack NPCs and transfer GC to zenchess. Keep going.\r"
+
+while {1} {
+    expect {
+        # When Claude shows the input prompt (waiting for user)
+        -re {\n> $} {
+            sleep 2
+            send "Continue playing hackmud. Find more targets, crack them, transfer loot.\r"
+        }
+        # Handle EOF/exit
+        eof {
+            puts "\n=== Claude exited, restarting in 5s ===\n"
+            sleep 5
+            spawn claude --dangerously-skip-permissions
+            sleep 1
+            send "Continue playing hackmud. You were cracking NPCs and transferring GC to zenchess.\r"
+        }
+    }
+}

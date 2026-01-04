@@ -1,0 +1,50 @@
+{
+  "known_npcs": [],
+  "cracked_npcs": [
+    "abandoned_ddttl_ppm4bo.extern_reimqz",
+    "abndnd_wbttl_xbha9c.out_3xs27w"
+  ],
+  "failed_npcs": [],
+  "lock_solutions": {
+    "l0cket_keys": ["cmppiq", "6hh8xw", "uphlaw", "vc2c7q", "tvfkyq", "xwz7ja", "sa23uw", "ellux0", "72umy0"],
+    "ez_commands": ["open", "unlock", "release"],
+    "colors": ["red", "orange", "yellow", "lime", "green", "cyan", "blue", "purple"],
+    "c002_complements": {
+      "cyan": "orange",
+      "orange": "cyan",
+      "red": "green",
+      "green": "red",
+      "yellow": "blue",
+      "blue": "yellow",
+      "lime": "purple",
+      "purple": "lime"
+    },
+    "c003_triads": {
+      "cyan": ["yellow", "red"],
+      "red": ["cyan", "yellow"],
+      "yellow": ["cyan", "red"]
+    },
+    "data_check_answers": {
+      "CAFE_share": "poetry",
+      "household_cleaning": "robovac",
+      "pet_pest_plague_meme": "bunnybat"
+    }
+  },
+  "gc_transferred": 134452,
+  "notes": [
+    "T2 locs found via weyland.public with password 'knowyourteam'",
+    "T2 locs also available via tyrell.public with password 'bethebest'",
+    "Hardline lasts 120 seconds, 15-17 second cooldown",
+    "DATA_CHECK answers must be concatenated: poetryrobovacbunnybat"
+  ],
+  "strategies": [
+    "Always check hardline status before starting crack attempt",
+    "Transfer GC to zenchess after each successful crack",
+    "Try l0cket keys in order: cmppiq, uphlaw, 6hh8xw..."
+  ],
+  "corps": [
+    {"script": "weyland.public", "cmd_key": "cmd", "pass_key": "pass", "password": "knowyourteam", "dir_cmd": "directory"},
+    {"script": "tyrell.public", "cmd_key": "nav", "pass_key": "p", "password": "bethebest", "dir_cmd": "list"}
+  ],
+  "projects": ["thefloood", "forgetme_nt", "Free_BFG", "H0meEntert4inment", "ls_rites", "ragnaroxx.sh", "LUNARLANDER_01.11.bat"]
+}

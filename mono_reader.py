@@ -76,10 +76,13 @@ class MonoReader:
 
     def read_bytes(self, address: int, size: int) -> Optional[bytes]:
         """Read bytes from memory at address"""
+        # Validate address range (64-bit Linux user space)
+        if address < 0 or address > 0x7FFFFFFFFFFF or size < 0:
+            return None
         try:
             self.mem_file.seek(address)
             return self.mem_file.read(size)
-        except (OSError, IOError):
+        except (OSError, IOError, ValueError):
             return None
 
     def read_ptr(self, address: int) -> Optional[int]:
@@ -274,6 +277,9 @@ def find_recent_output(reader: MonoReader) -> None:
 
     regions = [r for r in reader.get_regions() if r.is_rw_anon and 100*1024 <= r.size <= 20*1024*1024]
 
+    responses = []
+    seen = set()
+
     # Look for JSON-like responses {r: "..."}
     for region in regions:
         data = reader.read_bytes(region.start, min(region.size, 5*1024*1024))
@@ -289,16 +295,99 @@ def find_recent_output(reader: MonoReader) -> None:
         text = re.sub(r'<color[^>]*>', '', text)
         text = re.sub(r'</color>', '', text)
 
-        # Find response patterns
+        # Find response patterns with timestamp context
+        # Look for patterns like {"id":"...","t":1767XXXXXX,"script_name":"...","data":"{...}"}
+        for match in re.finditer(r'"t"\s*:\s*(\d{10})[^}]*"data"\s*:\s*"([^"]+)"', text):
+            timestamp = int(match.group(1))
+            data_content = match.group(2)
+            # Unescape
+            data_content = data_content.replace('\\n', '\n').replace('\\"', '"')
+            # Clean to printable
+            clean = ''.join(c for c in data_content if c.isprintable() or c in '\n\r')
+            if clean and len(clean) > 10:
+                key = clean[:50]
+                if key not in seen:
+                    seen.add(key)
+                    responses.append((timestamp, clean))
+
+        # Also find direct response patterns
         for match in re.finditer(r'r:\s*"([^"]{10,500})"', text):
             content = match.group(1)
-            # Clean to printable
             clean = ''.join(c for c in content if c.isprintable() or c in '\n\r')
             if clean and len(clean) > 10:
-                # Check for game-related content
                 if any(kw in clean for kw in ['LOCK', 'unlock', 'breach', 'DATA_CHECK', 'hardline']):
-                    print(f"Response: {clean[:200]}")
-                    print("---")
+                    key = clean[:50]
+                    if key not in seen:
+                        seen.add(key)
+                        responses.append((0, clean))  # No timestamp
+
+    # Sort by timestamp (newest first) and print
+    responses.sort(key=lambda x: x[0], reverse=True)
+    for ts, content in responses[:30]:
+        if ts > 0:
+            print(f"[t:{ts}] {content[:150]}")
+        else:
+            print(f"Response: {content[:150]}")
+        print("---")
+
+
+def find_linebuffer_instances(reader: MonoReader) -> None:
+    """Try to find LineBuffer instances in memory"""
+    print("\n=== Searching for LineBuffer class ===")
+
+    regions = [r for r in reader.get_regions() if r.is_rw_anon and 100*1024 <= r.size <= 50*1024*1024]
+
+    for region in regions:
+        data = reader.read_bytes(region.start, min(region.size, 10*1024*1024))
+        if not data:
+            continue
+
+        try:
+            text = data.decode('utf-16-le', errors='ignore')
+        except:
+            continue
+
+        # Look for LineBuffer marker
+        if 'LineBuffer' in text:
+            print(f"  Found LineBuffer reference in region 0x{region.start:x}")
+            # Find the context
+            idx = text.find('LineBuffer')
+            context = text[max(0, idx-50):idx+100]
+            clean = ''.join(c for c in context if c.isprintable())
+            print(f"    Context: {clean[:150]}")
+
+
+def find_queue_arrays(reader: MonoReader) -> None:
+    """Look for Queue arrays that might hold terminal lines"""
+    print("\n=== Looking for Queue-like structures ===")
+
+    regions = [r for r in reader.get_regions() if r.is_rw_anon and 500*1024 <= r.size <= 10*1024*1024]
+
+    for region in regions[:10]:
+        # Read MonoQueue-like structure from various offsets
+        for base_offset in range(0, min(region.size, 1024*1024), 0x1000):
+            addr = region.start + base_offset
+
+            # Read potential queue header
+            array_ptr = reader.read_ptr(addr + 0x10)
+            head = reader.read_int32(addr + 0x20)
+            tail = reader.read_int32(addr + 0x24)
+            size = reader.read_int32(addr + 0x28)
+
+            if array_ptr and head is not None and tail is not None and size is not None:
+                # Validate - size should be reasonable
+                if 0 < size < 10000 and head < 10000 and tail < 10000:
+                    # Try to read from the array
+                    if array_ptr > 0x10000:
+                        # Read first few elements
+                        first_elem = reader.read_ptr(array_ptr + 0x10)  # Skip array header
+                        if first_elem and first_elem > 0x10000:
+                            # Try to read as MonoString
+                            s = reader.read_mono_string(first_elem)
+                            if s and len(s) > 5:
+                                if any(kw in s for kw in ['>>>', 'LOCK', 'color', 'claudeb0t']):
+                                    print(f"  Found queue at 0x{addr:x} with size={size}")
+                                    print(f"    First element: {s[:100]}")
 
 
 def main():
@@ -313,14 +402,17 @@ def main():
         # First, look for recent output
         find_recent_output(reader)
 
+        # Look for LineBuffer
+        find_linebuffer_instances(reader)
+
+        # Look for queue structures
+        find_queue_arrays(reader)
+
         # Then scan for terminal-related strings
         print("\n=== Looking for terminal output strings ===")
         results = find_terminal_strings(reader)
         for r in results[:20]:
             print(r)
-
-        print("\n=== Analyzing MonoString regions ===")
-        analyze_string_regions(reader)
 
 
 if __name__ == '__main__':

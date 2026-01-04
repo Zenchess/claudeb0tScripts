@@ -1,0 +1,123 @@
+# Security.firewall Challenge Notes
+# Started: 2026-01-01
+
+## What I know so far:
+- security.firewall is likely a defensive/challenge script in hackmud
+- I need to figure out how to "beat" it
+
+## Attempts:
+
+### Attempt 1: Initial exploration (05:29)
+Running security.firewall{} returns a large grid of seemingly random characters.
+
+First few lines:
+Sr0{FVH%_DOJgx7cBeZH4)5h
+s]!#q!Ei5O+k41tD*LEwlvR+
+om(Gza!}sToV&DO[tQdimlf(
+qTaudISKYDM+B5{CCW8@vpBq
+
+This looks like either:
+1. A scrambled message/cipher to decode
+2. ASCII art with a hidden message
+3. Some kind of pattern to find
+
+Let me try different approaches...
+
+### Web research hints:
+From hackmud forums, there are riddle-based challenges:
+1. "Feed your password and it lives, yet give it a drink and it dies" = FIRE
+2. "Your password is a house. One enters it blind and comes out seeing" = SCHOOL
+
+### User hint: Colors in security.firewall are same as script parameters
+This means colored text in the grid might spell out parameter names/values.
+
+### Attempt 2: Try passing arguments (05:30)
+Tried security.firewall{password:"fire"} - just returned another grid
+Tried security.firewall{answer:"fire"} - same result
+
+The firewall seems to just generate random character grids.
+
+### Observation:
+The grids change each time I call security.firewall.
+The user mentioned colors are important - but the JSON response strips color codes.
+Maybe I need to look at the actual game screen to see colored letters.
+
+### Attempt 3: Looking for hidden words (05:31)
+The JSON response strips color codes. The user says colors are like script parameters.
+In hackmud, script parameters use backtick codes like `N for blue.
+
+Each call to security.firewall returns a DIFFERENT grid - it's randomized!
+This means it's likely a word search where I need to find a colored word.
+
+Since I can't see colors in JSON, I should look for patterns or common words.
+Looking at a sample grid row: "Sr0{FVH%_DOJgx7cBeZH4)5h"
+The characters include letters, numbers, and symbols.
+
+Possible approaches:
+1. Look for horizontal/vertical/diagonal words
+2. The colored letters might spell out a word
+3. Try common passwords like "fire", "school", "password"
+
+### Attempt 4: Try more password guesses (05:32)
+Tried security.firewall{school:"test"} - still returns a grid, no error message
+
+Observation: Every call returns a NEW random grid. No success/failure indication.
+The parameter I pass doesn't seem to change the behavior.
+
+### Current Theory:
+The firewall displays a word search grid on screen.
+Some letters are COLORED to spell out a word.
+I need to find that colored word in the GAME SCREEN (not JSON).
+Then pass that word as a parameter.
+
+The colors are like script parameter colors:
+- `N = blue (parameter names)
+- `0 = gray
+- `C = cyan
+- etc.
+
+### Next Steps:
+1. Need to view the actual game screen to see colors
+2. Or write a script to parse the grid for patterns
+3. Or ask other players for hints
+
+### Summary of what I've learned:
+- security.firewall returns a character grid (word search style)
+- Grid changes every call
+- Need to find colored letters that spell a word
+- That word is likely the password/answer to pass back
+
+### Attempt 5: Analysis script (05:41)
+Created fw_analyze script to check for special characters in response.
+Result: 0 special characters found - colors are NOT in JSON response!
+- 187 lines, 4674 chars, 3007 letters
+- Colors are only visible on the actual game screen
+
+### Current Block:
+I cannot see the actual game screen to identify which letters are colored.
+The JSON response strips all color codes.
+Need player help to see which letters are highlighted.
+
+### Memory Scanner Updates (05:50):
+- Updated mem_scanner.py to capture backtick color codes (`N, `C, etc.)
+- Added logging for raw colored output
+- Scanner captures chat messages with colors but not the firewall grid
+- The firewall grid colors seem to be added during Unity rendering, not in the data
+
+### What I've learned from web research:
+1. The firewall displays TWO colored words in the grid
+2. One word is the parameter NAME (like "pass" or another key)
+3. One word is the VALUE
+4. You pass them as `key:"value"` to the firewall
+5. Colors match script parameter colors:
+   - Cyan (`N) = parameter names
+   - Magenta/pink = parameter values
+6. Example from VLAN: riddle answers like "fire", "school", "promise"
+
+### Need from user:
+Can you look at your game screen and tell me what colored letters you see
+when you run security.firewall{}? I need to know:
+1. What color are they?
+2. What word do they spell out?
+
+There should be TWO colored words - one for the key and one for the value.

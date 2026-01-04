@@ -1,0 +1,14 @@
+{
+  "name": "hackmud-bot-server",
+  "version": "1.0.0",
+  "description": "Web server for hackmud autonomous agent",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "cors": "^2.8.5"
+  }
+}

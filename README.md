@@ -10,7 +10,49 @@ sudo pacman -S xdotool python
 
 ## Components
 
-### 1. Memory Scanner (`mem_scanner.py`)
+### 1. Terminal Reader (`read_vtable.py`) - Primary Scanner
+
+Reads hackmud terminal output directly from memory using Mono runtime vtable structures. This is the most reliable scanner that works across game restarts and updates.
+
+**Basic usage:**
+```bash
+# Read last 30 lines from shell terminal
+python3 read_vtable.py 30
+
+# Read chat instead of shell
+python3 read_vtable.py 30 --chat
+
+# Keep Unity color tags
+python3 read_vtable.py 30 --colors
+
+# Debug output showing vtable and instance addresses
+python3 read_vtable.py 30 --debug
+```
+
+**How it works:**
+- Scans heap for TextMeshProUGUI vtable via MonoClass structures
+- Finds all TMP instances by scanning for vtable pointers
+- Identifies shell/chat by Window.name field or content patterns
+- Reads m_text field (MonoString) to get terminal text
+- Loads offsets from `mono_offsets.json` for game update compatibility
+
+**Configuration (`mono_offsets.json`):**
+```json
+{
+  "version": "v2.016",
+  "window_offsets": {
+    "name": "0x90",
+    "gui_text": "0x58"
+  },
+  "tmp_offsets": {
+    "m_text": "0xc8"
+  }
+}
+```
+
+When hackmud updates, run `update_offsets.py` to recalculate field offsets from the decompiled Core.dll.
+
+### 2. JSON Memory Scanner (`mem_scanner.py`)
 
 Reads JSON responses directly from hackmud's memory. This captures all server responses including script outputs, errors, chat messages, etc.
 
@@ -33,7 +75,7 @@ Responses are logged to `responses.log` with timestamps and memory addresses.
 - Deduplicates using MD5 hashes
 - Writes new responses to the log file
 
-### 2. Send Command (`send_command.py`)
+### 3. Send Command (`send_command.py`)
 
 Sends text input to the hackmud window using xdotool.
 
@@ -48,7 +90,7 @@ python3 send_command.py "user.loc{target:\"some_npc\"}"
 - Types the command character by character
 - Sends Enter key to execute
 
-### 3. Get Responses (`get_responses.py`)
+### 4. Get Responses (`get_responses.py`)
 
 Retrieves recent responses from the log file.
 
@@ -66,7 +108,7 @@ python3 get_responses.py --raw
 python3 get_responses.py --script weyland.public
 ```
 
-### 4. Hardline Script (`hardline.sh`)
+### 5. Hardline Script (`hardline.sh`)
 
 Automates the kernel.hardline process (typing characters as they appear).
 
@@ -81,7 +123,7 @@ bash hardline.sh
 - Types them with appropriate timing
 - Confirms completion
 
-### 5. Start Scanner (`start_scanner.sh`)
+### 6. Start Scanner (`start_scanner.sh`)
 
 Convenience script to start the memory scanner in the background.
 
@@ -111,13 +153,16 @@ PID is saved to `scanner.pid` for later management.
 
 | File | Purpose |
 |------|---------|
-| `mem_scanner.py` | Reads game responses from process memory |
+| `read_vtable.py` | **Primary** - Reads terminal via Mono vtables |
+| `mono_offsets.json` | Field offsets for game version compatibility |
+| `update_offsets.py` | Recalculates offsets after game updates |
+| `mem_scanner.py` | Reads JSON responses from process memory |
 | `send_command.py` | Sends keyboard input to game window |
 | `get_responses.py` | Retrieves responses from log |
 | `hardline.sh` | Automates hardline connection |
 | `start_scanner.sh` | Starts scanner in background |
 | `responses.log` | Log of all captured responses |
-| `scanner.pid` | PID of running scanner process |
+| `scanner_backup/` | Legacy scanners (read_live.py, mono_reader.py) |
 
 ## Troubleshooting
 

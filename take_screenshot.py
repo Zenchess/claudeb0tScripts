@@ -10,6 +10,47 @@ from pathlib import Path
 
 SCREENSHOT_DIR = Path("/tmp")
 
+# Region definitions as percentage of window (x%, y%, width%, height%)
+# These are approximate and may need tuning based on window size
+REGIONS = {
+    'chat': (63, 43, 32, 45),      # Right side, chat area
+    'scratch': (70, 5, 30, 25),    # Right side, top area (scratch area)
+    'terminal': (0, 0, 65, 100),   # Left portion of window (main terminal)
+    'full': (0, 0, 100, 100),      # Full window
+}
+
+
+def crop_image(input_path, output_path, region_name, scale=130):
+    """Crop image to specified region using ImageMagick"""
+    if region_name not in REGIONS or region_name == 'full':
+        return True  # No cropping needed
+
+    # Get image dimensions
+    result = subprocess.run(
+        ['identify', '-format', '%w %h', str(input_path)],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        return False
+
+    width, height = map(int, result.stdout.strip().split())
+
+    # Calculate crop region in pixels
+    x_pct, y_pct, w_pct, h_pct = REGIONS[region_name]
+    x = int(width * x_pct / 100)
+    y = int(height * y_pct / 100)
+    w = int(width * w_pct / 100)
+    h = int(height * h_pct / 100)
+
+    # Crop and scale using ImageMagick convert
+    crop_spec = f"{w}x{h}+{x}+{y}"
+    result = subprocess.run(
+        ['convert', str(input_path), '-crop', crop_spec, '+repage',
+         '-resize', f'{scale}%', str(output_path)],
+        capture_output=True, text=True
+    )
+    return result.returncode == 0
+
 
 def get_hackmud_window():
     """Find hackmud window ID using xdotool"""
@@ -107,6 +148,10 @@ def main():
     parser.add_argument('--channel', '-c', type=int,
                         default=1456288519403208800,
                         help='Discord channel ID')
+    parser.add_argument('--region', '-r', type=str,
+                        choices=['full', 'chat', 'terminal', 'scratch'],
+                        default='full',
+                        help='Region to capture (full, chat, terminal, scratch)')
     args = parser.parse_args()
 
     output_path = Path(args.output)
@@ -133,6 +178,14 @@ def main():
         else:
             print("Failed to take screenshot", file=sys.stderr)
             sys.exit(1)
+
+    # Crop to region if specified
+    if args.region != 'full':
+        print(f"Cropping to region: {args.region}", file=sys.stderr)
+        if crop_image(output_path, output_path, args.region):
+            print(f"Cropped to {args.region}", file=sys.stderr)
+        else:
+            print(f"Failed to crop to {args.region}", file=sys.stderr)
 
     # Send to Discord if requested
     if args.discord or args.edit:

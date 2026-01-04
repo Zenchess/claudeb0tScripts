@@ -297,7 +297,32 @@ def read_live(num_lines=20, keep_colors=False, debug=False):
     # Sort chats by timestamp
     chats.sort(key=lambda x: x[0])
 
-    print("=== SHELL COMMANDS ===")
+    # Find script responses (money transfers, lock results, system messages)
+    responses = []
+    response_patterns = [
+        (r'Received\s+[\d,KMB]+GC\s+from\s+[\w_]+', 'MONEY'),
+        (r'Connection Terminated', 'BREACH'),
+        (r'LOCK_UNLOCKED\s+\w+', 'LOCK'),
+        (r'LOCK_ERROR.*?(?:correct|invalid|access)', 'LOCK'),
+        (r'System slots are full', 'SYSTEM'),
+        (r'Upgrade transfer failed', 'SYSTEM'),
+        (r'hardline required', 'HARDLINE'),
+        (r'[\d,]+[KMB]?GC(?:\s|$)', 'GC'),
+    ]
+    for pattern, ptype in response_patterns:
+        for match in re.finditer(pattern, clean, re.IGNORECASE):
+            msg = clean_text(match.group(0)[:150])
+            if msg and len(msg) > 3:
+                responses.append(f"[{ptype}] {msg}")
+
+    print("=== SCRIPT RESPONSES ===")
+    seen_resp = set()
+    for resp in responses[-num_lines//3:]:
+        if resp not in seen_resp:
+            seen_resp.add(resp)
+            print(resp)
+
+    print("\n=== SHELL COMMANDS ===")
     # Deduplicate and show recent commands
     seen_cmds = set()
     unique_cmds = []

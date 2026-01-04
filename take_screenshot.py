@@ -15,7 +15,7 @@ SCREENSHOT_DIR = Path("/tmp")
 REGIONS = {
     'chat': (64, 43, 30, 46),      # Right side, chat area (trimmed 2px all sides)
     'scratch': (70, 5, 30, 25),    # Right side, top area (scratch area)
-    'terminal': (2, 3, 63, 94),    # Left portion of window (trimmed edges)
+    'terminal': (2, 7, 62, 89),    # Left portion (adjusted per Kaj)
     'full': (0, 0, 100, 100),      # Full window
 }
 

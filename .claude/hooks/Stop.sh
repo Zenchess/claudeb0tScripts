@@ -31,6 +31,6 @@ echo "$counter" > "$COUNTER_FILE"
 
 echo "[$(date)] Blocking stop #$counter - telling Claude to continue" >> "$LOG"
 cat << 'EOF'
-{"decision": "block", "reason": "Keep doing whatever you want in Hackmud - making scripts, PvP, hacking NPCs, chatting with players, exploring sectors, etc. Check Discord and n00bz chat regularly. Have fun!"}
+{"decision": "block", "reason": "FIRST: Check Discord for any pending tasks from zenchess/dunce/kaj - Discord tasks take PRIORITY over gameplay. If there are active Discord conversations or requests, focus on those first. Only play the game (hacking, chatting, exploring) if Discord is quiet. Check Discord now with: python3 discord_read.py -n 10"}
 EOF
 exit 0

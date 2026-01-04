@@ -1,275 +1,5 @@
 [
   {
-    "timestamp": "2026-01-03T17:51:27.120659",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "dunce",
-    "author_id": 626075347225411584,
-    "content": "or not",
-    "message_id": 1457159456247906355
-  },
-  {
-    "timestamp": "2026-01-03T17:51:52.528523",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "I have the feeling claude forgot something?",
-    "message_id": 1457159562804203611
-  },
-  {
-    "timestamp": "2026-01-03T17:52:36.831623",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "@claude can you tell me the hackmud color id for the color code B035EE",
-    "message_id": 1457159748544761867
-  },
-  {
-    "timestamp": "2026-01-03T17:52:59.757980",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "you should remeber this",
-    "message_id": 1457159844569153537
-  },
-  {
-    "timestamp": "2026-01-03T17:56:19.922759",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Zenchess",
-    "author_id": 190743971469721600,
-    "content": "time to get john500 to coordinate with claudeb0t so we can hack t1's and t2's continuously \ud83d\ude42",
-    "message_id": 1457160683954241589
-  },
-  {
-    "timestamp": "2026-01-03T17:57:06.559259",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "so to b0ts",
-    "message_id": 1457160879878574091
-  },
-  {
-    "timestamp": "2026-01-03T17:58:19.449264",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "dtr.t1_lock_sim is a good t1 test script",
-    "message_id": 1457161185584615505
-  },
-  {
-    "timestamp": "2026-01-03T17:58:32.488411",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "whre did you picked that up?",
-    "message_id": 1457161240336924918
-  },
-  {
-    "timestamp": "2026-01-03T17:58:45.155342",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Zenchess",
-    "author_id": 190743971469721600,
-    "content": "someone told it",
-    "message_id": 1457161293462114458
-  },
-  {
-    "timestamp": "2026-01-03T17:59:19.053995",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "could be me and i forgot it",
-    "message_id": 1457161435506540632
-  },
-  {
-    "timestamp": "2026-01-03T17:59:24.250871",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "^^",
-    "message_id": 1457161457455071416
-  },
-  {
-    "timestamp": "2026-01-03T18:00:09.510515",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "he/she/it claudeb0t?",
-    "message_id": 1457161647285207314
-  },
-  {
-    "timestamp": "2026-01-03T18:00:43.896228",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Zenchess",
-    "author_id": 190743971469721600,
-    "content": "they said it/they earlier heh",
-    "message_id": 1457161791372001321
-  },
-  {
-    "timestamp": "2026-01-03T18:00:57.290762",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "okej divers",
-    "message_id": 1457161847697576171
-  },
-  {
-    "timestamp": "2026-01-03T18:02:24.865191",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "<@1456287435620225231> what is the RGV value for the hackmud color id D",
-    "message_id": 1457162214518558902
-  },
-  {
-    "timestamp": "2026-01-03T18:03:03.541857",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "and tell me the name of that color",
-    "message_id": 1457162376972337203
-  },
-  {
-    "timestamp": "2026-01-03T18:04:31.626343",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "im not sure whre did you got the information from?",
-    "message_id": 1457162746671136919
-  },
-  {
-    "timestamp": "2026-01-03T18:08:21.677915",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "if i say color id it is the value nit the string formatter",
-    "message_id": 1457163711516246098
-  },
-  {
-    "timestamp": "2026-01-03T18:09:52.720561",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "D is the Alphanumeric identifier and  #FF0000 is the RGB color value",
-    "message_id": 1457164093407629516
-  },
-  {
-    "timestamp": "2026-01-03T18:12:12.018053",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "the Alphanumeric identifier is used to form the color formatted string for hackmud ``` `D<string>` ``` to send color formatted text",
-    "message_id": 1457164677409931449
-  },
-  {
-    "timestamp": "2026-01-03T18:13:06.479998",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "this makes <string> in this case red #FF0000",
-    "message_id": 1457164906133590057
-  },
-  {
-    "timestamp": "2026-01-03T18:14:39.718214",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "here is an example string \"a test text\" format this in the #FF6A98",
-    "message_id": 1457165297193582645
-  },
-  {
-    "timestamp": "2026-01-03T18:18:46.788550",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "right if given RGB value didn't match the hackmud colors take the closest",
-    "message_id": 1457166333514088559
-  },
-  {
-    "timestamp": "2026-01-03T18:20:32.778744",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "If you have a closer look to the table at Colors on https://wiki.hackmud.com/scripting/syntax/colors/#colors you will see that #FF6A98 exists and has the id Y",
-    "message_id": 1457166777980162178
-  },
-  {
-    "timestamp": "2026-01-03T18:25:02.420492",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "if you write the hackmud color formatted string you have to use ` 4 times at the beginning and 4 times at the end",
-    "message_id": 1457167908814721176
-  },
-  {
-    "timestamp": "2026-01-03T18:25:42.535397",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "with 3 of the ` symbols you format in discord a code snipet",
-    "message_id": 1457168076914036993
-  },
-  {
-    "timestamp": "2026-01-03T18:27:29.051981",
-    "server": "Claudeb0t server",
-    "channel": "general",
-    "channel_id": 1456288519403208800,
-    "author": "Kaj",
-    "author_id": 1081873483300093952,
-    "content": "it should be ``Y a test text``",
-    "message_id": 1457168523842555936
-  },
-  {
     "timestamp": "2026-01-03T18:27:39.022744",
     "server": "Claudeb0t server",
     "channel": "general",
@@ -998,5 +728,275 @@
     "author_id": 190743971469721600,
     "content": "no aur package for ilspy or ilspycmd claude",
     "message_id": 1457395128741134367
+  },
+  {
+    "timestamp": "2026-01-04T09:44:28.991663",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "claude - look what i have written here https://discord.com/channels/1456288518492917834/1456288519403208800/1457398599498596559",
+    "message_id": 1457399294372872416
+  },
+  {
+    "timestamp": "2026-01-04T09:45:32.834271",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "in the terminal output strings there is \"Found 20\" that is what i have written in discord",
+    "message_id": 1457399562082717728
+  },
+  {
+    "timestamp": "2026-01-04T09:46:13.368549",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Zenchess",
+    "author_id": 190743971469721600,
+    "content": "yeah but claude you can use that to update the memory scanner on recompilation",
+    "message_id": 1457399732161745062
+  },
+  {
+    "timestamp": "2026-01-04T09:46:16.014208",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "Oh okej",
+    "message_id": 1457399743268261920
+  },
+  {
+    "timestamp": "2026-01-04T09:46:42.838036",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Zenchess",
+    "author_id": 190743971469721600,
+    "content": "claude you should make a script that you can run when the game recompiles that updates the mono memory scanner to use the new addresses",
+    "message_id": 1457399855595917396
+  },
+  {
+    "timestamp": "2026-01-04T09:47:43.885462",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Zenchess",
+    "author_id": 190743971469721600,
+    "content": "claude paste the full raw output of what the mono memory scanner is showing",
+    "message_id": 1457400111784001649
+  },
+  {
+    "timestamp": "2026-01-04T09:48:04.070034",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "and put it in code wrappers",
+    "message_id": 1457400196341170217
+  },
+  {
+    "timestamp": "2026-01-04T09:49:31.919708",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "thnaks",
+    "message_id": 1457400564848791655
+  },
+  {
+    "timestamp": "2026-01-04T09:49:52.864600",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "the Response looks good",
+    "message_id": 1457400652735975556
+  },
+  {
+    "timestamp": "2026-01-04T09:50:11.041622",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Zenchess",
+    "author_id": 190743971469721600,
+    "content": "claude output the full data of what you should be seeing in the terminal - the full scan.  don't summarize.  put it in code wrappers",
+    "message_id": 1457400728695079146
+  },
+  {
+    "timestamp": "2026-01-04T09:51:24.810663",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "dunce",
+    "author_id": 626075347225411584,
+    "content": "oh shit https://github.com/Zenchess/claudeb0tScripts/tree/master didn't notice this",
+    "message_id": 1457401038083461384
+  },
+  {
+    "timestamp": "2026-01-04T09:51:48.050992",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Zenchess",
+    "author_id": 190743971469721600,
+    "content": "claude i said don't summarize - try to get the same output the player would see",
+    "message_id": 1457401135936835594
+  },
+  {
+    "timestamp": "2026-01-04T09:52:05.442889",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "The repo is full of scripts lol",
+    "message_id": 1457401208393175256
+  },
+  {
+    "timestamp": "2026-01-04T09:52:53.012088",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Zenchess",
+    "author_id": 190743971469721600,
+    "content": "looks good",
+    "message_id": 1457401408348360786
+  },
+  {
+    "timestamp": "2026-01-04T09:52:54.486333",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "Thats awsome",
+    "message_id": 1457401414501400770
+  },
+  {
+    "timestamp": "2026-01-04T09:53:32.562695",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Zenchess",
+    "author_id": 190743971469721600,
+    "content": "claude update your claude.md and memory file to ONLY use the mono memory scanner now - only use that, maybe even move the old memory scanner so you dont accidentally use it",
+    "message_id": 1457401574010785843
+  },
+  {
+    "timestamp": "2026-01-04T09:54:03.801307",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "dunce",
+    "author_id": 626075347225411584,
+    "content": "it seems like mono memory scanner is still not doing the right approach",
+    "message_id": 1457401705217130529
+  },
+  {
+    "timestamp": "2026-01-04T09:54:12.897110",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "dunce",
+    "author_id": 626075347225411584,
+    "content": "shouldn't need to scan/search",
+    "message_id": 1457401743263400008
+  },
+  {
+    "timestamp": "2026-01-04T09:54:59.618484",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "dunce",
+    "author_id": 626075347225411584,
+    "content": "I mean maybe we scan for certain key class instances by looking for vtable pointers?",
+    "message_id": 1457401939292852468
+  },
+  {
+    "timestamp": "2026-01-04T09:55:06.598534",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "dunce",
+    "author_id": 626075347225411584,
+    "content": "but after that should only follow known offsets",
+    "message_id": 1457401968682074238
+  },
+  {
+    "timestamp": "2026-01-04T09:56:17.011992",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "That is what it's all about - no more scanning-",
+    "message_id": 1457402263701295135
+  },
+  {
+    "timestamp": "2026-01-04T09:58:37.550369",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "perfect try that and do a test - after that psot a comparison in code wrappersa",
+    "message_id": 1457402853164322846
+  },
+  {
+    "timestamp": "2026-01-04T09:59:26.086402",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "you can get those from BepinEx bleeding edge release",
+    "message_id": 1457403056856502284
+  },
+  {
+    "timestamp": "2026-01-04T09:59:42.698338",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "dunce",
+    "author_id": 626075347225411584,
+    "content": "there are other important classes besides Window but I'm afraid I can't give you any more hints claudeb0t \ud83d\ude09",
+    "message_id": 1457403126725214364
+  },
+  {
+    "timestamp": "2026-01-04T09:59:52.991756",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "dunce",
+    "author_id": 626075347225411584,
+    "content": "Window good start for now",
+    "message_id": 1457403169905578166
+  },
+  {
+    "timestamp": "2026-01-04T10:00:40.300792",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "<@1456287435620225231> use the missing libs from the latest build on https://builds.bepinex.dev/projects/bepinex_be",
+    "message_id": 1457403368270991412
+  },
+  {
+    "timestamp": "2026-01-04T10:01:30.646539",
+    "server": "Claudeb0t server",
+    "channel": "general",
+    "channel_id": 1456288519403208800,
+    "author": "Kaj",
+    "author_id": 1081873483300093952,
+    "content": "<@190743971469721600> claude needs: sudo pacman -S python-pyelftools",
+    "message_id": 1457403579395473602
   }
 ]

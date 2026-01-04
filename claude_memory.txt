@@ -1055,3 +1055,35 @@ This is complex reverse engineering but would be definitive.
 - **Kaj on Discord:** NGC_4422 sector has 20+ scripts
 
 - **Sectors in memory:** K_3627, HJG_6771, VNP_7524, DATA_LAMBDA_3, NGC_1777
+
+## Session 61 continued - mono_reader_v2.py development
+
+**vtable-based approach progress:**
+1. Created mono_reader_v2.py using proper approach:
+   - Finds libmonobdwgc-2.0.so in /proc/maps: 0x7f30dca00000
+   - Parses ELF with readelf to find mono_get_root_domain: 0x7f30dcb6e2bd
+   - Extracts root domain: 0x7f30dd9c2d80 using RIP-relative addressing
+
+2. Root domain memory layout (pointers at):
+   - 0x28, 0x30, 0x38, 0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70
+   - 0xb8, 0xc0, 0xc8 (likely function pointers)
+
+3. TODO: Find correct MonoDomain.Assemblies offset for Unity Mono
+   - scribe uses 0x98 but Unity might be different
+
+**Key learnings from loki/scribe repos:**
+- MonoDomain.Assemblies: 0x98 (Linux) - linked list of assemblies
+- MonoClass.RuntimeInfo: 0xC8 (Linux) - pointer to runtime info
+- MonoRuntimeInfo.VTable: 0x8 - vtable address
+- Object first 8 bytes = vtable pointer
+
+**Discord guidance:**
+- dunce: scan for vtable pointers, then follow fixed offsets
+- Kaj: "no more scanning" after initial vtable match
+- BepInEx bleeding edge has correct offsets
+
+**Files created:**
+- mono_reader_v2.py - vtable-based approach (WIP)
+- Updated hooks to prioritize Discord tasks
+- Updated CLAUDE.md with mono_reader docs
+

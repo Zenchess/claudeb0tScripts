@@ -302,12 +302,16 @@ def read_live(num_lines=20, keep_colors=False, debug=False):
     response_patterns = [
         (r'Received\s+[\d,KMB]+GC\s+from\s+[\w_]+', 'MONEY'),
         (r'Connection Terminated', 'BREACH'),
-        (r'LOCK_UNLOCKED\s+\w+', 'LOCK'),
-        (r'LOCK_ERROR.*?(?:correct|invalid|access)', 'LOCK'),
+        (r'LOCK_UNLOCKED\s*\w*', 'LOCK'),
+        (r'LOCK_ERROR[^:]*', 'LOCK'),
+        (r'Denied access by[^.]+', 'LOCK'),
+        (r'is not the correct\s+\w+', 'LOCK'),
         (r'System slots are full', 'SYSTEM'),
         (r'Upgrade transfer failed', 'SYSTEM'),
         (r'hardline required', 'HARDLINE'),
         (r'(\d{1,3}[KMB]\d{0,3}GC|balance[^<]*\d+[KMB]?\d*GC)', 'BALANCE'),
+        (r'Msg Sent', 'MSG'),
+        (r'Failure', 'FAIL'),
     ]
     for pattern, ptype in response_patterns:
         for match in re.finditer(pattern, clean, re.IGNORECASE):
@@ -315,58 +319,38 @@ def read_live(num_lines=20, keep_colors=False, debug=False):
             if msg and len(msg) > 3:
                 responses.append(f"[{ptype}] {msg}")
 
-    # Find script output by looking for JSON-like responses after commands
-    # Look for patterns like: >>command\n{ key: value } or >>command\n[ array ]
+    # Find script output by looking for ANY response after commands
     script_outputs = []
 
-    # First, find all >> command positions and extract what follows
+    # Find all >> command positions and extract what follows
     cmd_pattern = re.compile(r'>>(\w+[\w._]*(?:\{[^}]*\})?)\s*\n([\s\S]*?)(?=>>|\Z)')
     for match in cmd_pattern.finditer(clean):
         cmd = match.group(1).strip()
         response = match.group(2).strip()
 
-        # Clean the command
+        # Clean the command - keep only printable ASCII
         cmd = ''.join(c for c in cmd if 32 <= ord(c) <= 126)
-        cmd = cmd[:100]
+        cmd = cmd[:120]
 
-        # Skip if no meaningful command
+        # Skip if no meaningful command (needs user.script pattern)
         if len(cmd) < 5 or not re.search(r'\w+\.\w+', cmd):
             continue
 
         # Clean the response - keep printable chars and newlines
         response = ''.join(c for c in response if 32 <= ord(c) <= 126 or c == '\n')
+        # Remove color tag remnants
+        response = re.sub(r'</?color[^>]*>', '', response)
+        response = re.sub(r'#[A-Fa-f0-9]{6,8}', '', response)
+        # Collapse excessive whitespace but keep structure
+        response = re.sub(r'[ \t]{4,}', ' ', response)
+        response = re.sub(r'\n{3,}', '\n\n', response)
 
-        # Look for JSON-like output patterns
-        # Match { ... } blocks that contain key: value pairs
-        json_match = re.search(r'\{\s*\n?\s*(\w+\s*:\s*[^}]+)\}', response)
-        if json_match:
-            json_content = json_match.group(0)
-            # Clean up the JSON
-            json_content = re.sub(r'<[^>]*>', '', json_content)  # Remove HTML tags
-            json_content = re.sub(r'\s{3,}', ' ', json_content)  # Collapse whitespace
-            if len(json_content) > 20:
-                script_outputs.append(f">>{cmd}\n{json_content}")
-                continue
+        # Take first 600 chars of response
+        response = response[:600].strip()
 
-        # Also look for simple key: value responses
-        kv_match = re.search(r'^\s*((?:\w+:\s*(?:"[^"]*"|[\w\d]+|[\[\{][^\]\}]*[\]\}]),?\s*)+)', response, re.MULTILINE)
-        if kv_match and len(kv_match.group(1)) > 10:
-            script_outputs.append(f">>{cmd}\n{kv_match.group(1)[:300]}")
-            continue
-
-        # Look for r: "..." pattern specifically (DATA_CHECK responses)
-        r_match = re.search(r'r:\s*"([^"]{20,})"', response)
-        if r_match:
-            script_outputs.append(f">>{cmd}\nr: \"{r_match.group(1)[:400]}\"")
-            continue
-
-        # Fallback: if response starts with { or has ok:/locs:/remaining:
-        if response.startswith('{') or re.search(r'(ok|locs|remaining|total|x):\s*', response[:200]):
-            # Take first 400 chars of cleaned response
-            cleaned = re.sub(r'<[^>]*>', '', response[:500])
-            cleaned = re.sub(r'\s{3,}', '\n', cleaned)
-            if len(cleaned) > 15:
-                script_outputs.append(f">>{cmd}\n{cleaned[:400]}")
+        # Only add if response has meaningful content (at least some letters)
+        if len(response) > 10 and sum(1 for c in response if c.isalpha()) > 5:
+            script_outputs.append(f">>{cmd}\n{response}")
 
     print("=== SCRIPT OUTPUT ===")
     seen_out = set()

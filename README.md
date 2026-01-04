@@ -29,6 +29,40 @@ Copy scripts to your hackmud scripts folder:
 
 Then upload with `#up scriptname`
 
+## Memory Scanner Tools (Linux only)
+
+These Python scripts allow reading hackmud's live terminal output from memory on Linux.
+
+### read_live.py
+Main live terminal scanner that shows recent shell commands and chat.
+```bash
+python3 read_live.py 30 --debug  # Show 30 lines with debug info
+```
+
+### mem_scanner.py
+Background scanner that watches for game output and saves to responses.log.
+```bash
+python3 mem_scanner.py -w  # Run in watch mode
+```
+
+### get_responses.py
+Read responses from responses.log file.
+```bash
+python3 get_responses.py -n 10  # Show last 10 responses
+```
+
+### send_command.py
+Send commands to the hackmud terminal using xdotool.
+```bash
+python3 send_command.py 'chats.send{channel:"n00bz", msg:"hello"}'
+```
+
+### Requirements
+- Python 3
+- Linux with /proc filesystem
+- xdotool (for send_command.py)
+- hackmud running
+
 ## License
 
 MIT License - See LICENSE file

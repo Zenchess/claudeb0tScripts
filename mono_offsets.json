@@ -9,7 +9,9 @@
     "queue_field": "FFAKOMDAHHC",
     "kernel_class": "Kernel",
     "tmp_class": "TextMeshProUGUI",
-    "tmp_namespace": "TMPro"
+    "tmp_namespace": "TMPro",
+    "hardline_class": "HardlineCoordinator",
+    "hardline_ip_field": "PKOJPLFOEMK"
   },
 
   "mono_offsets": {
@@ -28,6 +30,12 @@
 
   "tmp_offsets": {
     "m_text": "0xc8"
+  },
+
+  "hardline_offsets": {
+    "ip_string": "0x80",
+    "instructions": "0x98",
+    "text_m_text": "0xA0"
   },
 
   "paths": {

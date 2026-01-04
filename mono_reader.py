@@ -358,36 +358,124 @@ def find_linebuffer_instances(reader: MonoReader) -> None:
 
 
 def find_queue_arrays(reader: MonoReader) -> None:
-    """Look for Queue arrays that might hold terminal lines"""
-    print("\n=== Looking for Queue-like structures ===")
+    """Look for Queue<string> arrays that might hold terminal lines
 
-    regions = [r for r in reader.get_regions() if r.is_rw_anon and 500*1024 <= r.size <= 10*1024*1024]
+    From decompiled Core.dll:
+    - NMOPNOICKDJ class has Queue<string> FFAKOMDAHHC
+    - Queue<string> uses: _items (array), _head, _tail, _size, _version
+    - Standard Queue<T> offsets (may vary):
+      0x10: _items (T[] array pointer)
+      0x18: _head (int)
+      0x1C: _tail (int)
+      0x20: _size (int)
+      0x24: _version (int)
+    """
+    print("\n=== Looking for Queue<string> structures ===")
 
-    for region in regions[:10]:
-        # Read MonoQueue-like structure from various offsets
-        for base_offset in range(0, min(region.size, 1024*1024), 0x1000):
+    regions = [r for r in reader.get_regions() if r.is_rw_anon and 100*1024 <= r.size <= 20*1024*1024]
+    found_queues = []
+
+    for region in regions[:20]:
+        # Scan for potential Queue<string> headers
+        for base_offset in range(0, min(region.size, 2*1024*1024), 0x8):
             addr = region.start + base_offset
 
-            # Read potential queue header
-            array_ptr = reader.read_ptr(addr + 0x10)
-            head = reader.read_int32(addr + 0x20)
-            tail = reader.read_int32(addr + 0x24)
-            size = reader.read_int32(addr + 0x28)
+            # Try different offset layouts for Queue<T>
+            for items_offset in [0x10, 0x18, 0x8]:
+                array_ptr = reader.read_ptr(addr + items_offset)
+                if not array_ptr or array_ptr < 0x10000 or array_ptr > 0x7FFFFFFFFFFF:
+                    continue
 
-            if array_ptr and head is not None and tail is not None and size is not None:
-                # Validate - size should be reasonable
-                if 0 < size < 10000 and head < 10000 and tail < 10000:
-                    # Try to read from the array
-                    if array_ptr > 0x10000:
-                        # Read first few elements
-                        first_elem = reader.read_ptr(array_ptr + 0x10)  # Skip array header
-                        if first_elem and first_elem > 0x10000:
-                            # Try to read as MonoString
-                            s = reader.read_mono_string(first_elem)
-                            if s and len(s) > 5:
-                                if any(kw in s for kw in ['>>>', 'LOCK', 'color', 'claudeb0t']):
-                                    print(f"  Found queue at 0x{addr:x} with size={size}")
-                                    print(f"    First element: {s[:100]}")
+                # Read queue metadata (try both 32-bit and 64-bit offsets)
+                size = reader.read_int32(addr + items_offset + 0x10)
+                if size is None or size < 1 or size > 5000:
+                    continue
+
+                # Try to read array elements (string pointers)
+                # Array header: vtable(8) + length(8) + elements...
+                array_len = reader.read_int32(array_ptr + 0x8)
+                if array_len is None or array_len < 1 or array_len > 10000:
+                    continue
+
+                # Read first few string pointers
+                terminal_found = False
+                sample_strings = []
+                for i in range(min(size, 5)):
+                    str_ptr = reader.read_ptr(array_ptr + 0x10 + i * 8)
+                    if str_ptr and str_ptr > 0x10000:
+                        s = reader.read_mono_string(str_ptr)
+                        if s and len(s) > 3:
+                            sample_strings.append(s[:50])
+                            if any(kw in s for kw in ['>>>', 'LOCK', 'color', 'claudeb0t', '::', 'breach']):
+                                terminal_found = True
+
+                if terminal_found and sample_strings:
+                    found_queues.append({
+                        'addr': addr,
+                        'size': size,
+                        'samples': sample_strings
+                    })
+
+    # Print results
+    for q in found_queues[:10]:
+        print(f"  Queue at 0x{q['addr']:x} (size={q['size']}):")
+        for s in q['samples'][:3]:
+            print(f"    {s}")
+
+
+def find_gui_text_content(reader: MonoReader) -> None:
+    """Find TextMeshProUGUI text content (the actual terminal display)
+
+    gui_text stores the rendered terminal as a single large string with:
+    - Multiple lines joined by newlines
+    - Unity rich text color tags
+    - Command prompts like >>>
+    """
+    print("\n=== Searching for gui_text content (large terminal strings) ===")
+
+    regions = [r for r in reader.get_regions() if r.is_rw_anon and 100*1024 <= r.size <= 50*1024*1024]
+
+    # Look for large MonoStrings containing multiple terminal lines
+    found = []
+
+    for region in regions[:30]:
+        # Scan for MonoString objects
+        for offset in range(0, min(region.size, 5*1024*1024), 0x10):
+            addr = region.start + offset
+            s = reader.read_mono_string(addr)
+
+            if not s or len(s) < 200:  # gui_text would be large
+                continue
+
+            # Check for terminal-like content
+            newlines = s.count('\n')
+            has_prompt = '>>>' in s
+            has_colors = '<color' in s.lower() or 'color=' in s.lower()
+            has_terminal_content = any(kw in s for kw in ['claudeb0t', 'LOCK_', '::', 'scripts.', 'sys.'])
+
+            # Score the likelihood this is gui_text
+            score = 0
+            if newlines > 5: score += 2
+            if newlines > 20: score += 2
+            if has_prompt: score += 3
+            if has_colors: score += 2
+            if has_terminal_content: score += 2
+
+            if score >= 5:
+                found.append({
+                    'addr': addr,
+                    'score': score,
+                    'length': len(s),
+                    'newlines': newlines,
+                    'preview': s[:500].replace('\n', '\\n')
+                })
+
+    # Sort by score
+    found.sort(key=lambda x: x['score'], reverse=True)
+
+    for f in found[:5]:
+        print(f"\n[0x{f['addr']:x}] Score={f['score']} Len={f['length']} Lines={f['newlines']}")
+        print(f"  Preview: {f['preview'][:200]}...")
 
 
 def main():
@@ -401,6 +489,9 @@ def main():
     with MonoReader(pid) as reader:
         # First, look for recent output
         find_recent_output(reader)
+
+        # Look for gui_text content
+        find_gui_text_content(reader)
 
         # Look for LineBuffer
         find_linebuffer_instances(reader)

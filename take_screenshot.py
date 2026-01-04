@@ -48,8 +48,11 @@ def focus_window(window_id):
     time.sleep(0.3)
 
 
-def send_to_discord(image_path, channel_id=1456288519403208800):
-    """Send screenshot to Discord using requests"""
+MESSAGE_ID_FILE = Path("/tmp/screenshot_message_id.txt")
+
+
+def send_to_discord(image_path, channel_id=1456288519403208800, edit=False):
+    """Send or edit screenshot on Discord using requests"""
     import requests
     from dotenv import load_dotenv
 
@@ -59,8 +62,21 @@ def send_to_discord(image_path, channel_id=1456288519403208800):
         print("DISCORD_BOT_TOKEN not set", file=sys.stderr)
         return False
 
-    url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
     headers = {"Authorization": f"Bot {token}"}
+
+    # Check if we should edit an existing message
+    message_id = None
+    if edit and MESSAGE_ID_FILE.exists():
+        message_id = MESSAGE_ID_FILE.read_text().strip()
+        print(f"Editing message {message_id}", file=sys.stderr)
+
+    if message_id:
+        # Delete old message and post new one (Discord doesn't allow editing attachments)
+        delete_url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}"
+        requests.delete(delete_url, headers=headers)
+
+    # Send new message with screenshot
+    url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
 
     with open(image_path, 'rb') as f:
         files = {'file': (image_path.name, f, 'image/png')}
@@ -68,7 +84,11 @@ def send_to_discord(image_path, channel_id=1456288519403208800):
         response = requests.post(url, headers=headers, data=data, files=files)
 
     if response.status_code == 200:
-        print(f"Screenshot sent to Discord", file=sys.stderr)
+        # Save message ID for future edits
+        new_message_id = response.json().get('id')
+        if new_message_id:
+            MESSAGE_ID_FILE.write_text(new_message_id)
+        print(f"Screenshot sent to Discord (msg: {new_message_id})", file=sys.stderr)
         return True
     else:
         print(f"Discord error: {response.status_code} {response.text}", file=sys.stderr)
@@ -82,6 +102,8 @@ def main():
                         help='Output file path')
     parser.add_argument('--discord', '-d', action='store_true',
                         help='Send to Discord after capture')
+    parser.add_argument('--edit', '-e', action='store_true',
+                        help='Replace/edit previous screenshot message')
     parser.add_argument('--channel', '-c', type=int,
                         default=1456288519403208800,
                         help='Discord channel ID')
@@ -113,8 +135,8 @@ def main():
             sys.exit(1)
 
     # Send to Discord if requested
-    if args.discord:
-        send_to_discord(output_path, args.channel)
+    if args.discord or args.edit:
+        send_to_discord(output_path, args.channel, edit=args.edit)
 
     print(output_path)
 

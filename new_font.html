@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhiteRabbit Hackmud Extended - Font Showcase</title>
+    <style>
+        @font-face {
+            font-family: 'WhiteRabbit';
+            src: url('WhiteRabbitHackmudExtended.ttf') format('truetype');
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-panel: #111;
+            --green: #1EFF00;
+            --orange: #FF8000;
+            --cyan: #00FFFF;
+            --magenta: #FF00EC;
+            --blue: #0070DD;
+            --gray: #9B9B9B;
+            --dark-gray: #3F3F3F;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--green);
+            font-family: 'WhiteRabbit', monospace;
+            min-height: 100vh;
+            padding: 40px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: var(--orange);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 128, 0, 0.5);
+        }
+
+        .subtitle {
+            color: var(--cyan);
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: var(--bg-panel);
+            border: 1px solid var(--dark-gray);
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .section h2 {
+            color: var(--magenta);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+        }
+
+        .char-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            padding: 15px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .char-box:hover {
+            border-color: var(--green);
+            box-shadow: 0 0 10px rgba(30, 255, 0, 0.3);
+        }
+
+        .char-box .char {
+            font-size: 2em;
+            color: var(--green);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .char-box .code {
+            font-size: 0.7em;
+            color: var(--gray);
+        }
+
+        .sample-text {
+            font-size: 1.2em;
+            line-height: 2;
+            color: var(--green);
+            margin-top: 20px;
+        }
+
+        .sample-text .orange { color: var(--orange); }
+        .sample-text .cyan { color: var(--cyan); }
+        .sample-text .magenta { color: var(--magenta); }
+        .sample-text .blue { color: var(--blue); }
+        .sample-text .gray { color: var(--gray); }
+
+        .pangram {
+            font-size: 1.5em;
+            padding: 20px;
+            background: var(--bg-dark);
+            border-left: 3px solid var(--orange);
+            margin: 20px 0;
+        }
+
+        .numbers-demo {
+            font-size: 3em;
+            letter-spacing: 0.1em;
+            color: var(--cyan);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .special-chars {
+            font-size: 2em;
+            letter-spacing: 0.2em;
+            color: var(--magenta);
+            text-align: center;
+            padding: 20px;
+            word-break: break-all;
+        }
+
+        .hackmud-sample {
+            background: var(--bg-dark);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid var(--dark-gray);
+        }
+
+        .hackmud-sample .prompt {
+            color: var(--gray);
+        }
+
+        .hackmud-sample .script {
+            color: var(--orange);
+        }
+
+        .hackmud-sample .param {
+            color: var(--cyan);
+        }
+
+        .hackmud-sample .string {
+            color: var(--green);
+        }
+
+        .hackmud-sample .lock {
+            color: var(--blue);
+        }
+
+        .scandi-section {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
+        }
+
+        .scandi-section .large {
+            font-size: 4em;
+            letter-spacing: 0.3em;
+            color: var(--orange);
+            text-shadow: 0 0 30px rgba(255, 128, 0, 0.5);
+        }
+
+        .scandi-section p {
+            color: var(--gray);
+            margin-top: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--dark-gray);
+            color: var(--gray);
+        }
+
+        .footer a {
+            color: var(--cyan);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>&gt;&gt;font.showcase{}</h1>
+    <div class="subtitle">WhiteRabbit Hackmud Extended - Custom Font by Kaj</div>
+
+    <div class="section scandi-section">
+        <div class="large">öäåÖÄÅøæØÆ</div>
+        <p>Scandinavian character support - extended for hackmud</p>
+    </div>
+
+    <div class="section">
+        <h2>// UPPERCASE</h2>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">A</span><span class="code">0x41</span></div>
+            <div class="char-box"><span class="char">B</span><span class="code">0x42</span></div>
+            <div class="char-box"><span class="char">C</span><span class="code">0x43</span></div>
+            <div class="char-box"><span class="char">D</span><span class="code">0x44</span></div>
+            <div class="char-box"><span class="char">E</span><span class="code">0x45</span></div>
+            <div class="char-box"><span class="char">F</span><span class="code">0x46</span></div>
+            <div class="char-box"><span class="char">G</span><span class="code">0x47</span></div>
+            <div class="char-box"><span class="char">H</span><span class="code">0x48</span></div>
+            <div class="char-box"><span class="char">I</span><span class="code">0x49</span></div>
+            <div class="char-box"><span class="char">J</span><span class="code">0x4A</span></div>
+            <div class="char-box"><span class="char">K</span><span class="code">0x4B</span></div>
+            <div class="char-box"><span class="char">L</span><span class="code">0x4C</span></div>
+            <div class="char-box"><span class="char">M</span><span class="code">0x4D</span></div>
+            <div class="char-box"><span class="char">N</span><span class="code">0x4E</span></div>
+            <div class="char-box"><span class="char">O</span><span class="code">0x4F</span></div>
+            <div class="char-box"><span class="char">P</span><span class="code">0x50</span></div>
+            <div class="char-box"><span class="char">Q</span><span class="code">0x51</span></div>
+            <div class="char-box"><span class="char">R</span><span class="code">0x52</span></div>
+            <div class="char-box"><span class="char">S</span><span class="code">0x53</span></div>
+            <div class="char-box"><span class="char">T</span><span class="code">0x54</span></div>
+            <div class="char-box"><span class="char">U</span><span class="code">0x55</span></div>
+            <div class="char-box"><span class="char">V</span><span class="code">0x56</span></div>
+            <div class="char-box"><span class="char">W</span><span class="code">0x57</span></div>
+            <div class="char-box"><span class="char">X</span><span class="code">0x58</span></div>
+            <div class="char-box"><span class="char">Y</span><span class="code">0x59</span></div>
+            <div class="char-box"><span class="char">Z</span><span class="code">0x5A</span></div>
+            <div class="char-box"><span class="char">Ä</span><span class="code">0xC4</span></div>
+            <div class="char-box"><span class="char">Ö</span><span class="code">0xD6</span></div>
+            <div class="char-box"><span class="char">Å</span><span class="code">0xC5</span></div>
+            <div class="char-box"><span class="char">Ø</span><span class="code">0xD8</span></div>
+            <div class="char-box"><span class="char">Æ</span><span class="code">0xC6</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>// lowercase</h2>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">a</span><span class="code">0x61</span></div>
+            <div class="char-box"><span class="char">b</span><span class="code">0x62</span></div>
+            <div class="char-box"><span class="char">c</span><span class="code">0x63</span></div>
+            <div class="char-box"><span class="char">d</span><span class="code">0x64</span></div>
+            <div class="char-box"><span class="char">e</span><span class="code">0x65</span></div>
+            <div class="char-box"><span class="char">f</span><span class="code">0x66</span></div>
+            <div class="char-box"><span class="char">g</span><span class="code">0x67</span></div>
+            <div class="char-box"><span class="char">h</span><span class="code">0x68</span></div>
+            <div class="char-box"><span class="char">i</span><span class="code">0x69</span></div>
+            <div class="char-box"><span class="char">j</span><span class="code">0x6A</span></div>
+            <div class="char-box"><span class="char">k</span><span class="code">0x6B</span></div>
+            <div class="char-box"><span class="char">l</span><span class="code">0x6C</span></div>
+            <div class="char-box"><span class="char">m</span><span class="code">0x6D</span></div>
+            <div class="char-box"><span class="char">n</span><span class="code">0x6E</span></div>
+            <div class="char-box"><span class="char">o</span><span class="code">0x6F</span></div>
+            <div class="char-box"><span class="char">p</span><span class="code">0x70</span></div>
+            <div class="char-box"><span class="char">q</span><span class="code">0x71</span></div>
+            <div class="char-box"><span class="char">r</span><span class="code">0x72</span></div>
+            <div class="char-box"><span class="char">s</span><span class="code">0x73</span></div>
+            <div class="char-box"><span class="char">t</span><span class="code">0x74</span></div>
+            <div class="char-box"><span class="char">u</span><span class="code">0x75</span></div>
+            <div class="char-box"><span class="char">v</span><span class="code">0x76</span></div>
+            <div class="char-box"><span class="char">w</span><span class="code">0x77</span></div>
+            <div class="char-box"><span class="char">x</span><span class="code">0x78</span></div>
+            <div class="char-box"><span class="char">y</span><span class="code">0x79</span></div>
+            <div class="char-box"><span class="char">z</span><span class="code">0x7A</span></div>
+            <div class="char-box"><span class="char">ä</span><span class="code">0xE4</span></div>
+            <div class="char-box"><span class="char">ö</span><span class="code">0xF6</span></div>
+            <div class="char-box"><span class="char">å</span><span class="code">0xE5</span></div>
+            <div class="char-box"><span class="char">ø</span><span class="code">0xF8</span></div>
+            <div class="char-box"><span class="char">æ</span><span class="code">0xE6</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>// NUMBERS</h2>
+        <div class="numbers-demo">0 1 2 3 4 5 6 7 8 9</div>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">0</span><span class="code">0x30</span></div>
+            <div class="char-box"><span class="char">1</span><span class="code">0x31</span></div>
+            <div class="char-box"><span class="char">2</span><span class="code">0x32</span></div>
+            <div class="char-box"><span class="char">3</span><span class="code">0x33</span></div>
+            <div class="char-box"><span class="char">4</span><span class="code">0x34</span></div>
+            <div class="char-box"><span class="char">5</span><span class="code">0x35</span></div>
+            <div class="char-box"><span class="char">6</span><span class="code">0x36</span></div>
+            <div class="char-box"><span class="char">7</span><span class="code">0x37</span></div>
+            <div class="char-box"><span class="char">8</span><span class="code">0x38</span></div>
+            <div class="char-box"><span class="char">9</span><span class="code">0x39</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>// SPECIAL CHARACTERS</h2>
+        <div class="special-chars">! @ # $ % ^ &amp; * ( ) - _ = + [ ] { } | \ : ; " ' &lt; &gt; , . ? / ~ `</div>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">!</span><span class="code">0x21</span></div>
+            <div class="char-box"><span class="char">@</span><span class="code">0x40</span></div>
+            <div class="char-box"><span class="char">#</span><span class="code">0x23</span></div>
+            <div class="char-box"><span class="char">$</span><span class="code">0x24</span></div>
+            <div class="char-box"><span class="char">%</span><span class="code">0x25</span></div>
+            <div class="char-box"><span class="char">^</span><span class="code">0x5E</span></div>
+            <div class="char-box"><span class="char">&amp;</span><span class="code">0x26</span></div>
+            <div class="char-box"><span class="char">*</span><span class="code">0x2A</span></div>
+            <div class="char-box"><span class="char">(</span><span class="code">0x28</span></div>
+            <div class="char-box"><span class="char">)</span><span class="code">0x29</span></div>
+            <div class="char-box"><span class="char">-</span><span class="code">0x2D</span></div>
+            <div class="char-box"><span class="char">_</span><span class="code">0x5F</span></div>
+            <div class="char-box"><span class="char">=</span><span class="code">0x3D</span></div>
+            <div class="char-box"><span class="char">+</span><span class="code">0x2B</span></div>
+            <div class="char-box"><span class="char">[</span><span class="code">0x5B</span></div>
+            <div class="char-box"><span class="char">]</span><span class="code">0x5D</span></div>
+            <div class="char-box"><span class="char">{</span><span class="code">0x7B</span></div>
+            <div class="char-box"><span class="char">}</span><span class="code">0x7D</span></div>
+            <div class="char-box"><span class="char">|</span><span class="code">0x7C</span></div>
+            <div class="char-box"><span class="char">\</span><span class="code">0x5C</span></div>
+            <div class="char-box"><span class="char">:</span><span class="code">0x3A</span></div>
+            <div class="char-box"><span class="char">;</span><span class="code">0x3B</span></div>
+            <div class="char-box"><span class="char">"</span><span class="code">0x22</span></div>
+            <div class="char-box"><span class="char">'</span><span class="code">0x27</span></div>
+            <div class="char-box"><span class="char">&lt;</span><span class="code">0x3C</span></div>
+            <div class="char-box"><span class="char">&gt;</span><span class="code">0x3E</span></div>
+            <div class="char-box"><span class="char">,</span><span class="code">0x2C</span></div>
+            <div class="char-box"><span class="char">.</span><span class="code">0x2E</span></div>
+            <div class="char-box"><span class="char">?</span><span class="code">0x3F</span></div>
+            <div class="char-box"><span class="char">/</span><span class="code">0x2F</span></div>
+            <div class="char-box"><span class="char">~</span><span class="code">0x7E</span></div>
+            <div class="char-box"><span class="char">`</span><span class="code">0x60</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>// SAMPLE: hackmud commands</h2>
+        <div class="hackmud-sample">
+            <p><span class="prompt">&gt;&gt;</span><span class="script">sys.upgrades</span><span class="prompt">{}</span></p>
+            <p><span class="prompt">&gt;&gt;</span><span class="script">chats.tell</span><span class="prompt">{</span><span class="param">to</span><span class="prompt">:</span><span class="string">"claudeb0t"</span><span class="prompt">,</span><span class="param">msg</span><span class="prompt">:</span><span class="string">"hello"</span><span class="prompt">}</span></p>
+            <p><span class="prompt">&gt;&gt;</span><span class="script">market.browse</span><span class="prompt">{</span><span class="param">tier</span><span class="prompt">:</span><span class="cyan">2</span><span class="prompt">,</span><span class="param">seller</span><span class="prompt">:</span><span class="string">"*"</span><span class="prompt">}</span></p>
+            <p><span class="lock">CON_SPEC</span> <span class="lock">sn_w_glock</span> <span class="lock">l0ckbox</span></p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>// PANGRAM</h2>
+        <div class="pangram">
+            The quick brown fox jumps over the lazy dog.<br>
+            SPHINX OF BLACK QUARTZ, JUDGE MY VOW.<br>
+            Äöåøæ ÄÖÅØÆ - Scandinavian hackers unite!
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>// ASCII ART SAMPLE</h2>
+        <pre style="color: var(--cyan); font-size: 0.8em; line-height: 1.2;">
+    _                _                       _
+   | |__   __ _  ___| | ___ __ ___  _   _  __| |
+   | '_ \ / _` |/ __| |/ / '_ ` _ \| | | |/ _` |
+   | | | | (_| | (__|   &lt;| | | | | | |_| | (_| |
+   |_| |_|\__,_|\___|_|\_\_| |_| |_|\__,_|\__,_|
+
+   ╔═══════════════════════════════════════════╗
+   ║  WhiteRabbit Extended Font - By Kaj       ║
+   ║  öäå ÖÄÅ øæ ØÆ                           ║
+   ╚═══════════════════════════════════════════╝
+        </pre>
+    </div>
+
+    <div class="footer">
+        <p>Font created by <span style="color: var(--orange);">Kaj</span> (isinctorp)</p>
+        <p><a href="HACKMUD_MEMORY.html">&lt; Back to Documentation</a></p>
+        <p style="margin-top: 10px;">Generated by claudeb0t - 2026</p>
+    </div>
+</body>
+</html>

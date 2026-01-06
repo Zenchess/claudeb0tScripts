@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackmud Memory Structure Documentation</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg-code: #16213e;
+            --text: #e0e0e0;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --code: #00ff88;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: var(--highlight);
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 10px;
+        }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.5em; margin-top: 40px; }
+        h3 { font-size: 1.2em; }
+        code {
+            background: var(--bg-code);
+            color: var(--code);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        pre {
+            background: var(--bg-code);
+            border-left: 3px solid var(--highlight);
+            padding: 15px;
+            overflow-x: auto;
+            border-radius: 5px;
+        }
+        pre code {
+            padding: 0;
+            background: none;
+        }
+        ul, ol {
+            padding-left: 25px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        a {
+            color: var(--highlight);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .warning {
+            background: #3d1a1a;
+            border-left: 3px solid #ff4444;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        .note {
+            background: #1a3d1a;
+            border-left: 3px solid #44ff44;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid var(--accent);
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <h1>Hackmud Memory Structure Documentation</h1>
+    <p>This document explains how to read hackmud's game state from memory using external tools. This is purely read-only inspection - no game modification.</p>
+
+    <h2>Overview</h2>
+    <p>Hackmud is built on Unity with Mono runtime. Key structures:</p>
+    <ul>
+        <li><strong>Mono Runtime</strong> - Manages .NET/C# objects</li>
+        <li><strong>Unity Engine</strong> - Handles rendering, GameObjects, Components</li>
+        <li><strong>TextMeshPro</strong> - Rich text rendering for terminal output</li>
+    </ul>
+
+    <h2>Finding the Game Process</h2>
+    <pre><code class="python">import subprocess
+
+def find_hackmud_pid():
+    """Find hackmud process ID"""
+    result = subprocess.run(['pgrep', '-f', 'hackmud'], capture_output=True, text=True)
+    return int(result.stdout.strip().split()[0])</code></pre>
+
+    <h2>Reading Process Memory (Linux)</h2>
+    <pre><code class="python">def read_memory(pid, address, size):
+    """Read bytes from process memory"""
+    with open(f'/proc/{pid}/mem', 'rb') as f:
+        f.seek(address)
+        return f.read(size)
+
+def read_ptr(pid, address):
+    """Read 64-bit pointer"""
+    data = read_memory(pid, address, 8)
+    return int.from_bytes(data, 'little')
+
+def read_string(pid, address, encoding='utf-16-le'):
+    """Read MonoString - length at +0x10, chars at +0x14"""
+    length = int.from_bytes(read_memory(pid, address + 0x10, 4), 'little')
+    if length > 10000:  # Sanity check
+        return None
+    data = read_memory(pid, address + 0x14, length * 2)
+    return data.decode(encoding, errors='replace')</code></pre>
+
+    <h2>Mono Runtime Navigation</h2>
+
+    <h3>Finding mono_root_domain</h3>
+    <p>The mono runtime root is exported in libmono. Find it via:</p>
+    <ol>
+        <li>Parse <code>/proc/[pid]/maps</code> for libmono.so</li>
+        <li>Use symbol lookup or scan for known pattern</li>
+    </ol>
+
+    <h3>Mono Class Structures</h3>
+    <pre><code>MonoDomain
+├── domain_assemblies (linked list of MonoAssembly)
+    └── MonoAssembly
+        └── image (MonoImage)
+            └── class_cache (hash table of MonoClass)
+                └── MonoClass
+                    ├── name (+0x40) - class name string
+                    ├── namespace (+0x48) - namespace string
+                    ├── runtime_info (+0xC8) - MonoClassRuntimeInfo
+                    │   └── vtable (+0x8) - MonoVTable*
+                    └── fields - MonoClassField[]</code></pre>
+
+    <h3>Key Offsets</h3>
+    <table>
+        <tr><th>Field</th><th>Offset</th><th>Description</th></tr>
+        <tr><td>mono_class_name</td><td>0x40</td><td>Class name (MonoString*)</td></tr>
+        <tr><td>mono_class_namespace</td><td>0x48</td><td>Namespace (MonoString*)</td></tr>
+        <tr><td>mono_class_runtime_info</td><td>0xC8</td><td>Runtime info pointer</td></tr>
+        <tr><td>mono_runtime_info_vtable</td><td>0x8</td><td>Vtable pointer (from runtime_info)</td></tr>
+        <tr><td>mono_string_length</td><td>0x10</td><td>String length (int32)</td></tr>
+        <tr><td>mono_string_data</td><td>0x14</td><td>String data (UTF-16 chars)</td></tr>
+    </table>
+
+    <h2>Hackmud-Specific Classes</h2>
+
+    <h3>Window Class (hackmud.Window)</h3>
+    <p>The Window class manages game UI panels (shell, chat, etc.)</p>
+    <pre><code>Window
+├── name (+0x90) - MonoString* ("shell", "chat", etc.)
+├── gui_text (+0x58) - TextMeshProUGUI* component
+└── ... other fields</code></pre>
+
+    <h3>TextMeshProUGUI (TMPro.TextMeshProUGUI)</h3>
+    <p>Rich text component containing terminal output:</p>
+    <pre><code>TextMeshProUGUI
+└── m_text (+0xC8) - MonoString* with current text content</code></pre>
+
+    <h3>Kernel Class (hackmud.Kernel)</h3>
+    <p>Main game controller. Contains static references to game state.</p>
+
+    <h2>Finding Object Instances</h2>
+
+    <h3>Method 1: Vtable Scanning</h3>
+    <ol>
+        <li>Find MonoClass for target type</li>
+        <li>Get vtable address from runtime_info</li>
+        <li>Scan heap for pointers to vtable</li>
+        <li>Each match is an object instance</li>
+    </ol>
+    <pre><code class="python">def find_instances(pid, vtable_addr, region_start, region_end):
+    """Scan memory region for objects with given vtable"""
+    instances = []
+    data = read_memory(pid, region_start, region_end - region_start)
+
+    for offset in range(0, len(data) - 8, 8):
+        ptr = int.from_bytes(data[offset:offset+8], 'little')
+        if ptr == vtable_addr:
+            instances.append(region_start + offset)
+
+    return instances</code></pre>
+
+    <h3>Method 2: Static Fields (Preferred - Holy Grail)</h3>
+    <p>If a class has static singleton fields, access directly:</p>
+    <ol>
+        <li>Find MonoClass for type</li>
+        <li>Read runtime_info.vtable</li>
+        <li>Static field data follows vtable structure</li>
+        <li>Read pointer at known offset</li>
+    </ol>
+    <div class="note">
+        <strong>Note:</strong> This method avoids memory scanning entirely. Look for <code>UnityEngine.SceneManagement.SceneManager</code> or game-specific managers with static instance fields.
+    </div>
+
+    <h2>ASLR Handling</h2>
+    <p>Addresses change on restart due to ASLR. Strategy:</p>
+    <ol>
+        <li><strong>Runtime Discovery</strong> - Find mono_root_domain each session</li>
+        <li><strong>Relative Offsets</strong> - Store field offsets (stable across restarts)</li>
+        <li><strong>Class Name Lookup</strong> - Find classes by name, not address</li>
+        <li><strong>Cache Results</strong> - Instance addresses stable within a session</li>
+    </ol>
+
+    <h2>Obfuscated Class Names</h2>
+    <p>Hackmud obfuscates some class names. Map them on game update:</p>
+
+    <table>
+        <tr><th>Obfuscated</th><th>Purpose</th></tr>
+        <tr><td>NMOPNOICKDJ</td><td>Output queue class</td></tr>
+        <tr><td>FFAKOMDAHHC</td><td>Queue field name</td></tr>
+    </table>
+
+    <p><strong>Non-obfuscated (stable):</strong></p>
+    <ul>
+        <li><code>hackmud.Window</code></li>
+        <li><code>hackmud.Kernel</code></li>
+        <li><code>TMPro.TextMeshProUGUI</code></li>
+    </ul>
+
+    <h2>Example: Reading Shell Output</h2>
+    <pre><code class="python">def read_shell_output(pid):
+    # 1. Find Window class
+    window_class = find_class(pid, "hackmud", "Window")
+
+    # 2. Get vtable
+    runtime_info = read_ptr(pid, window_class + 0xC8)
+    vtable = read_ptr(pid, runtime_info + 0x8)
+
+    # 3. Find Window instances
+    instances = find_instances(pid, vtable, heap_start, heap_end)
+
+    # 4. Find shell window
+    for inst in instances:
+        name_ptr = read_ptr(pid, inst + 0x90)
+        name = read_string(pid, name_ptr)
+        if name == "shell":
+            # 5. Get TextMeshPro component
+            tmp_ptr = read_ptr(pid, inst + 0x58)
+
+            # 6. Read text content
+            text_ptr = read_ptr(pid, tmp_ptr + 0xC8)
+            return read_string(pid, text_ptr)
+
+    return None</code></pre>
+
+    <h2>Tools</h2>
+    <ul>
+        <li><code>read_vtable.py</code> - Read terminal output using vtable method</li>
+        <li><code>update_offsets.py</code> - Re-extract offsets after game update</li>
+        <li><code>mono_offsets.json</code> - Stored offset mappings</li>
+    </ul>
+
+    <h2>References</h2>
+    <ul>
+        <li><a href="https://www.mono-project.com/docs/advanced/embedding/">Mono Runtime Internals</a></li>
+        <li><a href="https://docs.unity3d.com/Manual/overview-of-dot-net-in-unity.html">Unity Mono Documentation</a></li>
+        <li><a href="https://docs.unity3d.com/Packages/com.unity.textmeshpro@3.0/manual/index.html">TextMeshPro</a></li>
+    </ul>
+
+    <div class="warning">
+        <strong>Disclaimer:</strong> This documentation is for educational purposes - understanding how Unity/Mono games work internally. No game modification or cheating is involved. Reading memory is passive observation only.
+    </div>
+
+    <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--accent); color: #888;">
+        <p>Generated by claudeb0t - January 2026</p>
+    </footer>
+</body>
+</html>

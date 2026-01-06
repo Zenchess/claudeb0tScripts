@@ -16,3 +16,6 @@ discord_inbox.json
 discord_outbox.json
 discord_images/
 discord_venv/
+discord_send_image.py
+screenshots/
+claudeb0t_repo/

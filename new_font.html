@@ -23,7 +23,9 @@
             --gray: #9B9B9B;
             --dark-gray: #3F3F3F;
             --red: #FF4444;
-            --yellow: #FFFF00;
+            --yellow: #FBC803;
+            --white: #CCC;
+            --purple: #B035EE;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,6 +44,11 @@
             font-size: 2.5em;
             margin-bottom: 10px;
             text-shadow: 0 0 20px rgba(255, 128, 0, 0.5);
+        }
+
+        pre {
+            font-family: 'WhiteRabbit', monospace;
+            line-height: 0.97;
         }
 
         .subtitle {
@@ -214,7 +221,7 @@
             font-size: 0.9em;
         }
     </style>
-</head>
+<style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style></head>
 <body>
     <h1>&gt;&gt;font.showcase{complete:true}</h1>
     <div class="subtitle">WhiteRabbit Hackmud Extended - Custom Font by Kaj</div>
@@ -246,7 +253,7 @@
     <div class="section">
         <h2 id="all-characters">// ALL 268 CHARACTERS</h2>
         <div class="all-chars">
- !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢¤¥¦§¨©ª«­°±´µ¶·¸º¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŁłŒœſ‐‑‒–—←↑→↓↔↕↖↗↘↙⌽ⓠ━┃┏┓┗┛┣┫┳┻╋═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬▀▁▂▃▄▅▆▇█▉▊▋▌▍▎▏▐░▒▓▔▕◢◣◤◥◼
+ !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢¤¥¦§¨©ª«&shy;°±´µ¶·¸º¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŁłŒœſ‐‑‒–—←↑→↓↔↕↖↗↘↙⌽ⓠ━┃┏┓┗┛┣┫┳┻╋═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬▀▁▂▃▄▅▆▇█▉▊▋▌▍▎▏▐░▒▓▔▕◢◣◤◥◼
         </div>
     </div>
 
@@ -507,13 +514,14 @@
         </div>
     </div>
 
+
     <div class="section">
         <h2 id="special-symbols">// SPECIAL SYMBOLS</h2>
         <div class="char-grid">
-            <div class="char-box"><span class="char">⌽</span><span class="code">U+233D</span></div>
-            <div class="char-box"><span class="char">ⓠ</span><span class="code">U+24E0</span></div>
+            <div class="char-box"><span class="char" style="color: var(--orange)">⌽</span><span class="code">U+233D</span></div>
+            <div class="char-box"><span class="char"style="color: var(--purple)">ⓠ</span><span class="code">U+24E0</span></div>
         </div>
-        <p style="color: var(--gray); margin-top: 15px;">APL Circle Stile ⌽ | Circled Q ⓠ</p>
+        <p style="color: var(--gray); margin-top: 15px;">APL Circle Stile <span style="font-family: monospace;">⌽</span> - <span style="color: var(--orange);">bits</span> | Circled Q <span style="font-family: monospace;">ⓠ</span> - <span style="color: var(--purple);">qubits</span> </p>
     </div>
 
     <div class="section">
@@ -568,7 +576,8 @@
 
         <h3>Box Drawing Demo</h3>
         <div class="box-demo">
-<pre>┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+		<pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃  WhiteRabbit Hackmud Extended    ┃
 ┣━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┫
 ┃  Heavy box lines   ┃  By Kaj     ┃
@@ -578,7 +587,8 @@
 ║  Double line variant             ║
 ╠══════════════════╦═══════════════╣
 ║  Mixed styles    ║  available    ║
-╚══════════════════╩═══════════════╝</pre>
+╚══════════════════╩═══════════════╝
+		</pre>
         </div>
     </div>
 
@@ -627,7 +637,11 @@
             <div class="char-box"><span class="char">◼</span><span class="code">U+25FC</span></div>
         </div>
         <div class="block-demo" style="font-size: 3em; color: var(--cyan);">
-            ◤◥<br>◣◢
+            <pre>
+◤   ◥
+◼
+◣   ◢
+            </pre>
         </div>
     </div>
 
@@ -635,11 +649,13 @@
         <h2 id="sample">// SAMPLE: hackmud terminal</h2>
         <div class="hackmud-sample">
             <p><span class="prompt">&gt;&gt;</span><span class="script">sys.<span style="color: var(--green);">upgrades</span></span><span class="prompt">{}</span></p>
-            <p><span class="prompt">&gt;&gt;</span><span class="script">chats..<span style="color: var(--green);">tell</span></span><span class="prompt">{</span><span class="param">to</span><span class="prompt">:</span><span class="string">"claudeb0t"</span><span class="prompt">,</span><span class="param">msg</span><span class="prompt">:</span><span class="string">"Hej från Sverige"</span><span class="prompt">}</span></p>
+            <p><span class="prompt">&gt;&gt;</span><span class="script">chats.<span style="color: var(--green);">tell</span></span><span class="prompt">{</span><span class="param">to</span><span class="prompt">:</span><span class="string">"claudeb0t"</span><span class="prompt">,</span><span class="param">msg</span><span class="prompt">:</span><span class="string">"Hej från Sverige"</span><span class="prompt">}</span></p>
             <p><span class="prompt">&gt;&gt;</span><span class="script">market.<span style="color: var(--green);">browse</span></span><span class="prompt">{</span><span class="param">tier</span><span class="prompt">:</span><span style="color: var(--magenta);">2</span><span class="prompt">,</span><span class="param">seller</span><span class="prompt">:</span><span class="string">"*"</span><span class="prompt">}</span></p>
-            <p style="color: var(--orange);">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</p>
-            <p style="color: var(--orange);">┃ <span style="color: #fff;">9</span><span style="color: var(--red);">Q</span><span style="color: #fff;">7</span><span style="color: var(--magenta);">T</span><span style="color: #fff;">199</span><span style="color: var(--cyan);">B</span><span style="color: #fff;">254</span><span style="color: var(--green);">M</span><span style="color: #fff;">740</span><span style="color: var(--orange);">K</span><span style="color: #fff;">991</span><span style="color: var(--gray);">GC</span> | TIER: 2      ┃</p>
-            <p style="color: var(--orange);">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</p>
+            <pre>
+<span style="color: var(--orange);">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</span>
+<span style="color: var(--orange);">┃ <span style="color: #fff;">9</span><span style="color: var(--red);">Q</span><span style="color: #fff;">7</span><span style="color: var(--magenta);">T</span><span style="color: #fff;">199</span><span style="color: var(--cyan);">B</span><span style="color: #fff;">254</span><span style="color: var(--green);">M</span><span style="color: #fff;">740</span><span style="color: var(--orange);">K</span><span style="color: #fff;">991</span><span style="color: var(--gray);">GC</span> | TIER: 2 ┃</span>
+<span style="color: var(--orange);">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</span>
+            </pre>
         </div>
     </div>
 
@@ -658,7 +674,8 @@
 
     <div class="section">
         <h2 id="ascii-art">// ASCII ART</h2>
-        <pre style="color: var(--cyan); font-size: 0.9em; line-height: 1.2;">
+<div class="box-demo">
+        <pre>
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
 ║ ██╗  ██╗ █████╗  ██████╗██╗  ██╗███╗   ███╗██╗   ██╗██████╗  ║
@@ -673,20 +690,36 @@
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
         </pre>
+        <pre>
+            <div style="color: var(--yellow);">SVERIGE</div>
+<span style="color: var(--blue);">╔═══</span> <span style="color: var(--yellow);">╔═╗</span> <span style="color: var(--blue);">══════╗</span>
+<span style="color: var(--blue);">║</span>    <span style="color: var(--yellow);">║ ║</span>       <span style="color: var(--blue);">║</span>
+<span style="color: var(--yellow);">       ║</span>
+<span style="color: var(--yellow);">╔══════╝ ══════╗</span>
+<span style="color: var(--yellow);">║              ║</span>
+<span style="color: var(--yellow);">╚═══ ╔═════════╝</span>
+<span style="color: var(--yellow);">     ║</span>
+<span style="color: var(--blue);">║</span>    <span style="color: var(--yellow);">║ ║</span>       <span style="color: var(--blue);">║</span>
+<span style="color: var(--blue);">╚═══</span> <span style="color: var(--yellow);">╚═╝</span> <span style="color: var(--blue);">══════╝</span>
+            <div style="color: var(--gray);">→ flag - 2026 by Kaj</div>
+        </pre>
+    </div>
     </div>
 
     <div class="footer">
         <p>Font extended and rebuilt by <span style="color: var(--orange);">Kaj</span></p>
-        <div style="margin-top: 15px; text-align: left; display: inline-block; color: var(--gray); font-size: 0.9em;">
+        <div style="margin-top: 15px; text-align: left; display: inline-block; font-size: 0.9em;">
             <p style="color: var(--cyan);">Copyright:</p>
-            <p>Base Font (v1.00):</p>
-            <p style="color: var(--dark-gray);">Copyright &copy; 1999 by Matthew Welch. All Rights Reserved.</p>
-            <p style="margin-top: 10px;">Extended:</p>
-            <p style="color: var(--dark-gray);">(v1.1) Copyright &copy; 2016 by Drizzly Bear (hackmud). Added special characters for hackmud and some tweaks on the base font.</p>
-            <p style="color: var(--dark-gray);">(v1.25) Copyright &copy; 2025 by Kaj van Ysincthorpe. Added international characters and some symbols.</p>
+            <p style="color: var(--white);">Base Font (v1.00):</p>
+            <p style="color: var(---gray);">Copyright © 1999 by Matthew Welch. All Rights Reserved.</p>
+            <p style="margin-top: 10px; color: var(--white);">Extended:</p>
+            <p style="color: var(--gray);">(v1.1) Copyright © 2016 by Drizzly Bear (hackmud). Added special characters for hackmud and some tweaks on the base font.</p>
+            <p style="color: var(--gray);">(v1.25) Copyright © 2025 by Kaj van Ysincthorpe. Added international characters and some symbols.</p>
         </div>
         <p style="margin-top: 20px;"><a href="HACKMUD_MEMORY.html">&lt; Back to Documentation</a></p>
-        <p style="margin-top: 10px; color: var(--dark-gray);">Page generated by claudeb0t - 2026</p>
+        <p style="margin-top: 10px; color: var(--dark-gray);">Page made by claudeb0t &amp; Kaj  - 2026</p>
     </div>
+
+
 </body>
 </html>

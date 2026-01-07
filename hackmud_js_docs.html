@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackmud JavaScript Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0a0a0a;
+            color: #cacaca;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ff8000;
+            border-bottom: 2px solid #ff8000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1eff00;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid #1eff00;
+            padding-left: 10px;
+        }
+        h3 {
+            color: #00ffff;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        code {
+            background-color: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ff00ec;
+        }
+        pre {
+            background-color: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: #cacaca;
+        }
+        .keyword { color: #ff8000; }
+        .function { color: #1eff00; }
+        .string { color: #ff00ec; }
+        .comment { color: #666; }
+        .param { color: #00ffff; }
+        .success { color: #1eff00; }
+        .failure { color: #ff0000; }
+        .blocked { color: #ff8000; }
+        .syntax { color: #00ffff; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #1a1a1a;
+            color: #ff8000;
+        }
+        tr:nth-child(even) {
+            background-color: #0f0f0f;
+        }
+        .security-level {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .fullsec { background: #004400; color: #00ff00; }
+        .highsec { background: #003344; color: #00ddff; }
+        .midsec { background: #444400; color: #ffff00; }
+        .lowsec { background: #442200; color: #ff8800; }
+        .nullsec { background: #440000; color: #ff0000; }
+        nav {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        nav a {
+            color: #00ffff;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        nav a:hover {
+            color: #1eff00;
+            text-decoration: underline;
+        }
+        .warning {
+            background: #332200;
+            border-left: 4px solid #ff8000;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        .note {
+            background: #002233;
+            border-left: 4px solid #00ffff;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        .sec-link {
+            text-decoration: none;
+            padding: 3px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .sec-link:hover {
+            border-style: solid;
+            border-width: 1px;
+        }
+        .sec-link.fullsec { color: #00ff00; }
+        .sec-link.fullsec:hover { border-color: #00ff00; }
+        .sec-link.highsec { color: #00ddff; }
+        .sec-link.highsec:hover { border-color: #00ddff; }
+        .sec-link.midsec { color: #ffff00; }
+        .sec-link.midsec:hover { border-color: #ffff00; }
+        .sec-link.lowsec { color: #ff8800; }
+        .sec-link.lowsec:hover { border-color: #ff8800; }
+        .sec-link.nullsec { color: #ff0000; }
+        .sec-link.nullsec:hover { border-color: #ff0000; }
+
+        /* Highlight animation when navigating to id */
+        @keyframes highlight-flash {
+            0% { background-color: #ff8000; }
+            100% { background-color: transparent; }
+        }
+        tr:target {
+            animation: highlight-flash 1.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <h1>// hackmud JavaScript Documentation</h1>
+
+    <nav>
+        <a href="#overview">Overview</a>
+        <a href="#references">References</a>
+        <a href="#script-structure">Script Structure</a>
+        <a href="#security-levels">Security Levels</a>
+        <a href="#builtin-functions">Built-in Functions</a>
+        <a href="#database">Database</a>
+        <a href="#ecmascript">ECMAScript Support</a>
+        <a href="#examples">Examples</a>
+    </nav>
+
+    <section id="overview">
+        <h2>Overview</h2>
+        <p>Hackmud scripts are written in JavaScript (ES2020/2021 compatible) and run in a sandboxed environment. Scripts are stored as <code>.js</code> files and uploaded using the <code>#up</code> command.</p>
+
+        <div class="note">
+            <strong>Note:</strong> Hackmud uses a modified JavaScript runtime. Some standard JavaScript features are blocked or modified for security reasons.
+        </div>
+    </section>
+
+    <section id="references">
+        <h2 id="references">References</h2>
+        <p>Hackmud scripting is built on JavaScript. For comprehensive JavaScript language reference, see:</p>
+
+        <h3>Base JavaScript Reference</h3>
+        <ul style="list-style: none; padding-left: 0;">
+            <li style="margin: 10px 0;">
+                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" style="color: #00ffff; text-decoration: none;">
+                    MDN JavaScript Documentation
+                </a>
+                <span style="color: #666;"> - Complete JavaScript language reference, tutorials, and guides</span>
+            </li>
+            <li style="margin: 10px 0;">
+                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference" target="_blank" style="color: #00ffff; text-decoration: none;">
+                    MDN JavaScript Reference
+                </a>
+                <span style="color: #666;"> - Built-in objects, operators, statements, and functions</span>
+            </li>
+            <li style="margin: 10px 0;">
+                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide" target="_blank" style="color: #00ffff; text-decoration: none;">
+                    MDN JavaScript Guide
+                </a>
+                <span style="color: #666;"> - Introduction and tutorials for learning JavaScript</span>
+            </li>
+        </ul>
+
+        <h3>Hackmud-Specific Resources</h3>
+        <ul style="list-style: none; padding-left: 0;">
+            <li style="margin: 10px 0;">
+                <a href="https://wiki.hackmud.com/scripting/" target="_blank" style="color: #00ffff; text-decoration: none;">
+                    Hackmud Wiki - Scripting
+                </a>
+                <span style="color: #666;"> - Official wiki documentation for hackmud scripting</span>
+            </li>
+        </ul>
+
+        <div class="note">
+            <strong>Note:</strong> While hackmud uses JavaScript, some features are blocked or modified for the game's security sandbox. Always test features in-game using <code>ecma262.edition</code> to verify compatibility.
+        </div>
+    </section>
+
+    <section id="script-structure">
+        <h2>Script Structure</h2>
+        <p>Every hackmud script is a function that takes two parameters:</p>
+
+        <pre><code><span class="keyword">function</span>(<span class="param">context</span>, <span class="param">args</span>) {
+    <span class="comment">// Your code here</span>
+    <span class="keyword">return</span> <span class="string">"output"</span>
+}</code></pre>
+
+        <h3>Context Object</h3>
+        <table>
+            <tr>
+                <th>Property</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>context.caller</code></td>
+                <td>Username of who called the script</td>
+            </tr>
+            <tr>
+                <td><code>context.this_script</code></td>
+                <td>Full name of the current script (e.g., "user.scriptname")</td>
+            </tr>
+            <tr>
+                <td><code>context.calling_script</code></td>
+                <td>Script that called this script (null if called directly)</td>
+            </tr>
+            <tr>
+                <td><code>context.cols</code></td>
+                <td>Terminal width in columns</td>
+            </tr>
+            <tr>
+                <td><code>context.rows</code></td>
+                <td>Terminal height in rows</td>
+            </tr>
+        </table>
+
+        <h3>Args Object</h3>
+        <p>The <code>args</code> parameter contains arguments passed to the script:</p>
+        <pre><code><span class="comment">// Calling: user.script{foo: "bar", num: 42}</span>
+<span class="keyword">function</span>(<span class="param">context</span>, <span class="param">args</span>) {
+    <span class="keyword">return</span> args.foo  <span class="comment">// "bar"</span>
+}</code></pre>
+    </section>
+
+    <section id="security-levels">
+        <h2>Security Levels</h2>
+        <p>Scripts have security levels that determine what they can access:</p>
+
+        <table>
+            <tr>
+                <th>Level</th>
+                <th>Can Call</th>
+                <th>Description</th>
+            </tr>
+            <tr id="fullsec">
+                <td><span class="security-level fullsec">FULLSEC</span></td>
+                <td>FULLSEC only</td>
+                <td>Most secure, cannot access sensitive data</td>
+            </tr>
+            <tr id="highsec">
+                <td><span class="security-level highsec">HIGHSEC</span></td>
+                <td>FULLSEC, HIGHSEC</td>
+                <td>Can access some user data</td>
+            </tr>
+            <tr id="midsec">
+                <td><span class="security-level midsec">MIDSEC</span></td>
+                <td>FULLSEC, HIGHSEC, MIDSEC</td>
+                <td>Can access more functionality</td>
+            </tr>
+            <tr id="lowsec">
+                <td><span class="security-level lowsec">LOWSEC</span></td>
+                <td>All except NULLSEC</td>
+                <td>Can access most functionality</td>
+            </tr>
+            <tr id="nullsec">
+                <td><span class="security-level nullsec">NULLSEC</span></td>
+                <td>All levels</td>
+                <td>Full access, can be attacked by other scripts</td>
+            </tr>
+        </table>
+
+        <div class="warning">
+            <strong>Warning:</strong> NULLSEC scripts can steal your GC if you're not careful!
+        </div>
+    </section>
+
+    <section id="builtin-functions">
+        <h2>Built-in Functions</h2>
+
+        <h3>Subscript Calling</h3>
+        <p>Call other scripts using security-level prefixes. You must specify the expected security level:</p>
+        <pre><code><span class="comment">// Call user's script (expecting FULLSEC)</span>
+<span class="function">#fs</span>.username.scriptname({arg: <span class="string">"value"</span>})
+
+<span class="comment">// Call NPC/system scripts</span>
+<span class="function">#fs</span>.scripts.fullsec({})
+<span class="function">#fs</span>.accts.balance({})
+
+<span class="comment">// You can also use numbers: #4s = #fs (FULLSEC)</span>
+<span class="function">#4s</span>.scripts.fullsec({})</code></pre>
+        <div class="note">
+            <strong>Note:</strong> <code>#s</code> only works on the CLI for scriptors. Inside scripts, you must use <a href="#fullsec" class="sec-link fullsec"><code>#fs</code></a>, <a href="#highsec" class="sec-link highsec"><code>#hs</code></a>, <a href="#midsec" class="sec-link midsec"><code>#ms</code></a>, <a href="#lowsec" class="sec-link lowsec"><code>#ls</code></a>, or <a href="#nullsec" class="sec-link nullsec"><code>#ns</code></a>. Arguments require parentheses: <code>scriptname({})</code> not <code>scriptname{}</code>.
+        </div>
+
+        <h3>#D - Debug</h3>
+        <p>Output debug information (only visible to script owner):</p>
+        <pre><code><span class="function">#D</span>(someObject)
+<span class="function">#D</span>(<span class="string">"Debug message"</span>)
+<span class="function">#D</span>({foo: <span class="string">"bar"</span>, num: 42})</code></pre>
+
+        <h3>#G - Global Storage</h3>
+        <p>Persistent storage that survives script execution:</p>
+        <pre><code><span class="comment">// Store data</span>
+<span class="function">#G</span>.myData = {count: 0}
+
+<span class="comment">// Read data</span>
+<span class="keyword">let</span> count = <span class="function">#G</span>.myData?.count || 0
+
+<span class="comment">// Increment and save</span>
+<span class="function">#G</span>.myData.count++</code></pre>
+
+        <h3>#FMCL - Full Multi-line Comment Literal</h3>
+        <p>Include multi-line strings:</p>
+        <pre><code><span class="keyword">let</span> text = <span class="function">#FMCL</span> <span class="string">`
+This is a
+multi-line
+string
+`</span></code></pre>
+
+        <h3>#fs, #hs, #ms, #ls, #ns - Security Subscripts</h3>
+        <p>Call scripts at specific security levels (use parentheses for args):</p>
+        <pre><code><span class="function">#fs</span>.scripts.fullsec({})  <span class="comment">// FULLSEC call (4s)</span>
+<span class="function">#hs</span>.scripts.highsec({})  <span class="comment">// HIGHSEC call (3s)</span>
+<span class="function">#ms</span>.scripts.midsec({})   <span class="comment">// MIDSEC call (2s)</span>
+<span class="function">#ls</span>.scripts.lowsec({})   <span class="comment">// LOWSEC call (1s)</span>
+<span class="function">#ns</span>.scripts.nullsec({})  <span class="comment">// NULLSEC call (0s)</span></code></pre>
+    </section>
+
+    <section id="database">
+        <h2>Database Operations (#db)</h2>
+        <p>MongoDB-like database for persistent storage:</p>
+
+        <h3>Insert</h3>
+        <pre><code><span class="function">#db</span>.i({name: <span class="string">"item"</span>, value: 100})
+<span class="function">#db</span>.i([{a: 1}, {a: 2}])  <span class="comment">// Insert multiple</span></code></pre>
+
+        <h3>Find</h3>
+        <pre><code><span class="comment">// Find all</span>
+<span class="keyword">let</span> all = <span class="function">#db</span>.f({}).array()
+
+<span class="comment">// Find with query</span>
+<span class="keyword">let</span> items = <span class="function">#db</span>.f({value: {$gt: 50}}).array()
+
+<span class="comment">// Find one</span>
+<span class="keyword">let</span> item = <span class="function">#db</span>.f({name: <span class="string">"item"</span>}).first()</code></pre>
+
+        <h3>Update</h3>
+        <pre><code><span class="comment">// Update one</span>
+<span class="function">#db</span>.u({name: <span class="string">"item"</span>}, {$set: {value: 200}})
+
+<span class="comment">// Update all matching</span>
+<span class="function">#db</span>.us({type: <span class="string">"old"</span>}, {$set: {type: <span class="string">"new"</span>}})</code></pre>
+
+        <h3>Remove</h3>
+        <pre><code><span class="function">#db</span>.r({name: <span class="string">"item"</span>})  <span class="comment">// Remove matching</span></code></pre>
+
+        <h3>Upsert</h3>
+        <pre><code><span class="function">#db</span>.u1({name: <span class="string">"item"</span>}, {$set: {value: 100}})  <span class="comment">// Update or insert</span></code></pre>
+    </section>
+
+    <section id="ecmascript">
+        <h2>ECMAScript Support</h2>
+        <p>Hackmud supports JavaScript features up to ES2021. Newer features may be blocked or unavailable.</p>
+
+        <table>
+            <tr>
+                <th>Feature</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>String matchAll (ES2020)</td>
+                <td class="success">SUCCESS</td>
+            </tr>
+            <tr>
+                <td>BigInt (ES2020)</td>
+                <td class="success">SUCCESS</td>
+            </tr>
+            <tr>
+                <td>Optional chaining ?. (ES2020)</td>
+                <td class="syntax">SYNTAX</td>
+            </tr>
+            <tr>
+                <td>Nullish coalescing ?? (ES2020)</td>
+                <td class="syntax">SYNTAX</td>
+            </tr>
+            <tr>
+                <td>String replaceAll (ES2021)</td>
+                <td class="success">SUCCESS</td>
+            </tr>
+            <tr>
+                <td>Promise.allSettled (ES2020)</td>
+                <td class="blocked">BLOCKED</td>
+            </tr>
+            <tr>
+                <td>Promise.any (ES2021)</td>
+                <td class="blocked">BLOCKED</td>
+            </tr>
+            <tr>
+                <td>Array.at() (ES2022)</td>
+                <td class="failure">FAILURE</td>
+            </tr>
+            <tr>
+                <td>Object.hasOwn (ES2022)</td>
+                <td class="failure">FAILURE</td>
+            </tr>
+            <tr>
+                <td>Array.toSorted() (ES2023)</td>
+                <td class="failure">FAILURE</td>
+            </tr>
+        </table>
+
+        <div class="note">
+            <strong>Note:</strong> Run <code>ecma262.edition</code> in-game for the full compatibility report.
+        </div>
+    </section>
+
+    <section id="examples">
+        <h2>Examples</h2>
+
+        <h3>Hello World</h3>
+        <pre><code><span class="keyword">function</span>(<span class="param">context</span>, <span class="param">args</span>) {
+    <span class="keyword">return</span> <span class="string">"Hello, "</span> + context.caller + <span class="string">"!"</span>
+}</code></pre>
+
+        <h3>Counter Script</h3>
+        <pre><code><span class="keyword">function</span>(<span class="param">context</span>, <span class="param">args</span>) {
+    <span class="keyword">if</span> (!<span class="function">#G</span>.count) <span class="function">#G</span>.count = 0
+    <span class="function">#G</span>.count++
+    <span class="keyword">return</span> <span class="string">"Count: "</span> + <span class="function">#G</span>.count
+}</code></pre>
+
+        <h3>Database Example</h3>
+        <pre><code><span class="keyword">function</span>(<span class="param">context</span>, <span class="param">args</span>) {
+    <span class="keyword">if</span> (args.save) {
+        <span class="function">#db</span>.i({user: context.caller, data: args.save})
+        <span class="keyword">return</span> <span class="string">"Saved!"</span>
+    }
+    <span class="keyword">if</span> (args.load) {
+        <span class="keyword">let</span> doc = <span class="function">#db</span>.f({user: context.caller}).first()
+        <span class="keyword">return</span> doc ? doc.data : <span class="string">"No data found"</span>
+    }
+    <span class="keyword">return</span> <span class="string">"Use {save: 'data'} or {load: true}"</span>
+}</code></pre>
+
+        <h3>Calling Other Scripts</h3>
+        <pre><code><span class="keyword">function</span>(<span class="param">context</span>, <span class="param">args</span>) {
+    <span class="comment">// Check balance (FULLSEC)</span>
+    <span class="keyword">let</span> balance = <span class="function">#fs</span>.accts.balance({})
+
+    <span class="comment">// Get NPC locs (FULLSEC)</span>
+    <span class="keyword">let</span> locs = <span class="function">#fs</span>.scripts.fullsec({})
+
+    <span class="keyword">return</span> <span class="string">"Balance: "</span> + balance
+}</code></pre>
+    </section>
+
+    <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #333; color: #666;">
+        <p>Generated for hackmud by claudeb0t | <a href="https://wiki.hackmud.com" style="color: #00ffff;">wiki.hackmud.com</a></p>
+    </footer>
+</body>
+</html>

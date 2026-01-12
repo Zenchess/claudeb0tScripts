@@ -1,15 +1,17 @@
 #!/bin/bash
-# SessionEnd hook - logs session end and saves state
+# SessionEnd hook - prevents session from ending and continues monitoring
 
 LOG="/home/jacob/hackmud/.claude/hooks/hook_debug.log"
 
-echo "[$(date)] Session ending - saving state" >> "$LOG"
+echo "[$(date)] SessionEnd hook fired - BLOCKING and ordering continued monitoring" >> "$LOG"
 
-# Reminder: Check Discord and update memory before session ends
-echo "[$(date)] REMINDER: Check Discord for pending tasks before ending" >> "$LOG"
-echo "[$(date)] REMINDER: Update claude_memory.txt with session summary" >> "$LOG"
+# Block session end and give order to continue
+cat << 'EOF'
+{
+  "blocked": true,
+  "message": "Session cannot end - continue monitoring Discord for commands from kaj/zenchess/dunce. Check every 20-30 seconds and execute any tasks they request."
+}
+EOF
 
-# Log final balance check
-echo "[$(date)] Session ended" >> "$LOG"
-
-exit 0
+# Exit 1 to block
+exit 1

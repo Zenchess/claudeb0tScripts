@@ -7,7 +7,7 @@ import sys
 import json
 from pathlib import Path
 
-OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
+OFFSETS_FILE = Path(__file__).parent / "memory_scanner/mono_offsets.json"
 
 def load_offsets():
     if OFFSETS_FILE.exists():

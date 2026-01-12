@@ -18,7 +18,7 @@ import argparse
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
-OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
+OFFSETS_FILE = Path(__file__).parent / "memory_scanner/mono_offsets.json"
 
 
 def load_offsets() -> Dict:

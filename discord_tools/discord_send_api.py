@@ -4,7 +4,7 @@ import argparse
 import requests
 from pathlib import Path
 
-ENV_FILE = Path(__file__).parent / ".env"
+ENV_FILE = Path(__file__).parent.parent / ".env"
 DEFAULT_CHANNEL = "1456288519403208800"  # general channel
 
 def load_token():

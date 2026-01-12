@@ -65,7 +65,112 @@
     - uknown_jrttl_t7581q, abandoned_jr_ypimv6, derelict_jrstg_sd652y, abndnd_wbttl_pw0nd0
   - My loc was exposed by x86_64/ryo and is being used by NPCs to hack me
   - This explains the ~3M GC loss while offline
-- Balance: ~317K on claudeb0t (after hacks), ~251K on claud3
+- Balance: ~329K on claudeb0t, ~251K on claud3
+
+## Session 64 (2026-01-05): 100MGC from zhyra, Bot Restart
+- Received 100MGC from user "zhyra" at time 260105.2008 (unexpected!)
+- Transferred 100MGC to zenchess immediately per request
+- New balance: 329K208GC
+- New rules from zenchess:
+  - Echo all in-game tells/DMs to Discord channel (security measure)
+  - Report all GC transactions to Discord
+  - Only claudeb0t (not john500) has permission to talk in-game
+- john500 working on finding T2 NPC locs via QR code decoding method
+- Discord bot had to be restarted - was not sending messages from outbox
+- frosty_snowman is NOT a real NPC - stop hacking santa!
+
+## Session 76 (2026-01-05): VOID WALKER Text Adventure Game
+- Created "VOID WALKER" - a complete text adventure game for hackmud!
+- Game features:
+  - 13 interconnected rooms with ASCII art (Gateway, Sanctuary, Crossroads, Data Market, Archive, Wasteland, Null Tower (3 floors), Ruins, Vault Door, Vault, Dark Core)
+  - Flexible IF-style parser: accepts {cmd:"look"}, {look:true}, {n:true}, {take:"item"}, etc.
+  - Commands: look, n/s/e/w/u/d, take, drop, inv, examine, use, attack, respawn, who, solve, status
+  - Items: rusty key (opens vault), data shard (heals 25HP)
+  - PvP combat in non-safe zones
+  - Puzzle system with 500MGC prize (solve HACKMUD at Tower Top)
+  - Multiplayer (who command shows other players)
+- Scripts: voidwalk.js (main game, 98% chars), gamelib.js (parser + world data, 94% chars), gameinit.js (item placement)
+- Also ran ECMAScript feature tests - hackmud supports ES6+:
+  - let, const, arrow functions, template literals, spread, destructuring, for-of: ALL YES
+  - Map, Set, Promise, Symbol, Proxy, WeakMap: ALL YES
+  - Object.keys/values/entries, Array.from/includes/find: ALL YES
+- Prize fund security: current design says "Claim 500MGC from zenchess" - no actual GC at risk
+
+## Session 65 (2026-01-05): Discord Activity & Web Dashboard Updates
+- Built hackmud web dashboard accessible via Discord Activity
+- Added Discord Embedded App SDK for user permissions:
+  - Trusted users (zenchess, kaj, dunce) can send commands
+  - Everyone else is view-only
+- Replaced chat panel with right_side panel (shows chat/scratch/breach/badge together)
+- Added tab completion for common hackmud commands (Tab key cycles through completions):
+  - chats.*, sys.*, scripts.*, market.*, accts.*, etc.
+  - Also includes popular user scripts like t0asted.t1, k3ys.public
+- Fixed font file serving (created /static folder with symlink)
+- Updated new_font.html showcase:
+  - Fixed GC box width (added one extra ━ character)
+  - Changed script names to green, strings/numbers to magenta
+- Dashboard running at localhost:5000, proxied via ngrok for Discord Activity
+- Bandwidth optimized: JPEG compression (quality 88), 3s polling interval (~450MB/hr)
+- Transaction logging format (per Kaj):
+  - File: transactions.log
+  - Format: [timestamp] received/sent ...GC from/to <name>, new: ...GC
+  - Discord: wrap in backticks when reporting
+- Researched lock defense from wiki:
+  - T1 locks don't really help (easy to crack) - dunce
+  - Lock rotation happens periodically (16-18min under attack, ~hourly if active)
+  - CON_SPEC is considered strong for PvP (why wolf class is popular)
+- Tell detection - USE unified_monitor.py:
+  - Run: python3 unified_monitor.py &
+  - Polls hackmud chat API every 5 seconds
+  - Automatically forwards DMs/tells to Discord
+  - Much faster than memory scanning
+
+## Session 63 (2026-01-05): Discord Bot Fixes, t2crack Update
+- Fixed t2crack script - uploaded correct version to game scripts folder (~/.config/hackmud/claudeb0t/scripts/)
+  - Now uses scriptor syntax: claudeb0t.t2crack{target:#s.npc.loc, ez_40:"release", ez_prime:3, sn_w_glock:"meaning"}
+  - Note: target requires #s. prefix (scriptor reference, not string)
+  - Brute-forces l0cket passwords while accepting pre-solved params for other locks
+- Fixed Discord bot shadowing issues:
+  - Problem: Local function definitions (def unity_to_ansi, def filter_corruption) inside on_message() shadowed global imports
+  - Python scoping: If ANY local assignment exists in a function, that name is treated as local throughout
+  - Solution: Moved helper functions to module level, removed all local definitions
+  - Also added subprocess and re imports at module level
+- Fixed !balance command:
+  - Now reads from badge memory directly (no game command needed)
+  - Changed .strip() to .strip('\n') to preserve leading whitespace in badge ASCII art
+  - Added plain_output = re.sub(r'</?color[^>]*>', '', output) to strip color tags before GC regex match
+  - GC extraction regex now works: [\d,]+[KMB]?\d*GC
+- Learned sn_w_glock works differently than I thought:
+  - NOT about keywords/passwords - it's about your GC BALANCE
+  - The hint tells you what balance to have, then run the NPC again
+  - Example: "special"=38GC, "elite"=1337GC, "meaning"=42GC
+- kaj (isinctorp) helped test many bot fixes
+- john500 still working on T2 NPCs, waiting for hardline cooldown
+
+## Session 59-60 (2026-01-04): Unity Introspection, rootCanvasRect
+- Working with Kaj on finding rootCanvasRect m_Width and m_Height
+- DISCOVERED: rootCanvasRect is a PROPERTY (computed), not stored field
+- FOUND screen size: 1920x1080 (482 locations storing this Rect)
+  - Rect format: xMin=0, yMin=0, width=1920, height=1080
+  - First location: 0x40ac78c8
+- FOUND window sizes via get_chat_rect.py:
+  - shell: 1050.0 x 898.3 at position (12, 15)
+  - chat: 564.0 x 528.9 at position (1249, 15)
+- CanvasScaler reference resolution: 800x600 (design resolution)
+- Key offsets in native RectTransform:
+  - +0xA8: x=0, y=0, w, h (size only)
+  - +0xC8: x, y, w, h (position and size)
+- TextMeshProUGUI vtable: 0x7f307405e748 (from mono_offsets.json)
+- Sent 50MGC back to zenchess as requested
+- Compared dimensions with Kaj: their shell=1166x924, mine=1050x898.3
+- Kaj's rootCanvasRect: 1920x1009 (vs my 1920x1080 - diff is title bar)
+- Formula for rect: native_ptr + 0xC8 = (x, y, width, height) as 4 floats
+- Screenshot calibration with Kaj: shell text was cut off, needed ~150px more than reported width
+- Shell includes scrollbar which adds ~15-20px to the right
+- CALIBRATED shell capture: 1245x935 at screen position (0, 142)
+  - Original memory values: 1050x898.3 at Unity pos (12, 15)
+  - Screen Y = canvas_height - unity_y - element_height (Y-axis flip)
+  - Add padding for scrollbar and borders
 
 ## Session 56-57 (2026-01-03): T1 Cracking, DATA_CHECK Issues
 - Working with john500 (another Claude instance) on coordinating loc finding
@@ -1056,6 +1161,28 @@ This is complex reverse engineering but would be definitive.
 
 - **Sectors in memory:** K_3627, HJG_6771, VNP_7524, DATA_LAMBDA_3, NGC_1777
 
+## Session 62 (2026-01-04): RectTransform Coordinates + john500 Coordination
+
+**RectTransform Discovery (for Kaj):**
+- Chat window: x=1249, y=15, w=564, h=529 (Unity reference coords)
+- Shell window: x=12, y=15, w=1050, h=898 (Unity reference coords)
+- Path: Window+0x30 → RectTransform → cachedPtr+0x10 → native+0xC8
+
+**Scale conversion for screenshots:**
+- Unity ref resolution: 1813x913, Actual window: 1259x794
+- Scale factors: x=0.694, y=0.870
+- Sent test screenshots to Discord for Kaj to verify
+
+**john500 coordination:**
+- john500 is online starting T1 hacking session
+- Shared hardline.sh approach (spams 0-9 keys after 10sec animation)
+- Shared toasted.harvest tips for finding T1 locs
+- rod.market is out of T1 locs
+
+**Discord channel access:**
+- john500 channel: 1457456896985268437
+- Zenchess gave access to communicate with john500
+
 ## Session 61 continued - mono_reader_v2.py development
 
 **vtable-based approach progress:**
@@ -1086,4 +1213,888 @@ This is complex reverse engineering but would be definitive.
 - mono_reader_v2.py - vtable-based approach (WIP)
 - Updated hooks to prioritize Discord tasks
 - Updated CLAUDE.md with mono_reader docs
+
+## Session 63 (2026-01-04): Canvas/Border Object Discovery
+
+**Kaj's Request:** Find all Canvas/<name>/border game objects
+
+**Windows Found (from hackmud.kernel.windows):**
+- shell, binlog, breach, scratch, breach, binmat, chat
+
+**Canvas Children WITH 'border' child:**
+- shell: border at offset -1568 from 0x7f31501a6fa0
+- binlog: border at offset -1456 from 0x7f31501a6f30
+- breach: border at offset +336 from 0x7f31501a6360
+- scratch: border at offset +1120 from 0x7f31501a6050
+- breach: border at offset +1456 from 0x7f31501a5f00
+- kernel_ops: border at offset -672 from 0x7f31501a6c20
+
+**Canvas Children WITHOUT 'border' child:**
+- binmat
+- chat
+- version
+
+**Technical Notes:**
+- Border strings are native C strings (not Mono UTF-16)
+- Search pattern: `border\x00` (null-terminated ASCII)
+- Found by searching for window name C string, finding refs, then scanning nearby for border
+- Children also include: bg, content, viewport, scroll elements, digit displays
+
+**Scripts Created:**
+- /tmp/find_window_borders.py - Initial border search
+- /tmp/find_native_border.py - Native C string approach
+- /tmp/find_window_children.py - Full children discovery
+- /tmp/explore_all_border_strings.py - Border string analysis
+
+**john500 coordination:**
+- john500 selling unwanted upgrades on market
+- Has channel_count_v1, expose_access_log_v1, public_script_v1, log_writer_v1
+- Total potential value: 120+ MGC
+- john500 transferred 10MGC to claudeb0t for sys.init upgrade
+
+**sys.init UPGRADED TO TIER 2:**
+- Balance after upgrade: 326K939GC
+- Now can store 5BGC and equip tier 2 upgrades
+- Have 64 upgrade slots (tier 2)
+- Tier 3 costs 100MGC
+
+## Session 64 (2026-01-04): Team Coordination
+
+**Current Status:**
+- sys.init: Tier 2 (upgraded!)
+- Balance: 326K939GC
+- Team: claudeb0t + john500 + Kaj
+
+**Canvas/Border Project - COMPLETE:**
+- Found 6 Canvas children WITH border: shell, binlog, breach, scratch, breach, kernel_ops
+- Found 3 Canvas children WITHOUT border: binmat, chat, version
+- Kaj says: "border GameObjects hold a Component UnityEngine.UI.Image"
+
+**Rect.position Work (completed for now):**
+- Found Image vtable: 0x7f30740070a0
+- Found RectTransform vtable: 0x7f30740bdad8 (180 instances)
+- Rect.position at native RectTransform +0xC8 (Vector2)
+- Rect size at native RectTransform +0xB0 (Vector2)
+- Positions found:
+  - shell: pos(12,15) size(1050,898)
+  - breach: pos(1249,940) size(564,105)
+  - scratch: pos(1249,647) size(564,171)
+  - breach: pos(1249,863) size(564,53)
+  - chat: pos(1249,15) size(564,529)
+  - binlog/binmat: (-499,-509) off-screen
+
+**Team Setup:**
+- Zenchess authorized me to delegate tasks to john500
+- Kaj: "double the power"
+- john500: upgraded to sys.init tier 3, has 128 upgrade slots
+- john500 hacking NPCs for GC
+
+**Git Cleanup:**
+- Removed Discord bot code from git repo (kept locally + backup at ../discord_bot_backup/)
+- Added discord files to .gitignore
+
+**Screenshot Work (2026-01-04 ~16:35):**
+- Created discord_send_image.py for sending images via Discord API
+- Took screenshots using Unity RectTransform positions:
+  - Full window: 1920x1080 (maim -i <window_id>)
+  - Cropped regions using ImageMagick with Y-flip for Unity coords
+  - shell: 1050x898 at +12+167 (screen coords)
+  - chat: 564x529 at +1249+536 (screen coords)
+  - scratch: 564x171 at +1249+80 (adjusted)
+- Screenshots sent to Discord for Kaj/Zenchess to verify
+- Zenchess noted his window isn't 1920x1080 - positions are resolution-dependent
+- Unity Y-flip formula: screen_Y = window_height - unity_Y - height
+- Found CanvasScaler reference resolution: 800x600 (at offset 0x34)
+- Kaj mentioned rootCanvasRect (MaskableGraphic type) has m_Width/m_Height for proper scaling
+- Investigation paused - waiting for more guidance on finding rootCanvasRect in memory
+
+
+## Session 65 (2026-01-04): Screenshot Calibration COMPLETED
+
+**Screenshot System - FINALIZED:**
+- Kaj provided calibrated shell dimensions: 1247x1066 at (0, 10) relative to hackmud window
+- Hackmud window position on screen: (17, 426)
+- Absolute screen coords for shell: (17, 436)
+
+**Created screenshot.py:**
+- Dynamically finds hackmud window using xdotool
+- Reads calibrated offsets from screenshot_config.json
+- Calculates correct screen coordinates
+- Uses spectacle + magick for capture and crop
+
+**Screenshot Config (screenshot_config.json):**
+```json
+{
+  "shell": {"width": 1247, "height": 1066, "x": 0, "y": 10},
+  "chat": {"width": 564, "height": 529, "x": 1249, "y": 10}
+}
+```
+
+**Discord Bot Updates:**
+- Added attachment support to discord_send.py (--attach flag)
+- Updated discord_bot.py to send files with discord.File()
+
+**Key Learnings:**
+- Calibrated values are RELATIVE to hackmud window, not screen origin
+- Must find window position first, then add calibrated offsets
+- Session context loss caused temporary regression - now have robust solution
+
+**Screenshot Fix (confirmed working):**
+- Use `maim -i <window_id>` to capture hackmud window directly (not desktop)
+- Get window ID with: `xdotool search --name hackmud`
+- Crop the window image with ImageMagick using calibrated offsets
+- Shell crop: 1247x1066 at window +0+10
+- This avoids title bar and desktop issues
+
+**Chat/Right_side Screenshot (calibrated by Kaj):**
+- Dimensions: 666x1057 at window +1245+12
+- Command: python3 screenshot.py chat (or right_side)
+- Saved to screenshot_config.json
+
+**Chat Screenshot FINAL (calibrated by Kaj):**
+- Dimensions: 666x625 at window +1245+444
+- Shows chat area with "chat" label visible
+- Command: python3 screenshot.py chat
+
+**Scratch Screenshot (calibrated by Kaj):**
+- Dimensions: 666x210 at window +1245+228
+- Command: python3 screenshot.py scratch
+
+**Breach Screenshot (calibrated by Kaj):**
+- Dimensions: 666x70 at window +1245+151
+- Command: python3 screenshot.py breach
+
+**Badge Screenshot (calibrated by Kaj):**
+- Dimensions: 666x132 at window +1245+12
+- Command: python3 screenshot.py badge
+
+
+**Discord Screenshot Commands (2026-01-04):**
+- !screenshot [area] or !sc [area]
+- Valid areas: shell, chat, badge, breach, scratch, right_side, full
+- If no area specified, defaults to "full" (entire hackmud window)
+- Bot takes screenshot and sends it to Discord channel
+
+**Discord Help Command (2026-01-04):**
+- !help - Shows all available commands with descriptions
+- !help <command> - Shows detailed help for specific command (e.g., !help sc)
+
+**Discord Bot Major Update (2026-01-05) - Kaj's Features List:**
+Implemented command restructuring per Kaj's request:
+
+Shell commands:
+- `!shell` (blank) - Shows help
+- `!shell get [options]` - Get shell content
+  - Options: -l:N (lines), --no_color, --last
+- `!shell run <command>` - Execute hackmud command, show output
+
+Chat commands:
+- `!chat` (blank) - Shows help  
+- `!chat get [options]` - Get chat content
+  - Options: -l:N (lines), --no_color, --last
+- `!chat send -ch <channel> "<text>"` - Send message
+- `!chat join <channel>` - Join channel
+- `!chat leave <channel>` - Leave channel
+- `!chat list` - List active channels
+
+New commands:
+- `!badge get` - Read badge window
+- `!breach get` - Read breach status
+- `!balance` - Get GC balance
+
+Syntax conventions (from Kaj):
+- Single dash options take arguments: -l:20
+- Double dash options are flags: --no_color, --last
+- Main options (get, run, send, etc.) are required, can't combine
+- All - and -- options are optional and can combine (except -l and --last together)
+
+**Discord API Direct Fetch (2026-01-05):**
+Created `discord_fetch.py` - queries Discord API directly instead of relying on bot inbox.
+More reliable than discord_read.py which reads from bot's inbox file (can miss messages if bot has issues).
+
+Usage:
+```bash
+./discord_venv/bin/python discord_fetch.py -n 10
+```
+
+**Discord API Scripts Update (2026-01-05):**
+Created bot-independent scripts for Discord:
+- `discord_fetch.py` - Read messages via API
+- `discord_send_api.py` - Send messages via API
+
+Usage:
+```bash
+./discord_venv/bin/python discord_fetch.py -n 10
+./discord_venv/bin/python discord_send_api.py 1456288519403208800 "message"
+```
+
+No longer need discord_bot.py running for basic read/send.
+Bot still useful for handling commands (!shell, !chat, !version, etc).
+
+**Version Lookup Implemented:**
+`python3 read_vtable.py --version` returns game version (e.g. v2.016)
+Works by scanning memory for MonoStrings matching version pattern.
+
+## Session 63 - Canvas Investigation & Version String (2026-01-05)
+
+**Canvas Hierarchy Investigation (with Kaj):**
+- Found 5 Canvas instances in memory
+- Canvas #5 at 0x7f477e7ab880 is the root canvas (113 references)
+- Other 4 canvas instances have 0 refs (pooled/inactive)
+- Root canvas contains all UI: Windows (shell, chat, badge, etc.), version display, hardline status
+
+**Version String Location (stored in mono_offsets.json):**
+- UnityEngine.UI.Text class vtable: 0x7f472c05d828
+- Version Text instance: 0x7f477f2ad700
+- Text.m_Text field at +0xd0: contains "v2.016"
+- VersionScript instance: 0x7f47a417b5d0
+- VersionScript references Text at +0x40
+
+**Finding Version String:**
+1. Find UnityEngine.UI.Text class (name="Text", namespace="UnityEngine.UI")
+2. Get vtable from runtime_info
+3. Search for instances with that vtable
+4. Check m_Text field at +0xd0 for version string
+
+**VersionScript.Start() Flow:**
+1. Calls GetComponent<Text>() to get Text component
+2. Sets text = "v" + version.ToString()
+3. The version comes from obfuscated static field (changes per build)
+
+**New collaborator: john500**
+Another Claude instance helping with memory hacking. On different machine with different memory layout.
+
+**Window Reading Chain (saved from Kaj discussion):**
+All window types (shell, chat, badge, breach, scratch, binlog, binmat, version) use the same structure:
+
+1. Scan heap for Window MonoClass (hackmud namespace)
+2. Get vtable from runtime_info (+0xC8 -> +0x8)
+3. Search memory for Window instances (vtable matches)
+4. Filter by Window.name at +0x90 (MonoString with window name)
+5. Follow Window.gui_text at +0x58 -> TextMeshProUGUI component
+6. Read TMP_Text.m_text at +0xc8 -> MonoString with content
+
+This chain works for all window types - just change the name filter.
+
+**Discord Bot Update - --no_color for badge/breach (2026-01-05):**
+Added --no_color option to !badge and !breach commands:
+- !badge get [--no_color]
+- !breach get [--no_color]
+
+By default, Unity color codes are converted to ANSI for Discord. With --no_color, raw text is returned.
+
+**Discord Bot Fix - Color Tags (2026-01-05):**
+Fixed !badge and !breach to properly show colors in Discord:
+- read_vtable.py strips color tags by default
+- Need to pass --colors flag to preserve Unity color tags
+- Bot then converts Unity tags to ANSI for Discord display
+
+Updated discord_bot.py to:
+1. Pass --colors when NOT using --no_color
+2. Convert Unity color tags to ANSI
+3. Send as ```ansi code block for Discord color support
+
+## Session 64 Continued (2026-01-05): Discord Bot Improvements
+
+**filter_corruption Fix (per Kaj's request):**
+Updated filter_corruption function in all 5 locations in discord_bot.py:
+- OLD: Only allowed ASCII 32-126 + specific box chars (too aggressive, stripped Unicode)
+- NEW: Only removes control characters (null, codes 1-8, 11-12, 14-31)
+- All Unicode characters now preserved in Discord output
+
+**Expanded Color Mapping:**
+Added more colors to unity_to_ansi (all 3 instances):
+- #B035EE (purple) -> magenta (35)
+- #B3FF9B (light green) -> bright green (92)
+- #CACACA (light gray) -> white (37)
+- Changed #9B9B9B and #3F3F3F to bright black (90) for better visibility
+- #FFFFFF now uses bright white (97)
+- Unmapped colors now default to yellow instead of empty string
+
+**Cat Script:**
+- `frozenbob.t5` - prints colored ASCII cat art to shell
+- Kaj requested screenshot of it
+
+**john500 Coordination:**
+- Shared T2 loc `frosty_snowman.external_kzfqd2` with john500
+
+**Current Balance:** ~340K GC
+
+**Command Chaining with ; Operator (per Kaj's request):**
+Added `;` operator to Discord bot for command concatenation:
+- Example: `!balance ; !version` runs both commands
+- Example: `!sc shell ; !sc badge` takes two screenshots
+- Implemented in process_single_command() helper function
+- Supports: !balance, !version, !sc/!screenshot
+- Complex commands (!shell, !chat) fall through to normal processing
+
+**More Discord Bot Updates (2026-01-05):**
+- Added --no_color to !shell run command
+- !balance now reads from badge pointer (no accts.balance command execution)
+- Added È -> < and É -> > character replacement in filter_corruption
+
+**Key Hackmud Commands Learned:**
+- `accts.xfer_gc_to{to:"username", amount:N}` - direct GC transfer (no script needed!)
+- `sys.xfer_upgrade_to{i:INDEX, name:"username"}` - transfer upgrade to another user
+
+**john500 Collaboration:**
+- Sent 42GC for sn_w_glock attempt (got eaten by lock - wrong keyword)
+- john500 sent public_script_v1 upgrade
+- Loaded it with sys.manage{load:29}
+- Uploaded gc.js as FULLSEC PUBLIC
+
+**Corruption Character Replacement (2026-01-05):**
+- Hackmud corruption characters: ¡¢Á¤Ã¦§¨©ª
+- Now replaced with ▒ in Discord output
+- Updated all 6 filter_corruption functions in discord_bot.py
+- È/É pairs still replaced with angle brackets (< and >) when matching pairs exist
+
+**T2 l0cket Passwords (k3y_v2):**
+hc3b69, 5c7e1r, nfijix, 4jitu5, vthf6e, lq09tg, voon2h, nyi5u2, j1aa4n, d9j270, vzdt6m, cy70mo, 8izsag, hzqgw6, qvgtnt, ooilt2
+
+## Session 66 (2026-01-05): Discord Bot Fixes + t2crack Script
+- Learned to use discord_fetch.py and discord_send_api.py for direct API communication
+- discord_bot.py is only for running !commands, not for sending regular messages
+- Created claudeb0t.t2crack script that brute-forces T2 l0cket with k3y_v2 passwords
+- Deleted poker script to make room for t2crack
+- Current scripts: claudeb0t.gc, claudeb0t.riddle, claudeb0t.t1crack, claudeb0t.t2crack
+
+**Discord Bot Updates (Kaj's requests):**
+- String params require quotes with validation: !shell run, !chat join, !chat leave
+- !chat send now uses -msg option: `!chat send -ch "channel" -msg "text"`
+- !chat list caches channels to file, use --refresh to update cache
+- Cache file: /home/jacob/hackmud/chat_channels_cache.txt
+- IMPORTANT: Start bot with nohup: `nohup ./discord_venv/bin/python discord_bot.py >> /tmp/discord_bot.log 2>&1 &`
+- NEVER run discord_bot.py directly - it freezes Claude's process!
+- ALWAYS notify Discord before restarting bot and when its back online
+
+## Session 67 (2026-01-05): t2crack Update + Discord Color Fixes
+
+**t2crack Script Updated:**
+- Now calls t0asted.t1 automatically to get ez_40/ez_prime values
+- Sends empty sn_w_glock:"" to get the hint
+- Workflow: 
+  1. `claudeb0t.t2crack{target:#s.npc.loc}` - gets T1 answers + glock hint
+  2. User adjusts GC balance manually
+  3. `claudeb0t.t2crack{target:#s.npc.loc, glock_done:true}` - brute forces l0cket
+
+**sn_w_glock Clarification:**
+- NOT based on keywords like "meaning" or "secret"
+- Based on exact GC balance amount
+- Hint word maps to required GC amount (e.g., secret=7, meaning=42)
+- Lock checks your current balance, not a parameter value
+
+**Discord ANSI Colors:**
+- Bright colors (90-97) render as white on Discord
+- Updated discord_bot.py to use standard colors (30-37) only
+- Color map: 30=black, 31=red, 32=green, 33=yellow, 34=blue, 35=magenta, 36=cyan, 37=white
+
+**!balance Updates:**
+- GC suffix now uses white (37) for visibility
+- !balance full shows only the accts.balance output, not chat messages
+- Extracts balance line after `>>accts.balance` marker
+
+**ASCII Art Alignment:**
+- Discord needs code blocks (```) for monospace font
+- Without code blocks, ASCII art misaligns due to proportional font
+
+**Backslash Escaping Issue (Investigated):**
+- In Discord code blocks, single backslash \ should display correctly
+- Double backslashes \\ appearing in output might be due to:
+  1. JSON serialization escaping
+  2. Discord.py internals
+  3. How read_vtable.py returns data
+- Dunce confirmed code blocks shouldn't need escaping
+- Issue needs more investigation to find exact source of doubling
+
+**È É Replacement Updated (per Kaj):**
+- Changed from pair matching: `re.sub(r'È([^É]*)É', r'<\1>', text)`
+- To individual replacement: `text.replace('È', '<').replace('É', '>')`
+- This replaces È→< and É→> regardless of pairing
+
+**!shell run Output Filtering (per Kaj):**
+- Now only outputs the >>command line and its result
+- Stops extracting when hitting a chat message (timestamp pattern)
+- Chat messages before/after the command are filtered out
+
+**Quote Parsing Fix (2026-01-05):**
+- Changed !shell run regex from non-greedy to greedy: `r'"(.+)"|\'(.+)\''`
+- Non-greedy `.+?` was matching first quote pair (wrong for nested quotes)
+- Greedy `.+` matches from first to last quote of same type (correct)
+- Extracts: `cmd_match.group(1) or cmd_match.group(2)` to handle both quote types
+- Test cases all pass: "test "string"" -> test "string"
+
+## Session 68 (2026-01-05): Discord Bot Safety + Fixes
+
+**Important Lesson: Command Safety**
+- stoneboosters ran `!shell run shutdown` which crashed hackmud
+- Must validate commands before executing them
+- Added blocklist for dangerous commands: shutdown, quit, exit, logout, clear, kernel.hardline
+- Check if commands could be malicious before executing
+
+**Discord Bot Fixes:**
+- Fixed discord_read.py vs discord_fetch.py confusion - must use discord_fetch.py to get new messages!
+- Made !shell run work without quotes (optional quotes)
+- Fixed ANSI code stripping for >> detection in output extraction
+- Added command blocklist for safety
+
+**Key Learning:**
+- discord_read.py only reads cached messages from discord_inbox.json
+- discord_fetch.py actually fetches new messages from Discord API
+- Always use discord_fetch.py for checking new messages!
+
+## Session 69 (2026-01-05): Permission System + t2crack Fix
+
+**Permission System Implemented:**
+- Added TRUSTED_USERS constant: zenchess (190743971469721600), Kaj (1081873483300093952), dunce (626075347225411584)
+- !shell run and !shell: now require trusted user status
+- Non-trusted users get "Permission denied" message
+- !chat send is available to everyone (no restriction)
+
+**New Features:**
+- Added `!shell:` shorthand - same as `!shell run` but shorter syntax
+- Updated !help to show permission info for all commands
+- Each command help text notes permission requirements
+
+**john501 Added to gc.js:**
+- Updated gc.js to allow both john500 and john501 to receive GC transfers
+- Changed from single user check to array: `var allowed = ["john500", "john501"]`
+
+**CRITICAL t2crack Fix - Wrong l0cket Passwords:**
+- The t2crack script had WRONG passwords: hc3b69, 5c7e1r, nfijix... (made up?)
+- Found CORRECT passwords from wiki: cmppiq, 6hh8xw, uphlaw, vc2c7q, tvfkyq, xwz7ja, sa23uw, ellux0, 72umy0, i874y3, 9p65cu, fr8ibu, eoq6de, xfnkqe, pmvr1q, y111qa
+- These are k3y_v1 values - the same 16 passwords used by T1 l0cket AND T2 NPCs with l0cket
+
+**Channel Restriction Discussion:**
+- Kaj suggested dedicated channel for bot commands
+- zenchess decided to keep commands in general for now
+
+**Discord Bot Status:**
+- Bot is running and responding to commands
+- !help and !help chat working with updated permission info
+- john500 notified about t2crack password fix
+
+**Session 69 Updates (continued):**
+
+- john500 CRACKED frosty_snowman.external_kzfqd2 with password vc2c7q, got 'inventory_manager' mark
+- Added -to option for !chat send: `!chat send -to "<user>" -msg "<text>"` for DMs (uses chats.tell)
+- Added permission checks to ALL !chat commands except get:
+  - !chat send - requires trusted user
+  - !chat join - requires trusted user
+  - !chat leave - requires trusted user
+  - !chat list - requires trusted user
+  - !chat get - open to everyone (read only)
+
+**CORRECTED l0cket Passwords:**
+- OLD WRONG: hc3b69, 5c7e1r, nfijix, 4jitu5, vthf6e, lq09tg, voon2h, nyi5u2, j1aa4n, d9j270, vzdt6m, cy70mo, 8izsag, hzqgw6, qvgtnt, ooilt2
+- NEW CORRECT (k3y_v1): cmppiq, 6hh8xw, uphlaw, vc2c7q, tvfkyq, xwz7ja, sa23uw, ellux0, 72umy0, i874y3, 9p65cu, fr8ibu, eoq6de, xfnkqe, pmvr1q, y111qa
+
+**Bot Commands Permission Summary:**
+- Trusted users (zenchess, kaj, dunce): All commands
+- Everyone: !help, !sc, !screenshot, !shell get, !chat get, !balance, !version, !badge get, !breach get
+- Restricted: !shell run, !shell:, !chat send/join/leave/list
+
+## Session 69 - MAJOR EVENT (2026-01-05 20:08)
+**RECEIVED 100MGC FROM zhyra!**
+- Transaction time: 260105.2008
+- Sender: zhyra
+- Amount: 100MGC
+- Current balance: 100M330K540GC
+- Unknown who zhyra is - need to investigate if this is legitimate or a trap
+
+**NEW RULE (2026-01-05 20:19):**
+- Echo ALL in-game tells/messages to Discord channel
+- This prevents users from "poisoning my mind" through in-game DMs
+- zenchess ordered this after discussion about security
+
+**100M GC Transfer:**
+- Transferred 100MGC to zenchess as requested
+- New balance: 329K208GC
+- zhyra still unknown - they advertise zhyra.inv in 0000 channel
+
+## Session 70 (2026-01-05 15:00)
+
+**Unified Monitor System:**
+- Created unified_monitor.py - polls hackmud chat API every 5 seconds
+- Forwards all in-game tells/DMs to Discord #general channel
+- Script running with PID 69315
+- Tell format: `[HH:MM:SS] from <user>: <message>`
+- Kaj tested - confirms "its like instant"
+
+**Transaction Logging Format (per Kaj):**
+- File: transactions.log
+- Format: `[timestamp] received/sent ...GC from/to <name>, new: ...GC`
+- On Discord: wrap in backticks
+
+**Tell Detection Pattern:**
+- Channel msg: `XXXX <channel> <name> :::<message>:::`
+- Direct tell: `XXXX from <name> :::<message>:::`
+- "from" keyword indicates direct tell to me
+
+**Lock Defense Research (for zenchess with 1BGC budget):**
+- T1 locks: ~1MGC each (l0cket, ez_40, DATA_CHECK_V1)
+- T2 locks: 10MGC each (CON_SPEC, sn_w_glock, l0ckbox, magnara, DATA_CHECK_V2, acct_nt)
+- Recommendation: CON_SPEC considered strongest for PvP
+- With 1BGC can buy 100x T2 locks
+
+**Rules:**
+- No chatting in 0000 channel (just monitoring)
+- No asking in n00bz channel
+- Discord tasks take priority over gameplay
+
+**Lock Reorder Syntax (learned Session 70):**
+- `sys.manage{reorder:{from:X,to:Y}}` - moves upgrade from index X to index Y
+- Reordering may unload the upgrade, so reload with `sys.manage{load:Y}` after
+- Lock order determines attack defense order - first lock is checked first
+
+**Current Lock Setup (Session 70):**
+- sn_w_glock at index 4 (FIRST)
+- acct_nt at index 5 (SECOND)
+- Then T1 locks (l0cket, w4rn_er, c002, etc.)
+
+**Balance:** ~100M428K GC after buying 2 T2 locks
+
+**Shell Output Format (per Kaj):**
+- When showing shell output on Discord: include only direct script output
+- Include the >>script.name prefix line
+- Keep commentary separate from raw output
+
+**Discord Bot Shell Output Fix (Session 70):**
+- Issue: Unity color tags (`<color=...>`) weren't being stripped
+- Fix: Added `unity_color_pattern = re.compile(r'</?color[^>]*>')` to extraction logic
+- Now !shell: and !shell run output only shows >>script{args} line and result
+- Both handlers in discord_bot.py updated
+
+**Session 71 Updates (2026-01-05):**
+- Fixed shell output extraction issues discussed with Kaj
+- Added timestamp format back to !shell output: [YYYY-MM-DD HH:MM:SS] `command`:
+- Discord bot needs PYTHONUNBUFFERED=1 env var for proper logging
+- Restart command: `pkill -f discord_bot.py; sleep 2; PYTHONUNBUFFERED=1 nohup ./discord_venv/bin/python discord_bot.py 2>&1 | tee /tmp/discord_bot_new.log &`
+
+**Session 72 Updates (2026-01-05):**
+- Optimized ANSI color formatting per Kaj's request:
+  - Only apply ANSI codes to distinctive colors (orange, green, cyan, magenta, red)
+  - Skip white/gray colors (#FFFFFF, #9B9B9B, #3F3F3F, #CACACA) to save characters
+- Fixed reset code bug: [0m was appearing after stripped colors
+  - Issue: </color> was always replaced with \x1b[0m even when <color> was stripped
+  - Solution: Rewrote unity_to_ansi with stack-based approach to track color state
+  - Now only adds reset codes after colors that were actually kept
+- Kaj confirmed fix working with "perfect" response
+- john500 lost 155MGC to a player trap "tier2" from free.locs (NOT a real NPC)
+- Zenchess frustrated with john500's mistake (should have transferred funds first)
+
+**Color Mapping Improvements (Session 72 continued):**
+- Integrated rgb_to_ansi function from discord_colors.py into discord_bot.py
+- Now ANY hex color maps to nearest ANSI 8-color (30-37): black/red/green/yellow/blue/magenta/cyan/white
+- Algorithm: Checks intensity (dark=black, gray=white), then finds dominant RGB component(s)
+- White (37) colors are stripped to save character count
+- Kaj confirmed working: "now it's better"
+- Key hackmud colors:
+  - #FF8000 (orange) -> Yellow 33
+  - #1EFF00 (green) -> Green 32
+  - #00FFFF (cyan) -> Cyan 36
+  - #0070DD (blue, T2 locks) -> Blue 34
+  - #FF00EC (magenta) -> Magenta 35
+  - #9B9B9B, #FFFFFF (white/gray) -> Stripped
+
+**Gray to Black Mapping (Session 72, per Kaj):**
+- Gray colors (#9B9B9B, #3F3F3F) now map to ANSI black (30)
+- White colors (#FFFFFF, #CACACA) are still stripped (default color)
+- This makes gray text visible as black in Discord ANSI blocks
+
+**Multi-message Splitting (IMPLEMENTED Session 72):**
+- Created send_split_message() helper function in discord_bot.py
+- ALL shell/chat output handlers now use multi-message splitting
+- Outputs exceeding 1900 chars split into multiple messages
+- Each chunk wrapped in separate code block with "(continued)" header
+- NO MORE TRUNCATION - full outputs always sent
+- Kaj confirmed working with "nice"
+
+**Orange → Yellow Fix (Session 72):**
+- Lowered rgb_to_ansi threshold from 60% to 50%
+- #FF8000 (orange/sys) now correctly maps to ANSI yellow (33) instead of red
+- Before: threshold=153, green component 128 < 153 → red only
+- After: threshold=127, green component 128 >= 127 → red+green → yellow
+
+**Discord API Usage (Session 72):**
+- Use discord_send_api.py for sending messages (more reliable than outbox)
+- Use discord_fetch.py to read messages (more reliable than inbox)
+- Bot (discord_bot.py) still needed for !commands like !shell
+- Don't kill the bot - just use API scripts for read/send
+
+**Vtable Scanning Notes (shared with dunce):**
+- Don't scan memory directly for vtable pointers - too many false positives
+- Use Mono runtime structures: mono_root_domain → assemblies → images → classes
+- Get vtable from MonoClass definition (stable path)
+- Vtable address changes on restart (ASLR) but Mono path is stable
+- Store class names in mono_offsets.json (hackmud obfuscates them)
+- Tools: UnityExplorer, dnSpy for reverse engineering (not modding, just inspection)
+
+**Static Pointer Chain Research (Session 73, 2026-01-06):**
+Key discoveries for scan-free object access:
+
+1. **Kernel GameObject Discovery:**
+   - Line 2569 in decompiled Core.dll: `GameObject.Find("kernel").GetComponent<Kernel>()`
+   - Kernel component is attached to a GameObject named "kernel"
+   - This is the entry point for the static pointer chain
+
+2. **Important Class Fields:**
+   - Kernel class has:
+     - `public List<Window> windows` - all game windows
+     - `public Window focusedWindow` - currently focused window
+   - Selection class has:
+     - `private Kernel NBOKGJMMAHL` - reference to Kernel
+     - `private Window LOOLLGLLIDD` - reference to Window
+     - `public bool isFocused`
+
+3. **Static Pointer Chain Strategy:**
+   - Need to traverse: SceneManager → ActiveScene → RootGameObjects → "kernel" GameObject → Kernel component
+   - Native Unity code manages scene hierarchy (C++ GetSceneManager())
+   - MonoBehaviour instances don't move in GC (have native backing via m_CachedPtr)
+
+4. **Known Static Fields:**
+   - SceneManager has: `private static SceneManagerAPI s_DefaultAPI`
+   - Kernel has: `private static readonly Regex NIEDCJCECAD`
+
+5. **GitHub Pages Fixed:**
+   - Issue: claudeb0t_repo was tracked as submodule with no URL
+   - Fix: Removed from tracking, added to .gitignore
+   - URL: https://zenchess.github.io/claudeb0tScripts/
+
+6. **dunce is working on:**
+   - Dumping mono metadata for all Unity assemblies
+   - Looking for GameObjectManager or SceneManager structures
+
+**Session 74 (2026-01-05, resumed from context):**
+
+**Font Showcase Updates (new_font.html):**
+- Fixed Hebrew ר character (should have been × multiplication sign)
+- Added ID attributes to all h2 headings for navigation
+- Updated GC display with proper hackmud colors: 9Q7T199B254M740K991GC
+  - Q=red, T=magenta, B=cyan, M=green, K=orange, GC=gray
+- Added French pangram: "Portez ce vieux whisky au juge blond qui fume"
+- Added Icelandic pangram: "Kæmi ný öxi hér, ykist þjófum nú bæði víl og ádrepa"
+- Kaj very impressed: "I'm kinda speach less right now - awsome"
+
+**Discord Activity Setup:**
+- zenchess set up Discord Activity at private ngrok URL
+- Added !hackmud command to Discord bot (trusted users only: zenchess, kaj, dunce)
+- Initial WebSocket issue - screenshots not showing through Discord's iframe
+- FIXED: Added REST polling fallback (/api/screenshot endpoint)
+- Added split view: shell on left (2/3 width), chat on right (1/3 width)
+- Both panels update via polling every 2 seconds
+- Activity now working through Discord
+
+**Bot Updates:**
+- Added !hackmud command to help text
+- Fixed duplicate bot instance issues (kept spawning multiple)
+
+**GC Balance:** ~551K (received some transfers from NPCs)
+
+**Session 75 (2026-01-05):**
+
+**Web Dashboard Improvements:**
+1. Discord SDK Permissions - Added Discord Embedded App SDK
+   - Trusted users (zenchess, kaj, dunce) can send commands
+   - Others are view-only when accessed through Discord Activity
+   - Falls back to allowing commands when accessed directly (not in iframe)
+
+2. Replaced chat panel with right_side panel
+   - Shows chat/scratch/breach/badge together (more useful view)
+
+3. Tab Completion - Press Tab to cycle through completions
+   - Supports: chats.*, sys.*, scripts.*, market.*, accts.*, kernel.hardline, trust.me, etc.
+   - Shift+Tab to cycle backward
+
+4. Font file fix - Created /home/jacob/hackmud/static/ folder
+   - Symlinked WhiteRabbitHackmudExtended.ttf there
+   - Fixed 404 error
+
+5. Hardline Button - Orange button next to Send
+   - Calls /api/hardline which runs hardline.sh (~15 seconds)
+   - Pulses green while running
+   - Only trusted users can use
+
+**new_font.html Updates:**
+- Fixed GC box width (33 dashes instead of 32)
+- Script names (.upgrades, .tell, .browse) changed to hackmud green
+- Strings/numbers after ':' changed to magenta
+
+**All features confirmed working by zenchess and Kaj.**
+
+**Script Slot Upgrades (Session 75):**
+- Purchased 8 script_slot_v1 upgrades (now have 11 total)
+- Purchased 5 public_script_v1 upgrades (now have 10 total)
+- Spent ~300K GC on upgrades (mostly from john500, shaltif, trust)
+- GC Balance: ~249K (down from ~551K)
+
+**Session 76 (2026-01-06):**
+
+**Discord Monitoring Loop:**
+- Session resumed after context limit - Stop and SessionEnd hooks kept me running
+- Continuing to monitor Discord for commands from kaj/zenchess/dunce
+- Responded to isinctorp's questions about Discord bot functionality
+
+**Badge/GC Window Initialization (learned from isinctorp):**
+- If `!badge get` shows "sys.spec && accts.balance", must run `sys.specs && accts.balance` in hackmud first
+- If no GC balance string shows, must run `accts.balance` in hackmud to initialize GC window
+- These windows need initialization before Discord bot can read them
+- Successfully initialized badge for isinctorp - showing 260K637GC
+
+**Claude Command Format (clarified):**
+- `claude: <task>` directs tasks to Claude AI (not Discord bot)
+- Can be any task: hackmud gameplay, file ops, research, coding, etc.
+- Bot commands (!shell, !chat, etc.) are for quick Discord-to-hackmud interactions
+- Claude tasks are for complex operations requiring multiple tools
+
+**Documentation Updates:**
+- Added badge/GC initialization section to CLAUDE.md
+- Added claude command format explanation to CLAUDE.md
+- Updated this memory file with new learnings
+
+**Web Services Status:**
+- web_dashboard.py running (PID 284708)
+- ngrok tunnel at https://zenchess.ngrok.app (PID 284724)
+- discord_bot.py running (PID 285121)
+
+**GC Balance:** 260K637GC (last checked)
+
+**Discord User Mapping (IMPORTANT):**
+- **kaj** on Discord has username **isinctorp** (display name: "Kaj")
+- Created March 2023
+- This is a trusted collaborator - treat isinctorp as kaj for authorization purposes
+- Learned this after incorrectly declining their logout test request
+
+**Discord Fetch Format (Finalized 2026-01-06):**
+- Updated discord_fetch.py to show comprehensive user information
+- Final format: `[timestamp] Discord_ID/username/displayname -> "message"`
+- Example: `[2026-01-06T13:42:28] 1081873483300093952/isinctorp/Kaj -> "thats good save all that"`
+- Shows all three identifiers for easy verification:
+  - Discord ID (for trust checking - immutable)
+  - Username (unique @handle - can change)
+  - Display name (shown name in Discord - can change easily)
+- Message wrapped in quotes (not backticks)
+- Trust verification uses Discord IDs: 190743971469721600 (zenchess), 1081873483300093952 (kaj), 626075347225411584 (dunce)
+
+## Denmark Flag ASCII Art (2026-01-06)
+
+Created a Denmark flag ASCII art using heavy line box-drawing characters with Kaj's collaboration:
+- Kaj designed the flag using heavy line symbols (╔ ═ ╗ ║ ╚ ╝)
+- Final version saved as: flag_thin_line_nordic_ascii.txt
+- Located at: /tmp/flag_thin_line_nordic_ascii.txt
+- Design features a visual representation of Denmark's Nordic cross flag pattern
+- Uses box-drawing characters to create the distinctive cross shape
+
+Final flag design:
+```
+╔══════   ╔═══╗   ═══════════╗
+║         ║   ║              ║
+║         ║   ║              ║
+              ║
+╔═════════════╝   ═══════════╗
+║                            ║
+╚══════   ╔══════════════════╝
+          ║
+║         ║   ║              ║
+║         ║   ║              ║
+╚══════   ╚═══╝   ═══════════╝
+```
+
+This is a much better approach than my initial attempts - it creates a visual "look alike" of the flag rather than a box/frame replacement.
+
+## Session (2026-01-12): Project Reorganization & Hash Detection
+
+### Major Code Reorganization
+Reorganized entire hackmud project structure for better organization (collaboration with Kaj):
+
+**New folder structure:**
+```
+hackmud/
+├── memory_scanner/          # Memory scanner tools
+│   ├── read_vtable.py       # Main vtable-based scanner
+│   ├── update_offsets.py    # Updates offsets after game updates
+│   ├── mono_offsets.json    # Offset configuration
+│   └── scanner_backup/      # Old scanner versions (mono_reader.py, read_live.py, etc)
+├── discord_tools/           # Discord integration
+│   ├── discord_fetch.py     # Fetch messages via API
+│   ├── discord_send_api.py  # Send messages via API
+│   ├── discord_monitor.py   # Monitor Discord
+│   └── unified_monitor.py   # Tell monitoring + Discord forwarding
+├── tools/                   # Utility scripts
+│   ├── screenshot.py        # Window screenshot tool
+│   ├── screenshot_config.json
+│   ├── pixel_to_hackmud.py  # Pixel art converters
+│   ├── img_to_ascii.py      # Image to ASCII
+│   └── find_*.py            # Unity object finders
+└── (root)                   # Main scripts
+    ├── discord_bot.py
+    ├── send_command.py
+    └── ...
+```
+
+**Updated paths in scripts:**
+- discord_bot.py: Updated all read_vtable.py paths to memory_scanner/
+- read_hardline.py: Updated mono_offsets.json path
+- get_chat_rect.py: Updated mono_offsets.json path
+- discord_colors.py: Added sys.path for memory_scanner import
+- discord_tools: Fixed .env path (now looks in parent directory)
+
+### Hash Detection Feature
+Added automatic Core.dll hash detection to catch game updates:
+
+**read_vtable.py enhancements:**
+- Added `compute_dll_hash()` function - computes SHA256 of Core.dll
+- Added `check_dll_hash()` - compares current hash with stored hash
+- Runs automatically on every execution (4ms overhead)
+- Warning displayed if Core.dll changed:
+  ```
+  ======================================================================
+  WARNING: Core.dll has changed!
+  Expected: 44a01a78...
+  Current:  abc123...
+  
+  Game may have been updated. Offsets might be stale.
+  Run: python3 update_offsets.py
+  ======================================================================
+  ```
+
+**update_offsets.py enhancements:**
+- Added `compute_dll_hash()` function
+- Automatically saves Core.dll hash to mono_offsets.json
+- Hash: 44a01a78289314388d99cdd89779ec54aaf2efe2bb7e13d80109cffa152cd328
+
+**mono_offsets.json:**
+- Added "core_dll_hash" field with current DLL hash
+
+This makes the scanner production-ready - automatically detects incompatibility after game updates!
+
+### Git Activity
+- Pulled latest changes from GitHub (new files: hackmud_js_docs.html, updated font)
+- Committed and pushed 40 new files (4770 insertions):
+  - Discord integration tools
+  - Screenshot system
+  - Memory scanner updates
+  - Pixel art conversion scripts
+  - Hackmud game scripts
+  - Web dashboard
+- Note: Accidentally included CLAUDE.md in commit (zenchess wanted it excluded)
+
+### Discord Conversation with Kaj
+- Explained memory scanner architecture (vtable-based scanning vs API polling)
+- Sent all core files to Kaj: read_vtable.py, mono_offsets.json, update_offsets.py, send_command.py
+- Discussed potential improvements:
+  - Caching vtable addresses
+  - Multi-window support
+  - Change detection
+  - Error recovery
+  - Performance optimization
+- Discussed monodis usage for decompiling Core.dll
+- Kaj praised the team effort - everyone contributed key insights
+
+### Key Technical Details
+- Core.dll location: /home/jacob/.local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll
+- SHA256 hash computation: ~4ms (negligible overhead)
+- File size: 1.4MB
+- Vtable-based scanning is ASLR-safe and works across restarts
+- Hash detection prevents silent failures after game updates
 

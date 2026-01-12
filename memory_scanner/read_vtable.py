@@ -14,11 +14,54 @@ import re
 import sys
 import json
 import argparse
+import hashlib
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
 # Path to offsets file
 OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
+
+# Path to Core.dll
+CORE_DLL_PATH = Path.home() / ".local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll"
+
+
+def compute_dll_hash() -> str:
+    """Compute SHA256 hash of Core.dll"""
+    if not CORE_DLL_PATH.exists():
+        return ""
+
+    sha256 = hashlib.sha256()
+    with open(CORE_DLL_PATH, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+
+def check_dll_hash(offsets: Dict) -> bool:
+    """Check if Core.dll hash matches stored hash. Returns True if OK."""
+    current_hash = compute_dll_hash()
+    if not current_hash:
+        print("Warning: Could not find Core.dll", file=sys.stderr)
+        return True  # Continue anyway
+
+    stored_hash = offsets.get('core_dll_hash', '')
+
+    if not stored_hash:
+        print(f"Note: No hash stored in {OFFSETS_FILE}. Run update_offsets.py to store hash.", file=sys.stderr)
+        return True
+
+    if current_hash != stored_hash:
+        print("=" * 70, file=sys.stderr)
+        print("WARNING: Core.dll has changed!", file=sys.stderr)
+        print(f"Expected: {stored_hash}", file=sys.stderr)
+        print(f"Current:  {current_hash}", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("Game may have been updated. Offsets might be stale.", file=sys.stderr)
+        print("Run: python3 update_offsets.py", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        return False
+
+    return True
 
 
 def load_offsets() -> Dict:
@@ -484,6 +527,10 @@ def main():
     parser.add_argument('--debug', '-d', action='store_true', help='Debug output')
     parser.add_argument('--list-windows', action='store_true', help='List all found windows')
     args = parser.parse_args()
+
+    # Check DLL hash
+    offsets = load_offsets()
+    check_dll_hash(offsets)
 
     pid = get_hackmud_pid()
     if not pid:

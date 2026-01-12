@@ -17,12 +17,23 @@ import subprocess
 import re
 import json
 import os
+import hashlib
 from pathlib import Path
 
 # Paths
 CORE_DLL = Path.home() / ".local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll"
 OUTPUT_DIR = Path("/tmp/hackmud_decompiled")
 OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
+
+
+def compute_dll_hash(dll_path: Path) -> str:
+    """Compute SHA256 hash of Core.dll"""
+    sha256 = hashlib.sha256()
+    with open(dll_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
 
 def decompile_dll():
     """Decompile Core.dll using ilspycmd"""
@@ -130,6 +141,11 @@ def main():
     # Add metadata
     offsets['core_dll_path'] = str(CORE_DLL)
     offsets['decompiled_file'] = str(output_file)
+
+    # Add Core.dll hash
+    dll_hash = compute_dll_hash(CORE_DLL)
+    offsets['core_dll_hash'] = dll_hash
+    print(f"Core.dll SHA256: {dll_hash}")
 
     # Save offsets
     with open(OFFSETS_FILE, 'w') as f:

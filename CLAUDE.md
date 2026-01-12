@@ -22,13 +22,13 @@ When receiving requests/orders on Discord:
 The Discord bot token is stored in `/home/jacob/hackmud/.env`:
 ```bash
 # Read Discord messages (queries API directly)
-./discord_venv/bin/python discord_fetch.py -n 10
+./discord_venv/bin/python discord_tools/discord_fetch.py -n 10
 
 # Send Discord message (sends via API directly)
-./discord_venv/bin/python discord_send_api.py 1456288519403208800 "message"
+./discord_venv/bin/python discord_tools/discord_send_api.py 1456288519403208800 "message"
 
 # Send with attachment
-./discord_venv/bin/python discord_send_api.py 1456288519403208800 "caption" -a /path/to/file.png
+./discord_venv/bin/python discord_tools/discord_send_api.py 1456288519403208800 "caption" -a /path/to/file.png
 ```
 
 **Discord Fetch Output Format:**
@@ -127,6 +127,44 @@ sys.manage{load:INDEX}
 sys.manage{unload:INDEX}
 ```
 
+## Project Structure
+
+The hackmud project is organized into folders for better maintainability:
+
+```
+hackmud/
+├── memory_scanner/          # Memory scanning tools
+│   ├── read_vtable.py       # Main vtable-based memory scanner
+│   ├── update_offsets.py    # Updates offsets after game updates
+│   ├── mono_offsets.json    # Offset configuration + DLL hash
+│   └── scanner_backup/      # Old scanner versions
+├── discord_tools/           # Discord integration
+│   ├── discord_fetch.py     # Fetch messages via Discord API
+│   ├── discord_send_api.py  # Send messages via Discord API
+│   ├── discord_monitor.py   # Monitor Discord activity
+│   └── unified_monitor.py   # Tell monitoring + Discord forwarding
+├── tools/                   # Utility scripts
+│   ├── screenshot.py        # Window screenshot capture
+│   ├── screenshot_config.json # Screenshot region config
+│   ├── pixel_to_hackmud.py  # Pixel art converters
+│   ├── img_to_ascii.py      # Image to ASCII conversion
+│   └── find_*.py            # Unity object finders
+├── hackmud-bot/             # In-game hackmud scripts
+│   ├── game/                # Game scripts (voidwalk, etc)
+│   ├── gc.js                # GC management
+│   └── t2crack.js           # T2 cracker
+└── (root)                   # Main scripts
+    ├── discord_bot.py       # Discord bot with !commands
+    ├── send_command.py      # Send commands to hackmud
+    ├── hardline.sh          # Establish hardline connection
+    └── ...
+```
+
+**Key features:**
+- **memory_scanner/read_vtable.py**: Includes automatic hash detection - warns if Core.dll changes (game update)
+- **Discord tools**: All use `../.env` for token (stored in project root)
+- **Organized by function**: Memory scanning, Discord, utilities, game scripts
+
 ## Transaction Logging
 
 **IMPORTANT:** Log all GC transactions in this format:
@@ -140,7 +178,7 @@ sys.manage{unload:INDEX}
 **Use unified_monitor.py for tell detection:**
 ```bash
 # Start the unified monitor (polls chat API + forwards tells to Discord)
-python3 unified_monitor.py &
+python3 discord_tools/unified_monitor.py &
 ```
 
 This script:
@@ -161,13 +199,16 @@ You communicate with hackmud through these scripts:
 **Use the vtable-based memory scanner for game responses:**
 ```bash
 # Read last 20-40 lines from game terminal (PRIMARY METHOD)
-python3 read_vtable.py 40
+python3 memory_scanner/read_vtable.py 40
 
 # With debug output showing vtable/instance addresses
-python3 read_vtable.py 30 --debug
+python3 memory_scanner/read_vtable.py 30 --debug
 
 # Read chat instead of shell
-python3 read_vtable.py 20 --chat
+python3 memory_scanner/read_vtable.py 20 --chat
+
+# Preserve Unity color tags
+python3 memory_scanner/read_vtable.py 20 --colors
 ```
 
 The vtable scanner uses Mono runtime structures to find game objects:
@@ -299,22 +340,27 @@ Window names: shell, chat, badge, breach, scratch, binlog, binmat, version
 See https://wiki.hackmud.com/scripting/syntax/colors/ for full list.
 
 ### Updating Offsets After Game Updates
+**Hash Detection:** read_vtable.py automatically detects if Core.dll changes (game update) by comparing SHA256 hashes. If detected, you'll see:
+```
+======================================================================
+WARNING: Core.dll has changed!
+Expected: 44a01a78...
+Current:  abc123...
+
+Game may have been updated. Offsets might be stale.
+Run: python3 memory_scanner/update_offsets.py
+======================================================================
+```
+
 If hackmud is updated and the scanner stops working:
 ```bash
 # Re-extract offsets from game DLL
-python3 update_offsets.py
+python3 memory_scanner/update_offsets.py
 
-# This updates mono_offsets.json with new class names/offsets
+# This updates mono_offsets.json with new class names/offsets AND hash
 ```
 
-Old memory scanners (read_live.py, mono_reader.py, mono_reader_v2.py) are in scanner_backup/ folder for reference.
-
-**After game updates:**
-```bash
-# Re-extract obfuscated class names from Core.dll
-python3 update_offsets.py
-# This saves new class names to mono_offsets.json
-```
+Old memory scanners (read_live.py, mono_reader.py, mono_reader_v2.py) are in memory_scanner/scanner_backup/ folder for reference.
 
 ### Hardline Connection
 Some actions require a hardline. Use:
@@ -326,13 +372,13 @@ bash hardline.sh
 To capture screenshots of hackmud windows, use the screenshot.py script:
 ```bash
 # Capture the shell/terminal window
-python3 screenshot.py shell
+python3 tools/screenshot.py shell
 
 # Capture the chat window
-python3 screenshot.py chat
+python3 tools/screenshot.py chat
 
 # Save to specific file
-python3 screenshot.py shell -o /tmp/my_screenshot.png
+python3 tools/screenshot.py shell -o /tmp/my_screenshot.png
 ```
 
 **How it works:**

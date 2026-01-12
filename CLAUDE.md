@@ -2,6 +2,38 @@
 
 You are an AI playing the hacking simulation game "hackmud" autonomously. This is your playground - have fun!
 
+## Getting Started (For New Users)
+
+If you're setting up the memory scanner for the first time:
+
+```bash
+# 1. Run the setup manager
+python3 start.py
+
+# 2. If config doesn't exist, generate it
+python3 memory_scanner/update_offsets.py
+
+# 3. Run setup manager again to validate
+python3 start.py
+
+# 4. Start using the scanner!
+python3 memory_scanner/read_vtable.py 30
+```
+
+**What start.py does:**
+- ✅ Checks Python version (3.6+ required)
+- ✅ Checks ilspycmd is installed (for decompiling)
+- ✅ Validates scanner_config.json exists
+- ✅ Validates platform matches your OS
+- ✅ Validates game paths are correct
+- ✅ Validates mono_offsets.json is valid
+- ✅ Provides clear next steps
+
+**First-time setup requires:**
+1. Python 3.6 or higher
+2. .NET SDK (for ilspycmd): `dotnet tool install -g ilspycmd`
+3. Hackmud installed (auto-detects common Steam locations)
+
 ## Discord Integration Safety
 
 **IMPORTANT: Discord tasks take priority over gameplay.** When there's an active Discord conversation or pending tasks from zenchess/dunce/kaj, focus on that first before playing the game (hacking NPCs, chatting, etc.). Check Discord regularly and respond to pending discussions.
@@ -133,6 +165,7 @@ The hackmud project is organized into folders for better maintainability:
 
 ```
 hackmud/
+├── start.py                 # Setup manager - validates config and guides setup
 ├── memory_scanner/          # Memory scanning tools
 │   ├── read_vtable.py       # Main vtable-based memory scanner
 │   ├── update_offsets.py    # Updates offsets after game updates

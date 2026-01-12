@@ -22,9 +22,64 @@ import platform
 from pathlib import Path
 
 # Paths
-CORE_DLL = Path.home() / ".local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll"
 OUTPUT_DIR = Path("/tmp/hackmud_decompiled")
 OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
+
+# Default paths by platform
+DEFAULT_GAME_PATHS = {
+    'Linux': Path.home() / ".local/share/Steam/steamapps/common/hackmud",
+    'Windows': Path("C:/Program Files (x86)/Steam/steamapps/common/hackmud"),
+    'Darwin': Path.home() / "Library/Application Support/Steam/steamapps/common/hackmud"
+}
+
+DEFAULT_SETTINGS_PATHS = {
+    'Linux': Path.home() / ".config/unity3d/Drizzly Bear/hackmud",
+    'Windows': Path.home() / "AppData/LocalLow/Drizzly Bear/hackmud",
+    'Darwin': Path.home() / "Library/Application Support/Drizzly Bear/hackmud"
+}
+
+
+def get_core_dll_path(game_path: Path, plat: str) -> Path:
+    """Generate Core.dll path from game base path and platform"""
+    if plat == 'Linux':
+        return game_path / "hackmud_lin_Data/Managed/Core.dll"
+    elif plat == 'Windows':
+        return game_path / "hackmud_Data/Managed/Core.dll"
+    elif plat == 'Darwin':
+        return game_path / "hackmud.app/Contents/Resources/Data/Managed/Core.dll"
+    else:
+        raise ValueError(f"Unsupported platform: {plat}")
+
+
+def detect_game_path() -> Path:
+    """Try to detect game installation path"""
+    plat = platform.system()
+    default_path = DEFAULT_GAME_PATHS.get(plat)
+
+    if default_path and default_path.exists():
+        return default_path
+
+    # Try to find via Core.dll
+    if plat == 'Linux':
+        search_paths = [
+            Path.home() / ".local/share/Steam/steamapps/common/hackmud",
+            Path.home() / ".steam/steam/steamapps/common/hackmud",
+        ]
+    elif plat == 'Windows':
+        search_paths = [
+            Path("C:/Program Files (x86)/Steam/steamapps/common/hackmud"),
+            Path("C:/Program Files/Steam/steamapps/common/hackmud"),
+        ]
+    else:
+        search_paths = []
+
+    for path in search_paths:
+        if path.exists():
+            core_dll = get_core_dll_path(path, plat)
+            if core_dll.exists():
+                return path
+
+    return None
 
 
 def compute_dll_hash(dll_path: Path) -> str:
@@ -36,7 +91,7 @@ def compute_dll_hash(dll_path: Path) -> str:
     return sha256.hexdigest()
 
 
-def decompile_dll():
+def decompile_dll(core_dll: Path):
     """Decompile Core.dll using ilspycmd"""
     import shutil
     if OUTPUT_DIR.exists():
@@ -44,14 +99,14 @@ def decompile_dll():
     OUTPUT_DIR.mkdir(exist_ok=True)
     output_file = OUTPUT_DIR / "Core.decompiled.cs"
 
-    print(f"Decompiling {CORE_DLL}...")
+    print(f"Decompiling {core_dll}...")
     # ilspycmd is in ~/.dotnet/tools
     ilspycmd = Path.home() / ".dotnet/tools/ilspycmd"
     if not ilspycmd.exists():
         ilspycmd = "ilspycmd"  # Try PATH
 
     result = subprocess.run(
-        [str(ilspycmd), str(CORE_DLL), "-o", str(output_file)],
+        [str(ilspycmd), str(core_dll), "-o", str(output_file)],
         capture_output=True, text=True
     )
 
@@ -117,14 +172,54 @@ def find_queue_class(code: str, output_class: str) -> dict:
     return offsets
 
 def main():
-    # Check if Core.dll exists
-    if not CORE_DLL.exists():
-        print(f"Error: Core.dll not found at {CORE_DLL}")
-        print("Make sure hackmud is installed")
+    import argparse
+    parser = argparse.ArgumentParser(description='Update hackmud memory scanner offsets')
+    parser.add_argument('--game-path', type=str, help='Path to hackmud game folder')
+    parser.add_argument('--settings-path', type=str, help='Path to hackmud settings folder')
+    args = parser.parse_args()
+
+    plat = platform.system()
+
+    # Get game path
+    if args.game_path:
+        game_path = Path(args.game_path)
+    else:
+        game_path = detect_game_path()
+
+    if not game_path or not game_path.exists():
+        print("Could not detect game installation path.")
+        print(f"Please provide --game-path argument")
+        print(f"Example (Linux): --game-path ~/.local/share/Steam/steamapps/common/hackmud")
+        print(f"Example (Windows): --game-path \"C:/Program Files (x86)/Steam/steamapps/common/hackmud\"")
         return
 
+    print(f"Game path: {game_path}")
+
+    # Get settings path
+    if args.settings_path:
+        settings_path = Path(args.settings_path)
+    else:
+        settings_path = DEFAULT_SETTINGS_PATHS.get(plat)
+        if settings_path and not settings_path.exists():
+            settings_path = None
+
+    if settings_path:
+        print(f"Settings path: {settings_path}")
+    else:
+        print(f"Settings path not detected (will use default)")
+
+    # Generate Core.dll path
+    core_dll = get_core_dll_path(game_path, plat)
+
+    if not core_dll.exists():
+        print(f"Error: Core.dll not found at {core_dll}")
+        print("Make sure hackmud is installed and game path is correct")
+        return
+
+    print(f"Core.dll: {core_dll}")
+
     # Decompile
-    output_file = decompile_dll()
+    output_file = decompile_dll(core_dll)
     if not output_file or not output_file.exists():
         print("Decompilation failed")
         return
@@ -140,24 +235,22 @@ def main():
         offsets.update(find_queue_class(code, offsets['output_class']))
 
     # Add metadata
-    offsets['core_dll_path'] = str(CORE_DLL)
-    offsets['decompiled_file'] = str(output_file)
-    offsets['platform'] = platform.system()  # 'Linux', 'Windows', 'Darwin'
+    offsets['platform'] = plat
+    offsets['game_path'] = str(game_path)
+    if settings_path:
+        offsets['settings_path'] = str(settings_path)
 
     # Add Core.dll hash
-    dll_hash = compute_dll_hash(CORE_DLL)
+    dll_hash = compute_dll_hash(core_dll)
     offsets['core_dll_hash'] = dll_hash
-    print(f"Platform: {offsets['platform']}")
+    print(f"\nPlatform: {offsets['platform']}")
     print(f"Core.dll SHA256: {dll_hash}")
 
     # Save offsets
     with open(OFFSETS_FILE, 'w') as f:
         json.dump(offsets, f, indent=2)
 
-    print(f"\nOffsets saved to {OFFSETS_FILE}:")
-    print(json.dumps(offsets, indent=2))
-
-    print("\nTo use these in mono_reader.py, load the JSON and use the class names.")
+    print(f"\nOffsets saved to {OFFSETS_FILE}")
 
 if __name__ == '__main__':
     main()

@@ -22,27 +22,47 @@ from typing import Optional, List, Tuple, Dict
 # Path to offsets file
 OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
 
-# Path to Core.dll
-CORE_DLL_PATH = Path.home() / ".local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll"
+
+def get_core_dll_path(game_path: str, plat: str) -> Path:
+    """Generate Core.dll path from game base path and platform"""
+    game_path = Path(game_path)
+    if plat == 'Linux':
+        return game_path / "hackmud_lin_Data/Managed/Core.dll"
+    elif plat == 'Windows':
+        return game_path / "hackmud_Data/Managed/Core.dll"
+    elif plat == 'Darwin':
+        return game_path / "hackmud.app/Contents/Resources/Data/Managed/Core.dll"
+    else:
+        raise ValueError(f"Unsupported platform: {plat}")
 
 
-def compute_dll_hash() -> str:
+def compute_dll_hash(offsets: Dict) -> str:
     """Compute SHA256 hash of Core.dll"""
-    if not CORE_DLL_PATH.exists():
+    game_path = offsets.get('game_path')
+    plat = offsets.get('platform')
+
+    if not game_path or not plat:
         return ""
 
-    sha256 = hashlib.sha256()
-    with open(CORE_DLL_PATH, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            sha256.update(chunk)
-    return sha256.hexdigest()
+    try:
+        core_dll = get_core_dll_path(game_path, plat)
+        if not core_dll.exists():
+            return ""
+
+        sha256 = hashlib.sha256()
+        with open(core_dll, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                sha256.update(chunk)
+        return sha256.hexdigest()
+    except Exception:
+        return ""
 
 
 def check_dll_hash(offsets: Dict) -> bool:
     """Check if Core.dll hash matches stored hash. Returns True if OK."""
-    current_hash = compute_dll_hash()
+    current_hash = compute_dll_hash(offsets)
     if not current_hash:
-        print("Warning: Could not find Core.dll", file=sys.stderr)
+        print("Warning: Could not find/read Core.dll (check game_path in config)", file=sys.stderr)
         return True  # Continue anyway
 
     stored_hash = offsets.get('core_dll_hash', '')

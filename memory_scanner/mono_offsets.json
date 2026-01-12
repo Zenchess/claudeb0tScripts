@@ -2,6 +2,8 @@
   "version": "v2.016",
   "last_updated": "2026-01-04",
   "platform": "Linux",
+  "game_path": "/home/jacob/.local/share/Steam/steamapps/common/hackmud",
+  "settings_path": "/home/jacob/.config/unity3d/Drizzly Bear/hackmud",
   "core_dll_hash": "44a01a78289314388d99cdd89779ec54aaf2efe2bb7e13d80109cffa152cd328",
 
   "class_names": {

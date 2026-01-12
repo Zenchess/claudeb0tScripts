@@ -377,8 +377,33 @@ Note: Offsets are the same across platforms, but hash check will fail.
 **Important:** mono_offsets.json should be generated locally on first setup:
 1. Clone the repo
 2. Run `python3 memory_scanner/update_offsets.py` once
-3. This creates a platform-specific config with correct hash
-4. File is excluded from git (see .gitignore)
+3. Script will auto-detect game path or prompt you for it
+4. This creates a platform-specific config with correct paths and hash
+5. File is excluded from git (see .gitignore)
+
+**Configurable Paths:**
+The scanner now uses configurable paths stored in mono_offsets.json:
+- `game_path`: Base hackmud installation folder
+- `settings_path`: Unity settings folder (for future features)
+
+**Auto-detection:**
+update_offsets.py tries common locations:
+- Linux: ~/.local/share/Steam/steamapps/common/hackmud
+- Windows: C:/Program Files (x86)/Steam/steamapps/common/hackmud
+- macOS: ~/Library/Application Support/Steam/steamapps/common/hackmud
+
+**Manual configuration:**
+If auto-detection fails or you have custom install location:
+```bash
+python3 memory_scanner/update_offsets.py --game-path "/custom/path/to/hackmud"
+```
+
+**How it works:**
+- Stores base game folder path
+- Generates Core.dll path based on platform:
+  - Linux: game_path/hackmud_lin_Data/Managed/Core.dll
+  - Windows: game_path/hackmud_Data/Managed/Core.dll
+  - macOS: game_path/hackmud.app/Contents/Resources/Data/Managed/Core.dll
 
 Old memory scanners (read_live.py, mono_reader.py, mono_reader_v2.py) are in memory_scanner/scanner_backup/ folder for reference.
 

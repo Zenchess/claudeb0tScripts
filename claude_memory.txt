@@ -2160,3 +2160,69 @@ Note: Offsets are the same across platforms, but hash check will fail.
 ✅ .gitignore - excludes mono_offsets.json
 📝 Next: Update CLAUDE.md documentation
 
+## Session (2026-01-12 cont.): Configurable Paths Implementation
+
+### Configurable Game & Settings Paths (with Kaj)
+Kaj requested making paths configurable to support different install locations:
+
+**Problem:**
+- Core.dll path was hardcoded in both update_offsets.py and read_vtable.py
+- Linux-specific: ~/.local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll
+- Doesn't work for custom Steam install locations or other platforms
+
+**Solution:**
+Store base game path, generate platform-specific subdirectories automatically.
+
+**Files modified:**
+1. **update_offsets.py**
+   - Added `DEFAULT_GAME_PATHS` and `DEFAULT_SETTINGS_PATHS` dictionaries
+   - Added `get_core_dll_path(game_path, platform)` - generates Core.dll path from base path
+   - Added `detect_game_path()` - tries common locations and checks for Core.dll
+   - Updated `decompile_dll()` to accept core_dll as parameter
+   - Added command-line arguments: --game-path, --settings-path
+   - Auto-detects paths if not provided, prompts user if detection fails
+   - Saves both game_path and settings_path to mono_offsets.json
+
+2. **read_vtable.py**
+   - Removed hardcoded CORE_DLL_PATH constant
+   - Added `get_core_dll_path(game_path, platform)` helper (same as update_offsets.py)
+   - Updated `compute_dll_hash()` to read game_path from offsets, generate Core.dll path
+   - Updated warning message to mention checking game_path in config
+
+3. **mono_offsets.json**
+   - Added "game_path": "/home/jacob/.local/share/Steam/steamapps/common/hackmud"
+   - Added "settings_path": "/home/jacob/.config/unity3d/Drizzly Bear/hackmud"
+
+**Config structure:**
+\`\`\`json
+{
+  "platform": "Linux",
+  "game_path": "/path/to/hackmud",
+  "settings_path": "/path/to/settings",
+  "core_dll_hash": "..."
+}
+\`\`\`
+
+**Setup flow:**
+1. Clone repo
+2. Run `python3 memory_scanner/update_offsets.py` (auto-detects or prompts for paths)
+3. Saves platform-specific config to mono_offsets.json
+4. read_vtable.py reads paths from config automatically
+
+**Path generation per platform:**
+- Linux: game_path/hackmud_lin_Data/Managed/Core.dll
+- Windows: game_path/hackmud_Data/Managed/Core.dll
+- macOS: game_path/hackmud.app/Contents/Resources/Data/Managed/Core.dll
+
+**Benefits:**
+- Works with custom Steam install locations
+- Works across platforms without code changes
+- Single source of truth (mono_offsets.json)
+- Automatic path detection for common locations
+- Settings path ready for future features
+
+**Default settings paths:**
+- Linux: ~/.config/unity3d/Drizzly Bear/hackmud/
+- Windows: ~/AppData/LocalLow/Drizzly Bear/hackmud/
+- macOS: ~/Library/Application Support/Drizzly Bear/hackmud/
+

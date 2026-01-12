@@ -41,5 +41,19 @@
   "paths": {
     "core_dll": "/home/jacob/.local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll",
     "decompiled": "/tmp/hackmud_decompiled/Core.decompiled.cs"
+  },
+
+  "vtables": {
+    "comment": "Vtables discovered 2026-01-04 - may change on game update",
+    "window": "0x7f30740be210",
+    "rect_transform": "0x7f30740bdad8",
+    "image": "0x7f30740070a0",
+    "text_main": "0x7f307405e748"
+  },
+
+  "native_rect_transform": {
+    "comment": "Offsets from native RectTransform cachedPtr",
+    "position": "0xC8",
+    "size": "0xB0"
   }
 }

@@ -295,7 +295,7 @@ class VtableReader:
                 name_ptr = self.read_ptr(window_addr + self.WINDOW_NAME)
                 name = self.read_mono_string(name_ptr, 50) if name_ptr else None
 
-                if name and name in ['shell', 'chat', 'scratch', 'binlog', 'badge', 'breach', 'binmat']:
+                if name and name in ['shell', 'chat', 'scratch', 'binlog', 'badge', 'breach', 'binmat', 'version']:
                     # Get TMP instance via gui_text
                     tmp_ptr = self.read_ptr(window_addr + self.WINDOW_GUI_TEXT)
                     if tmp_ptr and self.is_valid(tmp_ptr):
@@ -402,6 +402,58 @@ class VtableReader:
 
         return self.read_mono_string(ptr, max_chars)
 
+    def read_window(self, name: str, max_chars: int = 50000) -> Optional[str]:
+        """Read any window by name (badge, breach, scratch, etc.)"""
+        if not self.windows:
+            self.find_windows_by_name()
+
+        if name not in self.windows:
+            return None
+
+        _, tmp_ptr = self.windows[name]
+        if not self.is_valid(tmp_ptr):
+            return None
+
+        ptr = self.read_ptr(tmp_ptr + self.M_TEXT_OFFSET)
+        if not self.is_valid(ptr):
+            return None
+
+        return self.read_mono_string(ptr, max_chars)
+
+    def find_version(self) -> Optional[str]:
+        """Find game version string by scanning for MonoString with version pattern"""
+        # Search memory for MonoStrings matching version pattern (vX.XXX)
+        # Match exactly: v followed by digits, dot, and more digits (e.g. v2.016)
+        version_pattern = re.compile(r'^v\d+\.\d+$')
+
+        candidates = []
+        for start, end in self.regions:
+            data = self.read_bytes(start, end - start)
+            if not data:
+                continue
+
+            # Scan for potential MonoString length fields (small values 5-10)
+            for offset in range(0, len(data) - 30, 4):
+                length_bytes = data[offset:offset+4]
+                if len(length_bytes) < 4:
+                    continue
+                length = struct.unpack('<I', length_bytes)[0]
+                if 5 <= length <= 10:  # Version string length e.g. "v2.016" = 6
+                    # Try reading as MonoString (length is at +0x10 from start)
+                    string_addr = start + offset - self.MONO_STRING_LENGTH
+                    if string_addr > 0:
+                        text = self.read_mono_string(string_addr, 20)
+                        if text:
+                            text = text.strip()
+                            # Only accept clean ASCII version strings
+                            if version_pattern.match(text) and all(ord(c) < 128 for c in text):
+                                candidates.append(text)
+
+        # Return the longest matching version (e.g. v2.016 over v2.4)
+        if candidates:
+            return max(candidates, key=len)
+        return None
+
     def close(self):
         self.mem.close()
 
@@ -424,8 +476,13 @@ def main():
     parser = argparse.ArgumentParser(description='Read hackmud terminal via vtable')
     parser.add_argument('lines', nargs='?', type=int, default=30, help='Number of lines')
     parser.add_argument('--chat', '-c', action='store_true', help='Read chat instead of shell')
+    parser.add_argument('--badge', action='store_true', help='Read badge window')
+    parser.add_argument('--breach', action='store_true', help='Read breach window')
+    parser.add_argument('--window', '-w', type=str, help='Read any window by name (shell, chat, badge, breach, scratch)')
+    parser.add_argument('--version', '-v', action='store_true', help='Get game version')
     parser.add_argument('--colors', action='store_true', help='Keep color tags')
     parser.add_argument('--debug', '-d', action='store_true', help='Debug output')
+    parser.add_argument('--list-windows', action='store_true', help='List all found windows')
     args = parser.parse_args()
 
     pid = get_hackmud_pid()
@@ -435,7 +492,7 @@ def main():
 
     reader = VtableReader(pid)
 
-    if args.debug:
+    if args.debug or args.list_windows:
         vtable = reader.find_vtable()
         print(f"vtable: 0x{vtable:x}" if vtable else "vtable: not found", file=sys.stderr)
         instances = reader.find_instances()
@@ -443,8 +500,31 @@ def main():
         reader.identify_instances()
         print(f"shell: 0x{reader.shell_instance:x}" if reader.shell_instance else "shell: not found", file=sys.stderr)
         print(f"chat: 0x{reader.chat_instance:x}" if reader.chat_instance else "chat: not found", file=sys.stderr)
+        if reader.windows:
+            print(f"windows found: {', '.join(reader.windows.keys())}", file=sys.stderr)
+        if args.list_windows:
+            reader.close()
+            return
 
-    if args.chat:
+    # Handle version lookup
+    if args.version:
+        version = reader.find_version()
+        reader.close()
+        if version:
+            print(version)
+        else:
+            print("Could not find version", file=sys.stderr)
+            sys.exit(1)
+        return
+
+    # Determine which window to read
+    if args.window:
+        text = reader.read_window(args.window)
+    elif args.badge:
+        text = reader.read_window('badge')
+    elif args.breach:
+        text = reader.read_window('breach')
+    elif args.chat:
         text = reader.read_chat()
     else:
         text = reader.read_shell()

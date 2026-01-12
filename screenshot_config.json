@@ -1,0 +1,44 @@
+{
+  "shell": {
+    "width": 1247,
+    "height": 1066,
+    "x": 0,
+    "y": 10,
+    "description": "Main terminal/shell window"
+  },
+  "chat": {
+    "width": 666,
+    "height": 625,
+    "x": 1245,
+    "y": 444,
+    "description": "Chat window with label visible"
+  },
+  "right_side": {
+    "width": 666,
+    "height": 1057,
+    "x": 1245,
+    "y": 12,
+    "description": "Full right side"
+  },
+  "scratch": {
+    "width": 666,
+    "height": 210,
+    "x": 1245,
+    "y": 228,
+    "description": "Scratch panel"
+  },
+  "breach": {
+    "width": 666,
+    "height": 70,
+    "x": 1245,
+    "y": 151,
+    "description": "Breach panel"
+  },
+  "badge": {
+    "width": 666,
+    "height": 132,
+    "x": 1245,
+    "y": 12,
+    "description": "Badge panel"
+  }
+}

@@ -79,7 +79,7 @@ def check_ilspycmd() -> bool:
 def check_config_exists() -> Tuple[bool, Optional[Path]]:
     """Check if scanner_config.json exists"""
     print("[3/5] Checking configuration...")
-    config_file = Path(__file__).parent / "memory_scanner/scanner_config.json"
+    config_file = Path(__file__).parent / "scanner_config.json"
 
     if config_file.exists():
         print(f"    ✅ Config found: {config_file}")
@@ -138,7 +138,7 @@ def validate_config(config_file: Path) -> bool:
 def check_offsets_file() -> bool:
     """Check if mono_offsets.json exists"""
     print("[5/5] Checking offset definitions...")
-    offsets_file = Path(__file__).parent / "memory_scanner/mono_offsets.json"
+    offsets_file = Path(__file__).parent / "mono_offsets.json"
 
     if offsets_file.exists():
         try:
@@ -169,7 +169,7 @@ def print_setup_instructions():
     print()
     print("To generate the configuration, run:")
     print()
-    print("    python3 memory_scanner/update_offsets.py")
+    print("    python3 update_offsets.py")
     print()
     print("This will:")
     print("  • Auto-detect your hackmud installation (or prompt for path)")
@@ -193,14 +193,14 @@ def print_success():
     print("1. Start hackmud")
     print()
     print("2. Read game terminal:")
-    print("   python3 memory_scanner/read_vtable.py 30")
+    print("   python3 read_vtable.py 30")
     print()
     print("3. Read chat window:")
-    print("   python3 memory_scanner/read_vtable.py 20 --chat")
+    print("   python3 read_vtable.py 20 --chat")
     print()
     print("4. Check other windows:")
-    print("   python3 memory_scanner/read_vtable.py --badge")
-    print("   python3 memory_scanner/read_vtable.py --breach")
+    print("   python3 read_vtable.py --badge")
+    print("   python3 read_vtable.py --breach")
     print()
     print("For more information, see CLAUDE.md")
     print()

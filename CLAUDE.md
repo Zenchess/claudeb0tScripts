@@ -7,17 +7,19 @@ You are an AI playing the hacking simulation game "hackmud" autonomously. This i
 If you're setting up the memory scanner for the first time:
 
 ```bash
+cd memory_scanner
+
 # 1. Run the setup manager
 python3 start.py
 
 # 2. If config doesn't exist, generate it
-python3 memory_scanner/update_offsets.py
+python3 update_offsets.py
 
 # 3. Run setup manager again to validate
 python3 start.py
 
 # 4. Start using the scanner!
-python3 memory_scanner/read_vtable.py 30
+python3 read_vtable.py 30
 ```
 
 **What start.py does:**
@@ -165,8 +167,8 @@ The hackmud project is organized into folders for better maintainability:
 
 ```
 hackmud/
-├── start.py                 # Setup manager - validates config and guides setup
 ├── memory_scanner/          # Memory scanning tools
+│   ├── start.py             # Setup manager - validates config and guides setup
 │   ├── read_vtable.py       # Main vtable-based memory scanner
 │   ├── update_offsets.py    # Updates offsets after game updates
 │   ├── scanner_config.json  # User config: platform, paths, hash (not in git)

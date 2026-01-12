@@ -15,6 +15,7 @@ import sys
 import json
 import argparse
 import hashlib
+import platform
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
@@ -58,6 +59,31 @@ def check_dll_hash(offsets: Dict) -> bool:
         print("", file=sys.stderr)
         print("Game may have been updated. Offsets might be stale.", file=sys.stderr)
         print("Run: python3 update_offsets.py", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        return False
+
+    return True
+
+
+def check_platform(offsets: Dict) -> bool:
+    """Check if platform matches stored platform. Returns True if OK or no platform stored."""
+    stored_platform = offsets.get('platform', '')
+    current_platform = platform.system()
+
+    if not stored_platform:
+        print(f"Note: No platform stored in {OFFSETS_FILE}. Run update_offsets.py.", file=sys.stderr)
+        return True
+
+    if current_platform != stored_platform:
+        print("=" * 70, file=sys.stderr)
+        print(f"WARNING: Platform mismatch!", file=sys.stderr)
+        print(f"Config platform: {stored_platform}", file=sys.stderr)
+        print(f"Current platform: {current_platform}", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("mono_offsets.json is for a different platform.", file=sys.stderr)
+        print(f"Run: python3 memory_scanner/update_offsets.py", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("Note: Offsets are the same across platforms, but hash check will fail.", file=sys.stderr)
         print("=" * 70, file=sys.stderr)
         return False
 
@@ -528,8 +554,9 @@ def main():
     parser.add_argument('--list-windows', action='store_true', help='List all found windows')
     args = parser.parse_args()
 
-    # Check DLL hash
+    # Check platform and DLL hash
     offsets = load_offsets()
+    check_platform(offsets)
     check_dll_hash(offsets)
 
     pid = get_hackmud_pid()

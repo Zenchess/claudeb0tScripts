@@ -2098,3 +2098,65 @@ This makes the scanner production-ready - automatically detects incompatibility 
 - Vtable-based scanning is ASLR-safe and works across restarts
 - Hash detection prevents silent failures after game updates
 
+## Session (2026-01-12 cont.): Platform Detection & Windows Compatibility
+
+### Windows Compatibility Discussion (with Kaj)
+Extended discussion about making memory scanner work on both Windows and Linux:
+
+**Key Insights:**
+- **Memory offsets are IDENTICAL across platforms** (Mono runtime structures are standardized)
+- **Core.dll hash is DIFFERENT** on each platform (PE vs ELF format, different compilation)
+- **Platform-specific code:** ~10% (memory access, process finding, file paths)
+- **Shared code:** ~90% (vtable scanning, Mono structures, game logic)
+
+**Cross-platform architecture:**
+- Shared: Vtable scanning logic, offset definitions (mono_offsets.json), MonoString reading, Window finding
+- Platform-specific: Memory API (ReadProcessMemory vs /proc/pid/mem), process finding, Core.dll path
+
+### Platform Field Implementation
+Added platform detection to memory scanner (per Kaj's suggestion):
+
+**Files modified:**
+1. **update_offsets.py**
+   - Added `import platform`
+   - Saves `platform.system()` to mono_offsets.json
+   - Output: "Linux", "Windows", or "Darwin"
+
+2. **read_vtable.py**
+   - Added `import platform`
+   - New function `check_platform()` - validates platform matches config
+   - Warns if platform mismatch detected
+   - Runs before hash check in main()
+
+3. **mono_offsets.json**
+   - Added "platform": "Linux" field (line 4)
+
+4. **.gitignore**
+   - Added memory_scanner/mono_offsets.json (local generation per user)
+
+**Design decision:**
+- mono_offsets.json is user-generated, not committed to git
+- Each user runs update_offsets.py to generate platform-specific config
+- Hash and platform are both stored for validation
+
+**Warning output on platform mismatch:**
+```
+======================================================================
+WARNING: Platform mismatch!
+Config platform: Linux
+Current platform: Windows
+
+mono_offsets.json is for a different platform.
+Run: python3 memory_scanner/update_offsets.py
+
+Note: Offsets are the same across platforms, but hash check will fail.
+======================================================================
+```
+
+### Implementation Status
+✅ update_offsets.py - saves platform
+✅ read_vtable.py - checks platform
+✅ mono_offsets.json - contains platform field
+✅ .gitignore - excludes mono_offsets.json
+📝 Next: Update CLAUDE.md documentation
+

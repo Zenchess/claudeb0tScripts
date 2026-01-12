@@ -3,6 +3,7 @@
 *.pyc
 __pycache__/
 claude_memory.txt
+memory_scanner/mono_offsets.json
 
 # Discord bot files - removed from repo
 discord_bot.py

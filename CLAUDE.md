@@ -357,8 +357,28 @@ If hackmud is updated and the scanner stops working:
 # Re-extract offsets from game DLL
 python3 memory_scanner/update_offsets.py
 
-# This updates mono_offsets.json with new class names/offsets AND hash
+# This updates mono_offsets.json with new class names/offsets, hash, AND platform
 ```
+
+**Platform Detection:** read_vtable.py also checks if mono_offsets.json matches your current platform (Linux, Windows, Darwin). If you pull the repo on a different platform, you'll see:
+```
+======================================================================
+WARNING: Platform mismatch!
+Config platform: Linux
+Current platform: Windows
+
+mono_offsets.json is for a different platform.
+Run: python3 memory_scanner/update_offsets.py
+
+Note: Offsets are the same across platforms, but hash check will fail.
+======================================================================
+```
+
+**Important:** mono_offsets.json should be generated locally on first setup:
+1. Clone the repo
+2. Run `python3 memory_scanner/update_offsets.py` once
+3. This creates a platform-specific config with correct hash
+4. File is excluded from git (see .gitignore)
 
 Old memory scanners (read_live.py, mono_reader.py, mono_reader_v2.py) are in memory_scanner/scanner_backup/ folder for reference.
 

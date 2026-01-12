@@ -18,6 +18,7 @@ import re
 import json
 import os
 import hashlib
+import platform
 from pathlib import Path
 
 # Paths
@@ -141,10 +142,12 @@ def main():
     # Add metadata
     offsets['core_dll_path'] = str(CORE_DLL)
     offsets['decompiled_file'] = str(output_file)
+    offsets['platform'] = platform.system()  # 'Linux', 'Windows', 'Darwin'
 
     # Add Core.dll hash
     dll_hash = compute_dll_hash(CORE_DLL)
     offsets['core_dll_hash'] = dll_hash
+    print(f"Platform: {offsets['platform']}")
     print(f"Core.dll SHA256: {dll_hash}")
 
     # Save offsets

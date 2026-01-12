@@ -136,7 +136,8 @@ hackmud/
 ├── memory_scanner/          # Memory scanning tools
 │   ├── read_vtable.py       # Main vtable-based memory scanner
 │   ├── update_offsets.py    # Updates offsets after game updates
-│   ├── mono_offsets.json    # Offset configuration + DLL hash
+│   ├── scanner_config.json  # User config: platform, paths, hash (not in git)
+│   ├── mono_offsets.json    # Shared offsets and class names (in git)
 │   └── scanner_backup/      # Old scanner versions
 ├── discord_tools/           # Discord integration
 │   ├── discord_fetch.py     # Fetch messages via Discord API
@@ -215,7 +216,8 @@ The vtable scanner uses Mono runtime structures to find game objects:
 - Finds TextMeshProUGUI instances via class vtable
 - Reads terminal content from TMP_Text.m_text field
 - Identifies shell/chat by Window.name field
-- Loads offsets from mono_offsets.json for robustness across game updates
+- Loads offsets from mono_offsets.json and config from scanner_config.json
+- Automatically validates Core.dll hash and platform compatibility
 
 **For chat API responses (separate data source):**
 ```bash
@@ -290,7 +292,8 @@ python3 read_vtable.py 20 --colors
 - Finds Window instances by name (shell, chat, scratch, etc.)
 - Follows Window.gui_text to TextMeshProUGUI component
 - Reads TMP_Text.m_text field for terminal content
-- Loads offsets from mono_offsets.json for game update compatibility
+- Loads offsets from mono_offsets.json and config from scanner_config.json
+- Validates platform and Core.dll hash on each run
 - Works across hackmud restarts (ASLR safe)
 
 **Key Offsets (stored in mono_offsets.json):**
@@ -357,34 +360,49 @@ If hackmud is updated and the scanner stops working:
 # Re-extract offsets from game DLL
 python3 memory_scanner/update_offsets.py
 
-# This updates mono_offsets.json with new class names/offsets, hash, AND platform
+# This updates both scanner_config.json and mono_offsets.json
+# - scanner_config.json: platform, paths, hash (user-specific)
+# - mono_offsets.json: offsets, class names (shared via git)
 ```
 
-**Platform Detection:** read_vtable.py also checks if mono_offsets.json matches your current platform (Linux, Windows, Darwin). If you pull the repo on a different platform, you'll see:
+**Platform Detection:** read_vtable.py checks if scanner_config.json matches your current platform (Linux, Windows, Darwin). If you pull the repo on a different platform, you'll see:
 ```
 ======================================================================
 WARNING: Platform mismatch!
 Config platform: Linux
 Current platform: Windows
 
-mono_offsets.json is for a different platform.
+scanner_config.json is for a different platform.
 Run: python3 memory_scanner/update_offsets.py
 
 Note: Offsets are the same across platforms, but hash check will fail.
 ======================================================================
 ```
 
-**Important:** mono_offsets.json should be generated locally on first setup:
+**Important:** scanner_config.json must be generated locally on first setup:
 1. Clone the repo
 2. Run `python3 memory_scanner/update_offsets.py` once
 3. Script will auto-detect game path or prompt you for it
-4. This creates a platform-specific config with correct paths and hash
-5. File is excluded from git (see .gitignore)
+4. This creates scanner_config.json with platform-specific config (paths and hash)
+5. scanner_config.json is excluded from git (see .gitignore)
+6. mono_offsets.json is shared via git and contains only offsets/class names
 
-**Configurable Paths:**
-The scanner now uses configurable paths stored in mono_offsets.json:
+**Configuration Files:**
+Two separate JSON files manage the scanner:
+
+**scanner_config.json** (user-specific, not in git):
+- `platform`: Your OS (Linux/Windows/Darwin)
 - `game_path`: Base hackmud installation folder
 - `settings_path`: Unity settings folder (for future features)
+- `core_dll_hash`: SHA256 hash of your Core.dll (for update detection)
+
+**mono_offsets.json** (shared via git):
+- `version`: Game version
+- `class_names`: Obfuscated class names (extracted from Core.dll)
+- `mono_offsets`: Mono runtime structure offsets
+- `window_offsets`: Window object field offsets
+- `tmp_offsets`: TextMeshPro field offsets
+- `vtables`: vtable addresses (may vary, used as reference)
 
 **Auto-detection:**
 update_offsets.py tries common locations:

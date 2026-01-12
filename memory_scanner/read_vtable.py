@@ -19,8 +19,9 @@ import platform
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
-# Path to offsets file
+# Path to config files
 OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
+CONFIG_FILE = Path(__file__).parent / "scanner_config.json"
 
 
 def get_core_dll_path(game_path: str, plat: str) -> Path:
@@ -68,7 +69,7 @@ def check_dll_hash(offsets: Dict) -> bool:
     stored_hash = offsets.get('core_dll_hash', '')
 
     if not stored_hash:
-        print(f"Note: No hash stored in {OFFSETS_FILE}. Run update_offsets.py to store hash.", file=sys.stderr)
+        print(f"Note: No hash stored in {CONFIG_FILE}. Run update_offsets.py to store hash.", file=sys.stderr)
         return True
 
     if current_hash != stored_hash:
@@ -91,7 +92,7 @@ def check_platform(offsets: Dict) -> bool:
     current_platform = platform.system()
 
     if not stored_platform:
-        print(f"Note: No platform stored in {OFFSETS_FILE}. Run update_offsets.py.", file=sys.stderr)
+        print(f"Note: No platform stored in {CONFIG_FILE}. Run update_offsets.py.", file=sys.stderr)
         return True
 
     if current_platform != stored_platform:
@@ -100,7 +101,7 @@ def check_platform(offsets: Dict) -> bool:
         print(f"Config platform: {stored_platform}", file=sys.stderr)
         print(f"Current platform: {current_platform}", file=sys.stderr)
         print("", file=sys.stderr)
-        print("mono_offsets.json is for a different platform.", file=sys.stderr)
+        print("scanner_config.json is for a different platform.", file=sys.stderr)
         print(f"Run: python3 memory_scanner/update_offsets.py", file=sys.stderr)
         print("", file=sys.stderr)
         print("Note: Offsets are the same across platforms, but hash check will fail.", file=sys.stderr)
@@ -110,12 +111,30 @@ def check_platform(offsets: Dict) -> bool:
     return True
 
 
+def load_config() -> Dict:
+    """Load user config from scanner_config.json"""
+    if CONFIG_FILE.exists():
+        with open(CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+
 def load_offsets() -> Dict:
-    """Load offsets from JSON file"""
+    """Load offsets from mono_offsets.json"""
     if OFFSETS_FILE.exists():
         with open(OFFSETS_FILE, 'r') as f:
             return json.load(f)
     return {}
+
+
+def load_full_config() -> Dict:
+    """Load and merge both config files (for backwards compatibility)"""
+    config = load_config()
+    offsets = load_offsets()
+    # Merge: config (user settings) takes precedence
+    result = offsets.copy()
+    result.update(config)
+    return result
 
 
 def get_hackmud_pid() -> Optional[int]:
@@ -134,7 +153,7 @@ def get_hackmud_pid() -> Optional[int]:
 class VtableReader:
     def __init__(self, pid: int):
         # Load offsets from JSON (with defaults)
-        offsets = load_offsets()
+        offsets = load_full_config()
         mono = offsets.get('mono_offsets', {})
         window = offsets.get('window_offsets', {})
         tmp = offsets.get('tmp_offsets', {})
@@ -575,9 +594,9 @@ def main():
     args = parser.parse_args()
 
     # Check platform and DLL hash
-    offsets = load_offsets()
-    check_platform(offsets)
-    check_dll_hash(offsets)
+    config = load_full_config()
+    check_platform(config)
+    check_dll_hash(config)
 
     pid = get_hackmud_pid()
     if not pid:

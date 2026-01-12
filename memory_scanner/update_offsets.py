@@ -24,6 +24,7 @@ from pathlib import Path
 # Paths
 OUTPUT_DIR = Path("/tmp/hackmud_decompiled")
 OFFSETS_FILE = Path(__file__).parent / "mono_offsets.json"
+CONFIG_FILE = Path(__file__).parent / "scanner_config.json"
 
 # Default paths by platform
 DEFAULT_GAME_PATHS = {
@@ -228,29 +229,56 @@ def main():
     code = output_file.read_text()
 
     # Find class names
-    offsets = {}
-    offsets.update(find_window_class(code))
+    class_info = {}
+    class_info.update(find_window_class(code))
 
-    if 'output_class' in offsets:
-        offsets.update(find_queue_class(code, offsets['output_class']))
+    if 'output_class' in class_info:
+        class_info.update(find_queue_class(code, class_info['output_class']))
 
-    # Add metadata
-    offsets['platform'] = plat
-    offsets['game_path'] = str(game_path)
-    if settings_path:
-        offsets['settings_path'] = str(settings_path)
-
-    # Add Core.dll hash
+    # Compute Core.dll hash
     dll_hash = compute_dll_hash(core_dll)
-    offsets['core_dll_hash'] = dll_hash
-    print(f"\nPlatform: {offsets['platform']}")
+    print(f"\nPlatform: {plat}")
     print(f"Core.dll SHA256: {dll_hash}")
+
+    # Create config (user-specific settings)
+    config = {
+        'platform': plat,
+        'game_path': str(game_path),
+        'core_dll_hash': dll_hash
+    }
+    if settings_path:
+        config['settings_path'] = str(settings_path)
+
+    # Save config
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f, indent=2)
+    print(f"Config saved to {CONFIG_FILE}")
+
+    # Update offsets file (only class names, not user config)
+    # Read existing offsets to preserve version/metadata
+    if OFFSETS_FILE.exists():
+        with open(OFFSETS_FILE, 'r') as f:
+            offsets = json.load(f)
+    else:
+        offsets = {}
+
+    # Update class names only
+    offsets['class_names'] = {
+        'window_class': class_info.get('window_class'),
+        'window_namespace': class_info.get('window_namespace'),
+        'output_class': class_info.get('output_class'),
+        'queue_field': class_info.get('queue_field'),
+        'kernel_class': offsets.get('class_names', {}).get('kernel_class', 'Kernel'),
+        'tmp_class': offsets.get('class_names', {}).get('tmp_class', 'TextMeshProUGUI'),
+        'tmp_namespace': offsets.get('class_names', {}).get('tmp_namespace', 'TMPro'),
+        'hardline_class': offsets.get('class_names', {}).get('hardline_class', 'HardlineCoordinator'),
+        'hardline_ip_field': offsets.get('class_names', {}).get('hardline_ip_field')
+    }
 
     # Save offsets
     with open(OFFSETS_FILE, 'w') as f:
         json.dump(offsets, f, indent=2)
-
-    print(f"\nOffsets saved to {OFFSETS_FILE}")
+    print(f"Offsets saved to {OFFSETS_FILE}")
 
 if __name__ == '__main__':
     main()

@@ -2415,3 +2415,87 @@ match = re.match(r'v(\d+)\.(\d+)', decoded)  # Regex handles version parsing
 - debug_get_version_trace.py: debug tracer showing variable values
 - test_new_get_version.py: test script (passing)
 
+
+
+## Scanner Reorganization (2026-01-13) - ARCHIVE OLD IMPLEMENTATIONS
+
+**Per Kaj's request**, archived old scanner implementations to clean up the project:
+
+**Changes:**
+1. Created backups/ folder structure
+2. Renamed and moved old implementations:
+   - old_scanner → backups/memory_scanners/old_scanner_20260113_075800/
+   - memory_scanner → backups/memory_scanners/memory_scanner_20260113_075843/
+
+**Current Active Codebase:**
+- python_lib/hackmud/memory/scanner.py (minimal API, get_version only)
+- VtableScanner archived in memory_scanner_20260113_075843/read_vtable.py
+
+**Why Two Scanners Existed:**
+- **VtableScanner** (read_vtable.py): Full-featured, fast reads (<0.3ms), caching
+- **Scanner** (python_lib): Minimal library API, only connect/get_version/close
+
+**Benchmark Comparison Completed:**
+- Old VtableScanner: 0.22ms reads (with persistent connection)
+- New python_lib: 3.6s reads (CLI reinitializes each time)
+- Trade-off: Simplicity vs performance
+
+**Status:** All old code archived, commit f9c4d73 pushed to GitHub.
+
+
+
+## Scanner API v1.2.2 - Script-Relative Config Path (2026-01-13)
+
+**Per Kaj's request**, changed config folder location from current working directory (CWD) to script's directory.
+
+**Problem:** The `data/` folder was created in `os.getcwd()` (where the command is run), not next to the script using the API.
+
+**Solution:** Scanner now detects the calling script's location using `sys.modules['__main__'].__file__` and creates `data/` there.
+
+**Implementation:**
+```python
+@staticmethod
+def _get_caller_script_dir() -> Path:
+    """Get the directory of the script that's using the Scanner API"""
+    if hasattr(sys.modules['__main__'], '__file__'):
+        main_file = sys.modules['__main__'].__file__
+        if main_file:
+            return Path(main_file).resolve().parent
+    # Fallback to cwd if running in interactive mode (REPL, Jupyter, etc.)
+    return Path.cwd()
+
+def __init__(self, config_dir: Optional[Path] = None, memory_reader: Optional[MemoryReader] = None):
+    if config_dir is None:
+        # Default to data/ in the same folder as the calling script
+        config_dir = self._get_caller_script_dir() / 'data'
+    self.config_dir = Path(config_dir)
+```
+
+**Key Behavior:**
+- Script at: `/home/user/my_project/my_script.py`
+- Creates: `/home/user/my_project/data/` (equivalent to "./data" relative to script)
+- Works regardless of where you run the command from
+
+**Testing:**
+```bash
+# Test 1: Run from script directory
+$ cd python_lib/example/scanner_test/
+$ python3 basic_example.py
+# ✓ Creates: scanner_test/data/
+
+# Test 2: Run from different directory
+$ cd /home/jacob/hackmud
+$ python3 python_lib/example/scanner_test/basic_example.py
+# ✓ Still creates: scanner_test/data/ (not hackmud/data/)
+```
+
+**Changes:**
+- Scanner._get_caller_script_dir() - New static method
+- Scanner.__init__ - Uses script dir instead of CWD
+- README.md - Updated documentation with v1.2.2 notes
+- Version bumped from 1.2.1 to 1.2.2
+
+**Status:** Implemented, tested, committed (f1de806), pushed to GitHub.
+
+**Kaj's Request:** "the folder should be generated in the same folder where the python script that uses the API is located" - COMPLETED.
+

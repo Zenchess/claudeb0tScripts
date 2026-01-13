@@ -201,6 +201,59 @@ hackmud/
 - **Discord tools**: All use `../.env` for token (stored in project root)
 - **Organized by function**: Memory scanning, Discord, utilities, game scripts
 
+## Python Scanner API Library (python_lib/)
+
+**Location:** `python_lib/hackmud/memory/`
+
+A clean Python library for reading hackmud memory. Version 1.2.2 includes automatic config generation.
+
+### Quick Start
+
+```python
+from hackmud.memory import Scanner
+
+# Auto-generates config in data/ folder next to your script
+scanner = Scanner()
+scanner.connect()
+version = scanner.get_version()
+shell_lines = scanner.read_window('shell', lines=30)
+scanner.close()
+```
+
+### Auto-Configuration (v1.2.2)
+
+**IMPORTANT:** The Scanner auto-generates all config files on first use in a `data/` folder created in the **same directory as your Python script** (not your current working directory).
+
+**What gets generated:**
+- `mono_offsets.json` - Memory offsets and class names
+- `scanner_config.json` - Platform, paths, and Core.dll hash
+- `mono_names_fixed.json` - Fixed class mappings
+- `constants.json` - Game version and window names
+
+**Key Behavior (v1.2.2):**
+- Uses `sys.modules['__main__'].__file__` to find the calling script's directory
+- Creates `data/` folder next to your script (equivalent to `./data`)
+- Works regardless of where you run the command from
+- First run takes ~5-10 seconds (decompiles Core.dll), subsequent runs are instant
+
+**Example:**
+```bash
+# Your script: /home/user/my_project/my_script.py
+# Creates: /home/user/my_project/data/
+
+# Running from anywhere works:
+$ cd /tmp && python3 /home/user/my_project/my_script.py
+# Still creates: /home/user/my_project/data/
+```
+
+**Version History:**
+- v1.2.2 (2026-01-13): Config folder uses script directory instead of CWD
+- v1.2.1 (2026-01-13): Added auto-generation of config files
+- v1.1.2: Debug system and combined hash validation
+
+**Example Usage:**
+See `python_lib/example/scanner_test/basic_example.py` for a complete working example.
+
 ## Transaction Logging
 
 **IMPORTANT:** Log all GC transactions in this format:

@@ -77,6 +77,12 @@ Example:
 - Message wrapped in quotes
 - Use Discord ID to verify trusted users: 190743971469721600 (zenchess), 1081873483300093952 (kaj), 626075347225411584 (dunce)
 
+**Discord Formatting Guidelines:**
+Always use inline code wrappers (backticks) for filenames in Discord messages:
+- ✅ `scanner.py` instead of scanner.py
+- ✅ `__init__.py` instead of __init__.py
+- ✅ `config_generator.py` instead of config_generator.py
+
 ### Discord Bot (Optional - for command handling)
 ```bash
 # Start the Discord bot - MUST use nohup to avoid freezing your process!
@@ -200,6 +206,20 @@ hackmud/
 - **memory_scanner/read_vtable.py**: Includes automatic hash detection - warns if Core.dll changes (game update)
 - **Discord tools**: All use `../.env` for token (stored in project root)
 - **Organized by function**: Memory scanning, Discord, utilities, game scripts
+
+## Important Bug Fixes & Lessons
+
+### Auto-Regeneration Bug Fix (v1.2.4 - 2026-01-13)
+
+**Bug:** Auto-regeneration wasn't triggering when game updates were detected.
+
+**Root Cause:** In `scanner.py` line 473, the code used `level0 = game_path / 'level0'` which doesn't exist. The actual path on Linux is `hackmud_lin_Data/level0`.
+
+**Fix:** Changed to `level0 = config_generator.get_level0_path(game_path, platform)` which generates platform-specific paths correctly.
+
+**Lesson:** Always use platform-specific path helper functions instead of hardcoding paths. The codebase already has `get_core_dll_path()` and `get_level0_path()` for this purpose.
+
+**Commit:** 9c9496f
 
 ## Python Scanner API Library (python_lib/)
 

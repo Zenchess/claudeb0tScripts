@@ -2499,3 +2499,65 @@ $ python3 python_lib/example/scanner_test/basic_example.py
 
 **Kaj's Request:** "the folder should be generated in the same folder where the python script that uses the API is located" - COMPLETED.
 
+
+---
+
+## Discord Formatting Guidelines (2026-01-13)
+
+**Feedback from Kaj:** Always use inline code wrappers (backticks) for filenames in Discord messages.
+
+**Correct Format:**
+- ✅ `scanner.py` instead of scanner.py
+- ✅ `__init__.py` instead of __init__.py
+- ✅ `config_generator.py` instead of config_generator.py
+
+**Rationale:** Makes filenames easier to read and distinguish from regular text in Discord.
+
+**Where to Apply:** All Discord responses when mentioning files, whether in lists, sentences, or explanations.
+
+
+---
+
+## Bug Fix: Auto-Regeneration level0 Path (2026-01-13)
+
+**Discovered during:** Simulated game update test requested by Kaj
+
+**Bug Description:**
+Auto-regeneration feature wasn't triggering when game updates were detected due to incorrect level0 path calculation in `scanner.py` line 473.
+
+**Root Cause:**
+```python
+# WRONG (what was there):
+level0 = game_path / 'level0'
+
+# This path doesn't exist because level0 is actually in:
+# Linux: hackmud_lin_Data/level0
+# Windows: hackmud_Data/level0
+# macOS: hackmud.app/Contents/Resources/Data/level0
+```
+
+**Fix Applied:**
+```python
+# CORRECT (what it should be):
+level0 = config_generator.get_level0_path(game_path, platform)
+
+# This function generates the correct platform-specific path
+```
+
+**Location:** `python_lib/hackmud/memory/scanner.py` line 473 in `_load_config()` method
+
+**Impact:**
+- Auto-regeneration now works correctly when game updates are detected
+- Hash mismatch properly triggers config regeneration  
+- Version cache is correctly cleared on game updates
+
+**Testing Process:**
+1. Changed checksum in `scanner_config.json` to all zeros (simulating game update)
+2. Ran benchmark with `HACKMUD_DEBUG=1` to see verbose output
+3. Observed auto-regeneration trigger and complete successfully
+4. Verified version cache was cleared (561ms first call, then 0ms cached)
+
+**Commit:** 9c9496f "Fix bug in auto-regeneration: use correct level0 path"
+
+**Key Lesson:** Always use platform-specific path helper functions instead of hardcoding paths.
+

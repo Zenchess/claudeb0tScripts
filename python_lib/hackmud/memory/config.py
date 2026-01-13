@@ -6,6 +6,7 @@ Handles platform-specific paths, auto-detection, and config file creation.
 import json
 import hashlib
 import platform
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -174,7 +175,8 @@ def create_config(
     config = {
         'platform': plat,
         'game_path': str(game_path),
-        'core_dll_hash': dll_hash
+        'core_dll_hash': dll_hash,
+        'date_last': datetime.now().isoformat()
     }
 
     if settings_path:
@@ -190,6 +192,9 @@ def save_config(config: Dict[str, str], config_file: Path) -> None:
         config: Configuration dictionary
         config_file: Path to save config.json
     """
+    # Update date_last on every save
+    config['date_last'] = datetime.now().isoformat()
+
     with open(config_file, 'w') as f:
         json.dump(config, f, indent=2)
 

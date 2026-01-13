@@ -79,9 +79,9 @@ def check_ilspycmd() -> bool:
     print("    Install with: dotnet tool install -g ilspycmd")
     print()
     print("    If you don't have .NET SDK:")
-    print("    - Linux: sudo apt install dotnet-sdk-8.0")
+    print("    - Linux: sudo apt install dotnet-sdk-8.0 (or higher)")
     print("    - Windows: https://dotnet.microsoft.com/download")
-    print("    - macOS: brew install dotnet")
+    print("    - macOS: brew install dotnet (version 8+)")
     return False
 
 

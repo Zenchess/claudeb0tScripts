@@ -1,0 +1,13 @@
+{
+  "version": "v2.016",
+  "window_names": [
+    "shell",
+    "chat",
+    "badge",
+    "breach",
+    "scratch",
+    "binlog",
+    "binmat",
+    "version"
+  ]
+}

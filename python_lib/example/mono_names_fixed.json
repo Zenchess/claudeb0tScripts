@@ -1,0 +1,8 @@
+{
+  "window_class": "Window",
+  "window_namespace": "hackmud",
+  "kernel_class": "Kernel",
+  "tmp_class": "TextMeshProUGUI",
+  "tmp_namespace": "TMPro",
+  "hardline_class": "HardlineCoordinator"
+}

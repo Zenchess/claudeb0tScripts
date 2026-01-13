@@ -2226,3 +2226,149 @@ Store base game path, generate platform-specific subdirectories automatically.
 - Windows: ~/AppData/LocalLow/Drizzly Bear/hackmud/
 - macOS: ~/Library/Application Support/Drizzly Bear/hackmud/
 
+
+---
+[2026-01-13] Memory Scanner Version 1.1.2 Released
+
+**Major Changes:**
+1. **Combined Hash System**
+   - Now hashes both Core.dll + level0 together
+   - Field renamed from `core_dll_hash` to `checksum` in scanner_config.json
+   - Detects changes to either file
+   - Ensures class names and window names regenerate together
+
+2. **Version Extraction**
+   - update_offsets.py extracts version from game memory if running
+   - Reads from version window (runtime-generated)
+   - Saves to constants.json
+   - Defaults to "unknown" if game not running
+   - Regex pattern: ^v\d+\.\d+$
+
+3. **Hybrid Debug System**
+   - Environment variable: HACKMUD_DEBUG=1 (global)
+   - Programmatic: scanner.set_debug(True/False) (per-instance)
+   - Debug output in all modules: config, offsets, scanner, update_offsets
+   - Shows: hash computation, PID checking, decompilation progress, memory operations
+
+**Usage:**
+```bash
+# Enable debug globally
+HACKMUD_DEBUG=1 python3 update_offsets.py
+
+# Or in code
+from hackmud.memory import Scanner
+scanner = Scanner()
+scanner.set_debug(True)
+scanner.connect()
+```
+
+**Files Modified:**
+- python_lib/hackmud/memory/__init__.py - version bumped to 1.1.2
+- python_lib/hackmud/memory/config.py - debug support + combined hash
+- python_lib/hackmud/memory/offsets.py - debug support in update_offsets()
+- python_lib/hackmud/memory/scanner.py - set_debug() method + debug output
+- memory_scanner/update_offsets.py - debug support + version extraction
+
+**Git Commits:**
+- "Release version 1.1.2: Debug system and combined hash" (pushed to GitHub)
+
+**Trusted Collaborators:**
+- zenchess (Jacob, Discord ID: 190743971469721600) - main boss
+- dunce (Discord ID: 626075347225411584) - collaborator
+- kaj/isinctorp (Discord ID: 1081873483300093952) - collaborator, requested these features
+
+## Version Validation Work (2026-01-13)
+
+Completed comprehensive validation attempts for version string finding method per Kaj's request.
+
+**Key Findings:**
+- Version string "v2.016" at 0x7f1601d93c44 (MonoString base: 0x7f1601d93c38)
+- Forward search (VersionScript → Text) failed - no VersionScript instances found
+- Backward search (MonoString → pointers) found ZERO pointers in all 323 RW regions
+- GameObject hierarchy search (Main → version) found only ELF/PE metadata, not Unity objects
+
+**Technical Insight:**
+Unity 6000.0 embeds string data directly in Text.m_Text field (doesn't use pointer references). This makes complete GameObject hierarchy validation extremely difficult without Unity debug tools.
+
+**Recommendation:**
+Use simple pattern finder (test_version_simple.py) which reliably finds "v2.016" in UTF-16 format. Complete validation requires Unity debugging tools or extensive reverse engineering.
+
+**Files Created:**
+- VERSION_VALIDATION_SUMMARY.md - comprehensive documentation
+- Multiple test scripts showing different validation approaches
+- Sent summary to Kaj on Discord for review
+
+**Status:** Waiting for Kaj's feedback on whether simple pattern finder is acceptable.
+
+
+## Scanner API Update (2026-01-13)
+
+Successfully replaced Scanner.get_version() method to use pattern search instead of reading from version window.
+
+**Changes:**
+- get_version() now searches memory for UTF-16 LE version pattern
+- No longer requires version window to be open
+- Scans memory regions for "v2." prefix and extracts full version
+- Properly handles Unity color tags (stops before '<' character)
+
+**Testing:**
+- Tested successfully: Returns 'v2.4' (current game version)
+- Detected that game updated from v2.016 to v2.4 during our work session
+- Pattern finder working correctly across version changes
+
+**Documentation:**
+- Updated VERSION_VALIDATION_SUMMARY.md with correct Unity hierarchy:
+  Scene → Main → Canvas → version → Text → m_Text
+- Documented why complete GameObject traversal is complex
+- Created test_version_validation_final.py demonstrating pattern finder
+
+**Status:** Complete. Kaj asked for implementation, tested and working.
+
+
+## Version String Complete Saga (2026-01-13) - FINAL UPDATE
+
+Today's work involved extensive iteration on finding the game version string correctly.
+
+**Final Implementation (WORKING):**
+- Scanner.get_version() uses pattern search for UTF-16 LE "v2." prefix
+- Filters out module versions (contain ":::")
+- Collects 50 candidates, sorts by minor version length
+- Returns longest minor (v2.016 over v2.16 or v2.4)
+- Successfully returns "v2.016"
+
+**Key Discoveries:**
+1. Multiple version formats in memory:
+   - v2.4: Module version (:::what.next v2.4)
+   - v2.16: UI color-tagged version
+   - v2.016: Canonical game version (3 digits with leading zero)
+
+2. Unity scene hierarchy (from Kaj):
+   Scene → Main → Canvas → version → Text → m_Text
+
+3. Version source code (from decompiled Core.dll):
+   - Class: ANOCAGPEAIF (obfuscated, changes per update)
+   - Static field: GDGNHOHJAMA = new ANOCAGPEAIF(2, 16, 0)
+   - Format: major=2, minor=16, build=0 → v2.016
+
+**Attempted Approaches:**
+1. ✗ Forward search (VersionScript → Text) - no instances found
+2. ✗ Backward search (MonoString → pointers) - zero pointers in 323 regions
+3. ✗ GameObject hierarchy (Main → Canvas → version) - found only ELF metadata
+4. ✓ Pattern search (finds "v2.016" directly) - WORKING
+5. Partial: VersionScript reference approach - found MonoClass, but reading static fields complex
+
+**Files Created:**
+- test_version_validation_final.py - validation test
+- find_all_versions.py - searches all version patterns
+- search_v2_016.py - finds both v2.016 and v2.16
+- debug_get_version.py - debugs candidate collection
+- implement_version_via_versionscript.py - skeleton for VersionScript approach
+
+**Current Status:**
+- get_version() working correctly with pattern search
+- Returns "v2.016" as expected
+- VersionScript approach partially implemented (can find MonoClass)
+- Reading static fields would require 2-3 more hours
+
+**Recommendation:** Pattern search is robust, simple, and working. VersionScript approach is theoretically better but requires significant Mono runtime expertise.
+

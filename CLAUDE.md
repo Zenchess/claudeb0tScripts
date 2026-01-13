@@ -460,6 +460,54 @@ python3 memory_scanner/update_offsets.py --game-path "/custom/path/to/hackmud"
 
 Old memory scanners (read_live.py, mono_reader.py, mono_reader_v2.py) are in memory_scanner/scanner_backup/ folder for reference.
 
+### Debug Mode (Version 1.1.2+)
+The memory scanner supports a hybrid debug system for troubleshooting:
+
+**Environment Variable (Global):**
+```bash
+# Enable debug output for all modules
+HACKMUD_DEBUG=1 python3 memory_scanner/update_offsets.py
+HACKMUD_DEBUG=1 python3 memory_scanner/read_vtable.py 30
+```
+
+**Programmatic Control (Per-Instance):**
+```python
+from hackmud.memory import Scanner
+
+scanner = Scanner()
+scanner.set_debug(True)  # Enable debug for this instance
+scanner.connect()
+```
+
+**What Debug Mode Shows:**
+- `[DEBUG config]` - Hash computation (file sizes, combined hash)
+- `[DEBUG offsets]` - Checksum validation, PID checking, class name regeneration
+- `[DEBUG scanner]` - Memory scanning (PID, connection, window search)
+- `[DEBUG update_offsets]` - Decompilation progress, file sizes, errors
+
+**When to Use:**
+- Game update broke the scanner → use debug to see what's failing
+- Scanner can't find game → see PID detection and memory access
+- Slow performance → see which operations take time
+- Contributing/debugging → understand scanner internals
+
+**Debug Output Example:**
+```bash
+$ HACKMUD_DEBUG=1 python3 update_offsets.py
+[DEBUG update_offsets] Decompiling DLL: /path/to/Core.dll
+[DEBUG update_offsets]   Output directory: /tmp/hackmud_decompiled
+[DEBUG update_offsets]   Using ilspycmd: /home/user/.dotnet/tools/ilspycmd
+[DEBUG update_offsets]   Running: ilspycmd /path/to/Core.dll -o /tmp/...
+[DEBUG update_offsets]   Decompilation succeeded
+[DEBUG update_offsets]   File size: 2,457,123 bytes
+[DEBUG config] Computing combined hash for:
+[DEBUG config]   Core.dll: /path/to/Core.dll
+[DEBUG config]   level0: /path/to/level0
+[DEBUG config]   Core.dll size: 12,456,789 bytes
+[DEBUG config]   level0 size: 8,234,567 bytes
+[DEBUG config]   Combined hash: a1b2c3d4e5f6...
+```
+
 ### Hardline Connection
 Some actions require a hardline. Use:
 ```bash

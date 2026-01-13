@@ -266,8 +266,13 @@ class Scanner:
     def get_version(self) -> str:
         """Read game version from memory
 
-        Reads the version string from the version window.
-        This is the most reliable method as version is runtime-generated.
+        Searches memory for version string pattern (UTF-16 LE encoding).
+        This method scans memory regions for the version pattern and doesn't
+        require the version window to be open.
+
+        Uses flexible regex pattern to match any version format (v1.x, v2.x, v3.x, etc.)
+
+        Unity Scene Hierarchy: Scene → Main → Canvas → version → Text → m_Text
 
         Returns:
             Version string (e.g., "v2.016")
@@ -278,31 +283,89 @@ class Scanner:
         if not self.connected:
             raise MemoryReadError("Not connected - call connect() first")
 
+        # Search for version pattern "v#.###" in UTF-16 LE using flexible regex
+        # Prioritize 3-digit minor versions (v2.016) over 2-digit (v2.16)
+        # Avoid module versions like ":::what.next v2.4"
+        import re
+
         try:
-            # Read version window text
-            lines = self.read_window('version', lines=5, preserve_colors=False)
+            regions = self._get_memory_regions()
 
-            # Find line with version pattern (v#.###)
-            for line in lines:
-                line = line.strip()
-                if line.startswith('v') and '.' in line and len(line) < 10:
-                    # Validate format
-                    parts = line[1:].split('.')
-                    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-                        return line
+            # Collect all candidate versions
+            candidates = []
 
-            # If no valid version found, return first non-empty line as fallback
-            for line in lines:
-                line = line.strip()
-                if line:
-                    return line
+            for start, end in regions:
+                size = end - start
+                if size > 100 * 1024 * 1024:  # Skip huge regions
+                    continue
 
-            raise MemoryReadError("No version text found in version window")
+                try:
+                    data = self.memory_reader.read(start, size)
 
-        except WindowNotFoundError:
+                    # Search for "v" prefix in UTF-16 LE (flexible pattern)
+                    # Matches any version: v1.x, v2.x, v3.x, etc.
+                    version_prefix = b'v\x00'
+                    pos = 0
+
+                    while True:
+                        pos = data.find(version_prefix, pos)
+                        if pos == -1:
+                            break
+
+                        # Extract version string
+                        version_start = pos
+                        version_end = min(pos + 64, len(data))
+                        version_bytes = data[version_start:version_end]
+
+                        try:
+                            decoded = version_bytes.decode('utf-16le', errors='ignore')
+
+                            # Extract version with regex - flexible pattern
+                            # Matches: v1.2, v2.016, v3.100, etc.
+                            match = re.match(r'v(\d+)\.(\d+)', decoded)
+                            if match:
+                                version_str = match.group(0)
+                                minor = match.group(2)
+
+                                # Get context to filter out module versions
+                                context_start = max(0, pos - 64)
+                                context_end = min(len(data), pos + 64)
+                                context = data[context_start:context_end].decode('utf-16le', errors='ignore')
+
+                                # Skip if this is a module version (contains ":::")
+                                if ':::' in context:
+                                    pos += 1
+                                    continue
+
+                                # Prefer longer minor versions (v2.016 over v2.16)
+                                # and versions with 2+ digits (game versions over module versions)
+                                if len(minor) >= 2:
+                                    candidates.append((len(minor), version_str))
+
+                        except UnicodeDecodeError:
+                            pass
+
+                        pos += 1
+
+                        if len(candidates) >= 50:  # Collect up to 50 candidates
+                            break
+
+                except MemoryReadError:
+                    continue
+
+                if len(candidates) >= 50:
+                    break
+
+            # Return the version with longest minor number (most specific)
+            if candidates:
+                candidates.sort(reverse=True)  # Sort by minor length descending
+                return candidates[0][1]
+
+            # If we get here, version string was not found
             raise MemoryReadError(
-                "Version window not found. Make sure the version window is open in the game."
+                "Version string not found in memory. Make sure hackmud is fully loaded."
             )
+
         except Exception as e:
             raise MemoryReadError(f"Failed to read version: {e}")
 

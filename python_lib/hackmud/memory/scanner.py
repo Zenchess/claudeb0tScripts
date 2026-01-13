@@ -156,6 +156,10 @@ class Scanner:
         self.names_fixed: Optional[Dict] = None
         self.constants: Optional[Dict] = None
 
+        # Cache for addresses (PID-specific)
+        self._window_vtable: Optional[int] = None
+        self._windows_cache: Dict = {}
+
     def __enter__(self):
         """Context manager entry - connects to game"""
         self.connect()
@@ -218,12 +222,26 @@ class Scanner:
 
         This performs the expensive vtable and window scanning (~5s).
         Called automatically by connect().
+
+        Uses address caching to speed up subsequent scans:
+        - First run: Scan heap → find addresses → cache them (~5s)
+        - Subsequent runs: Load cached addresses (~1ms)
+        - Game restart: Detect PID change → rescan → update cache
         """
         if not self.connected:
             raise MemoryReadError("Not connected - call connect() first")
 
-        # Scan for all windows (this finds vtables internally)
+        # Try to load cached addresses first
+        if self._load_addresses():
+            self._debug_print("  Loaded addresses from cache (fast path)")
+            return
+
+        # Cache miss or invalid - do full scan
+        self._debug_print("  Cache miss - scanning for windows (slow path)")
         self._scan_windows()
+
+        # Save addresses for next time
+        self._save_addresses()
 
     def close(self) -> None:
         """Close connection to game process"""
@@ -548,6 +566,114 @@ class Scanner:
         except json.JSONDecodeError as e:
             raise ConfigError(f"Invalid JSON in constants.json: {e}")
 
+    def _load_addresses(self) -> bool:
+        """Load cached window addresses from mono_addresses.json
+
+        Returns:
+            True if addresses loaded successfully and are valid for current PID
+            False if cache miss, PID mismatch, or validation failed
+        """
+        addresses_file = self.config_dir / 'mono_addresses.json'
+        if not addresses_file.exists():
+            self._debug_print("    No address cache file found")
+            return False
+
+        try:
+            with open(addresses_file) as f:
+                cache = json.load(f)
+
+            # Check PID - addresses are invalid if game restarted
+            cached_pid = cache.get('pid')
+            if cached_pid != self.pid:
+                self._debug_print(f"    PID mismatch: cached={cached_pid}, current={self.pid}")
+                return False
+
+            # Load window vtable
+            vtable_hex = cache.get('vtables', {}).get('Window')
+            if not vtable_hex:
+                self._debug_print("    No Window vtable in cache")
+                return False
+            self._window_vtable = int(vtable_hex, 16)
+
+            # Load window addresses
+            windows = cache.get('windows', {})
+            if not windows:
+                self._debug_print("    No window addresses in cache")
+                return False
+
+            # Validate cached addresses by trying to read from them
+            self._windows_cache = {}
+            for window_name, data in windows.items():
+                window_addr = int(data['window_addr'], 16)
+                tmp_addr = int(data['tmp_addr'], 16)
+
+                # Validate by reading window name
+                try:
+                    name_offset = self.offsets.get('window_name', 0x90)
+                    name_ptr = self._read_pointer(window_addr + name_offset)
+                    if name_ptr and name_ptr != 0:
+                        name = self._read_mono_string(name_ptr)
+                        if name == window_name:
+                            self._windows_cache[window_name] = (window_addr, tmp_addr)
+                        else:
+                            # Name doesn't match - cache is stale
+                            self._debug_print(f"    Window name mismatch: expected={window_name}, got={name}")
+                            self._windows_cache = {}
+                            return False
+                except (MemoryReadError, struct.error) as e:
+                    # Read failed - cache is invalid
+                    self._debug_print(f"    Failed to validate {window_name}: {e}")
+                    self._windows_cache = {}
+                    return False
+
+            # All addresses validated successfully
+            self._debug_print(f"    Loaded {len(self._windows_cache)} windows from cache")
+            return True
+
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            self._debug_print(f"    Failed to load address cache: {e}")
+            return False
+
+    def _save_addresses(self) -> None:
+        """Save window addresses to mono_addresses.json for faster subsequent scans
+
+        Saves:
+        - Current PID (for invalidation detection)
+        - Window vtable address
+        - Window instance addresses (window_addr, tmp_addr) for each window
+        """
+        if not hasattr(self, '_windows_cache') or not self._windows_cache:
+            self._debug_print("    No windows to cache")
+            return
+
+        addresses_file = self.config_dir / 'mono_addresses.json'
+
+        cache = {
+            'pid': self.pid,
+            'vtables': {},
+            'windows': {}
+        }
+
+        # Save window vtable
+        if self._window_vtable:
+            cache['vtables']['Window'] = hex(self._window_vtable)
+
+        # Save window addresses
+        for window_name, (window_addr, tmp_addr) in self._windows_cache.items():
+            cache['windows'][window_name] = {
+                'window_addr': hex(window_addr),
+                'tmp_addr': hex(tmp_addr)
+            }
+
+        try:
+            with open(addresses_file, 'w') as f:
+                json.dump(cache, f, indent=2)
+            self._debug_print(f"    Saved {len(self._windows_cache)} windows to cache")
+        except Exception as e:
+            # Non-fatal - caching is optional
+            if self._debug:
+                print(f"[DEBUG scanner] Failed to save address cache: {e}")
+
     def _find_window(self, window_name: str) -> Optional[int]:
         """Find Window instance in memory by name
 
@@ -577,6 +703,9 @@ class Scanner:
         window_vtable = self._find_window_vtable()
         if not window_vtable:
             return
+
+        # Cache vtable for saving later
+        self._window_vtable = window_vtable
 
         # Scan memory regions for Window instances
         window_vtable_bytes = struct.pack('<Q', window_vtable)

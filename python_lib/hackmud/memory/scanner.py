@@ -470,7 +470,7 @@ class Scanner:
                     # Compute current hash
                     platform = config_data.get('platform', '')
                     core_dll = config_generator.get_core_dll_path(game_path, platform)
-                    level0 = game_path / 'level0'
+                    level0 = config_generator.get_level0_path(game_path, platform)
 
                     if core_dll.exists() and level0.exists():
                         current_hash = config_generator.compute_combined_hash(core_dll, level0)

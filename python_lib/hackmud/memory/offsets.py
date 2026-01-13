@@ -170,31 +170,20 @@ def generate_offsets(core_dll: Path, output_dir: Optional[Path] = None) -> Dict[
 
 
 def save_names(class_info: Dict[str, str], names_file: Path) -> None:
-    """Save class names to mono_names.json
+    """Save obfuscated class names to mono_names.json
+
+    Only saves obfuscated names that change each game update.
+    Non-obfuscated names are in mono_names_fixed.json.
 
     Args:
         class_info: Dictionary with class names
         names_file: Path to mono_names.json
     """
-    # Read existing names to preserve other entries
-    if names_file.exists():
-        with open(names_file, 'r') as f:
-            names = json.load(f)
-    else:
-        names = {}
-
-    # Update class names
-    names.update({
-        'window_class': class_info.get('window_class'),
-        'window_namespace': class_info.get('window_namespace'),
+    # Only save obfuscated names
+    names = {
         'output_class': class_info.get('output_class'),
-        'queue_field': class_info.get('queue_field'),
-        'kernel_class': names.get('kernel_class', 'Kernel'),
-        'tmp_class': names.get('tmp_class', 'TextMeshProUGUI'),
-        'tmp_namespace': names.get('tmp_namespace', 'TMPro'),
-        'hardline_class': names.get('hardline_class', 'HardlineCoordinator'),
-        'hardline_ip_field': names.get('hardline_ip_field')
-    })
+        'queue_field': class_info.get('queue_field')
+    }
 
     # Save names
     with open(names_file, 'w') as f:
@@ -237,6 +226,41 @@ def load_offsets(offsets_file: Path) -> Dict:
         return json.load(f)
 
 
+def generate_constants(constants_file: Path) -> Dict:
+    """Generate runtime constants
+
+    This creates constants.json with default values. In a future version,
+    this could be enhanced to scan game memory for actual runtime values.
+
+    Args:
+        constants_file: Path to save constants.json
+
+    Returns:
+        Constants dictionary
+    """
+    # Default constants (can be enhanced to read from game memory later)
+    constants = {
+        "version": "v2.016",  # Default, could be read from game memory
+        "window_names": [
+            "shell",
+            "chat",
+            "badge",
+            "breach",
+            "scratch",
+            "binlog",
+            "binmat",
+            "version"
+        ]
+    }
+
+    # Save constants
+    with open(constants_file, 'w') as f:
+        json.dump(constants, f, indent=2)
+
+    print(f"Constants saved to {constants_file}")
+    return constants
+
+
 def update_offsets(
     core_dll: Path,
     config_file: Path,
@@ -277,9 +301,18 @@ def update_offsets(
         reason = "Names file doesn't exist"
     else:
         try:
-            # Load config to get stored hash
+            # Load config to get stored hash and PID
             cfg = config.load_config(config_file)
             stored_hash = cfg.get('core_dll_hash')
+            stored_pid = cfg.get('game_pid')
+
+            # PID optimization: if game PID matches, skip expensive hash check
+            if stored_pid is not None:
+                current_pid = config.get_game_pid()
+                if current_pid == stored_pid:
+                    # Game hasn't restarted - use cached names without hashing
+                    print(f"Game PID matches ({current_pid}) - using existing class names (hash check skipped)")
+                    return load_names(names_file), False
 
             if not stored_hash:
                 need_regen = True

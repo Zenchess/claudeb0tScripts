@@ -6,6 +6,7 @@ Handles platform-specific paths, auto-detection, and config file creation.
 import json
 import hashlib
 import platform
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
@@ -130,6 +131,48 @@ def compute_dll_hash(dll_path: Path) -> str:
     return sha256.hexdigest()
 
 
+def get_game_pid(plat: Optional[str] = None) -> Optional[int]:
+    """Get hackmud process ID
+
+    Args:
+        plat: Platform name (defaults to current platform)
+
+    Returns:
+        Process ID if found, None otherwise
+    """
+    if plat is None:
+        plat = get_platform()
+
+    try:
+        if plat == 'Linux' or plat == 'Darwin':
+            # Use pgrep to find hackmud process
+            result = subprocess.run(
+                ['pgrep', '-x', 'hackmud'],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return int(result.stdout.strip().split('\n')[0])
+        elif plat == 'Windows':
+            # Use tasklist to find hackmud.exe
+            result = subprocess.run(
+                ['tasklist', '/FI', 'IMAGENAME eq hackmud.exe', '/FO', 'CSV', '/NH'],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+            if result.returncode == 0 and 'hackmud.exe' in result.stdout:
+                # Parse CSV output: "hackmud.exe","PID",...
+                parts = result.stdout.split(',')
+                if len(parts) >= 2:
+                    return int(parts[1].strip('"'))
+    except (subprocess.TimeoutExpired, ValueError, FileNotFoundError):
+        pass
+
+    return None
+
+
 def create_config(
     game_path: Optional[Path] = None,
     settings_path: Optional[Path] = None,
@@ -171,6 +214,9 @@ def create_config(
 
     dll_hash = compute_dll_hash(core_dll)
 
+    # Get game PID if running
+    game_pid = get_game_pid(plat)
+
     # Build config
     config = {
         'platform': plat,
@@ -181,6 +227,9 @@ def create_config(
 
     if settings_path:
         config['settings_path'] = str(settings_path)
+
+    if game_pid is not None:
+        config['game_pid'] = game_pid
 
     return config
 

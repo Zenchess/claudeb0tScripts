@@ -15,8 +15,8 @@ import time
 from pathlib import Path
 from typing import List, Tuple
 
-# Add python_lib to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'python_lib'))
+# Add python_lib to path (go up 3 levels to project root)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from hackmud.memory import Scanner
 

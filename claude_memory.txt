@@ -2372,3 +2372,46 @@ Today's work involved extensive iteration on finding the game version string cor
 
 **Recommendation:** Pattern search is robust, simple, and working. VersionScript approach is theoretically better but requires significant Mono runtime expertise.
 
+
+
+## Flexible Regex Version Detection (2026-01-13) - APPROVED BY KAJ
+
+**Change:** Updated get_version() to use flexible regex pattern instead of hardcoded v2.x search.
+
+**Old Implementation:**
+```python
+version_prefix = b'v\x002\x00.\x00'  # Only matches v2.x
+```
+
+**New Implementation:**
+```python
+version_prefix = b'v\x00'  # Matches any v1.x, v2.x, v3.x, etc.
+match = re.match(r'v(\d+)\.(\d+)', decoded)  # Regex handles version parsing
+```
+
+**Benefits:**
+- Works with future game updates (v3.x, v4.x, etc.)
+- More robust and maintainable
+- Same filtering and priority selection logic
+
+**Implementation Chain:**
+1. Memory Region Enumeration: Reads /proc/PID/maps
+2. Binary Pattern Search: Finds 'v\x00' in UTF-16 LE
+3. UTF-16 Decoding: Converts binary to text
+4. Regex Version Extraction: Matches v(\d+)\.(\d+)
+5. Context Filtering: Skips ':::' module versions
+6. Priority Selection: Returns longest minor version
+
+**Testing:**
+- Ran debug_get_version_trace.py to verify variable values
+- Collects 22 candidates, finds both v2.16 (2 digits) and v2.016 (3 digits)
+- Sorts by minor length descending: [(3, 'v2.016'), (2, 'v2.16'), ...]
+- Returns v2.016 correctly
+
+**Status:** Approved by Kaj, pushed to GitHub (commit b357cb1)
+
+**Files:**
+- scanner.py: get_version() updated
+- debug_get_version_trace.py: debug tracer showing variable values
+- test_new_get_version.py: test script (passing)
+

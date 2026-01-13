@@ -1,0 +1,766 @@
+"""Memory scanner for hackmud game terminal output
+
+Provides a clean API for reading terminal content from hackmud's memory.
+Uses Mono vtables to locate Window objects and read TextMeshProUGUI text.
+"""
+
+import json
+import struct
+import os
+from pathlib import Path
+from typing import Dict, List, Optional, Protocol, Tuple
+
+# Import config and exceptions
+try:
+    from . import config
+    from .exceptions import (
+        GameNotFoundError,
+        ConfigError,
+        MemoryReadError,
+        WindowNotFoundError,
+        OffsetsNotFoundError
+    )
+except ImportError:
+    # Fallback for direct execution
+    import config
+    from exceptions import (
+        GameNotFoundError,
+        ConfigError,
+        MemoryReadError,
+        WindowNotFoundError,
+        OffsetsNotFoundError
+    )
+
+
+# Debug flag from environment
+_DEBUG = os.getenv('HACKMUD_DEBUG', '').lower() in ('1', 'true', 'yes')
+
+def _debug_print(*args, **kwargs):
+    """Print debug message if DEBUG is enabled"""
+    if _DEBUG:
+        print('[DEBUG scanner]', *args, **kwargs)
+
+
+# Memory reader protocol for dependency injection and testing
+class MemoryReader(Protocol):
+    """Protocol for memory reading - allows mocking in tests"""
+
+    def open(self, pid: int) -> None:
+        """Open memory access for process"""
+        ...
+
+    def close(self) -> None:
+        """Close memory access"""
+        ...
+
+    def read(self, address: int, size: int) -> bytes:
+        """Read bytes from memory address"""
+        ...
+
+
+class ProcMemReader:
+    """Real memory reader using /proc/PID/mem"""
+
+    def __init__(self):
+        self.mem_file = None
+        self.pid = None
+
+    def open(self, pid: int) -> None:
+        """Open /proc/PID/mem for reading"""
+        self.pid = pid
+        try:
+            self.mem_file = open(f'/proc/{pid}/mem', 'rb', buffering=0)
+        except (FileNotFoundError, PermissionError) as e:
+            raise MemoryReadError(f"Cannot access process {pid} memory: {e}")
+
+    def close(self) -> None:
+        """Close memory file"""
+        if self.mem_file:
+            self.mem_file.close()
+            self.mem_file = None
+
+    def read(self, address: int, size: int) -> bytes:
+        """Read bytes from memory address"""
+        if not self.mem_file:
+            raise MemoryReadError("Memory not opened - call open() first")
+
+        try:
+            self.mem_file.seek(address)
+            data = self.mem_file.read(size)
+            if len(data) != size:
+                raise MemoryReadError(f"Short read at {hex(address)}: got {len(data)}, expected {size}")
+            return data
+        except Exception as e:
+            raise MemoryReadError(f"Failed to read memory at {hex(address)}: {e}")
+
+
+class Scanner:
+    """Memory scanner for reading hackmud terminal output
+
+    Usage:
+        # Context manager (recommended)
+        with Scanner() as scanner:
+            text = scanner.read_window('shell', lines=30)
+
+        # Manual
+        scanner = Scanner()
+        scanner.connect()
+        text = scanner.read_window('shell')
+        scanner.close()
+
+    Args:
+        config_dir: Directory containing scanner_config.json (defaults to memory_scanner/)
+        memory_reader: Custom memory reader for testing (defaults to ProcMemReader)
+    """
+
+    def __init__(
+        self,
+        config_dir: Optional[Path] = None,
+        memory_reader: Optional[MemoryReader] = None
+    ):
+        # Set config directory
+        if config_dir is None:
+            # Default to memory_scanner/ in project root
+            config_dir = Path(__file__).parent.parent.parent.parent / 'memory_scanner'
+        self.config_dir = Path(config_dir)
+
+        # Set memory reader (allows mocking for tests)
+        self.memory_reader = memory_reader if memory_reader else ProcMemReader()
+
+        # Debug flag (instance-level, overrides global)
+        self._debug = _DEBUG
+
+        # State
+        self.connected = False
+        self.pid: Optional[int] = None
+        self.offsets: Optional[Dict] = None
+        self.names: Optional[Dict] = None
+        self.names_fixed: Optional[Dict] = None
+        self.constants: Optional[Dict] = None
+
+    def __enter__(self):
+        """Context manager entry - connects to game"""
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - closes connection"""
+        self.close()
+        return False
+
+    def set_debug(self, enabled: bool) -> None:
+        """Enable or disable debug output for this scanner instance
+
+        Args:
+            enabled: True to enable debug output, False to disable
+        """
+        self._debug = enabled
+        if enabled:
+            print('[DEBUG scanner] Debug mode enabled for this scanner instance')
+
+    def _debug_print(self, *args, **kwargs):
+        """Print debug message if debug is enabled"""
+        if self._debug:
+            print('[DEBUG scanner]', *args, **kwargs)
+
+    def connect(self) -> None:
+        """Connect to hackmud process and load configuration
+
+        Raises:
+            GameNotFoundError: If hackmud process is not running
+            ConfigError: If configuration files are missing or invalid
+        """
+        if self.connected:
+            return
+
+        self._debug_print("Connecting to hackmud process...")
+
+        # Find game process
+        self.pid = config.get_game_pid()
+        if self.pid is None:
+            raise GameNotFoundError(
+                "hackmud process not found. Make sure the game is running."
+            )
+        self._debug_print(f"  Found hackmud process: PID {self.pid}")
+
+        # Load configuration files
+        self._debug_print("  Loading configuration files...")
+        self._load_config()
+
+        # Open memory access
+        self._debug_print(f"  Opening memory access for PID {self.pid}")
+        self.memory_reader.open(self.pid)
+        self.connected = True
+
+        # Initialize vtable scanning
+        self.init()
+
+    def init(self) -> None:
+        """Initialize scanner by finding vtables and scanning for windows
+
+        This performs the expensive vtable and window scanning (~5s).
+        Called automatically by connect().
+        """
+        if not self.connected:
+            raise MemoryReadError("Not connected - call connect() first")
+
+        # Scan for all windows (this finds vtables internally)
+        self._scan_windows()
+
+    def close(self) -> None:
+        """Close connection to game process"""
+        if self.connected:
+            self.memory_reader.close()
+            self.connected = False
+
+    def read_window(
+        self,
+        window_name: str,
+        lines: int = 20,
+        preserve_colors: bool = False
+    ) -> List[str]:
+        """Read text from a game window
+
+        Args:
+            window_name: Window to read ('shell', 'chat', 'badge', etc.)
+            lines: Number of lines to return (default 20)
+            preserve_colors: Keep Unity color tags (default False)
+
+        Returns:
+            List of text lines from the window
+
+        Raises:
+            WindowNotFoundError: If window is not found in memory
+            MemoryReadError: If memory reading fails
+        """
+        if not self.connected:
+            raise MemoryReadError("Not connected - call connect() first")
+
+        # Validate window name
+        if window_name not in self.constants['window_names']:
+            valid_windows = ', '.join(self.constants['window_names'])
+            raise ValueError(
+                f"Invalid window name '{window_name}'. "
+                f"Valid windows: {valid_windows}"
+            )
+
+        # Find window instance
+        window_addr = self._find_window(window_name)
+        if window_addr is None:
+            raise WindowNotFoundError(
+                f"Window '{window_name}' not found in memory. "
+                f"Make sure the window is open in the game."
+            )
+
+        # Read text from window
+        text = self._read_window_text(window_addr)
+
+        # Process text
+        if not preserve_colors:
+            text = self._strip_colors(text)
+
+        # Split into lines and return requested number
+        all_lines = text.split('\n')
+        return all_lines[-lines:] if lines > 0 else all_lines
+
+    def get_version(self) -> str:
+        """Read game version from memory
+
+        Reads the version string from the version window.
+        This is the most reliable method as version is runtime-generated.
+
+        Returns:
+            Version string (e.g., "v2.016")
+
+        Raises:
+            MemoryReadError: If memory reading fails or version not found
+        """
+        if not self.connected:
+            raise MemoryReadError("Not connected - call connect() first")
+
+        try:
+            # Read version window text
+            lines = self.read_window('version', lines=5, preserve_colors=False)
+
+            # Find line with version pattern (v#.###)
+            for line in lines:
+                line = line.strip()
+                if line.startswith('v') and '.' in line and len(line) < 10:
+                    # Validate format
+                    parts = line[1:].split('.')
+                    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                        return line
+
+            # If no valid version found, return first non-empty line as fallback
+            for line in lines:
+                line = line.strip()
+                if line:
+                    return line
+
+            raise MemoryReadError("No version text found in version window")
+
+        except WindowNotFoundError:
+            raise MemoryReadError(
+                "Version window not found. Make sure the version window is open in the game."
+            )
+        except Exception as e:
+            raise MemoryReadError(f"Failed to read version: {e}")
+
+    def _load_config(self) -> None:
+        """Load configuration files
+
+        Raises:
+            ConfigError: If config files are missing or invalid
+        """
+        # Load mono_offsets.json
+        offsets_file = self.config_dir / 'mono_offsets.json'
+        if not offsets_file.exists():
+            raise ConfigError(
+                f"mono_offsets.json not found at {offsets_file}. "
+                f"Run update_offsets.py to generate offsets."
+            )
+
+        try:
+            with open(offsets_file) as f:
+                data = json.load(f)
+
+                # Flatten nested offset structure for easy access
+                self.offsets = {}
+                self.names = data.get('class_names', {})
+
+                # Extract mono offsets (convert hex strings to int)
+                for key, value in data.get('mono_offsets', {}).items():
+                    self.offsets[key] = int(value, 16) if isinstance(value, str) else value
+
+                # Extract window offsets
+                for key, value in data.get('window_offsets', {}).items():
+                    self.offsets[f'window_{key}'] = int(value, 16) if isinstance(value, str) else value
+
+                # Extract TMP offsets
+                for key, value in data.get('tmp_offsets', {}).items():
+                    self.offsets[f'tmp_{key}'] = int(value, 16) if isinstance(value, str) else value
+
+        except json.JSONDecodeError as e:
+            raise ConfigError(f"Invalid JSON in mono_offsets.json: {e}")
+
+        # Load mono_names_fixed.json
+        names_fixed_file = self.config_dir / 'mono_names_fixed.json'
+        if not names_fixed_file.exists():
+            raise ConfigError(f"mono_names_fixed.json not found at {names_fixed_file}")
+
+        try:
+            with open(names_fixed_file) as f:
+                self.names_fixed = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ConfigError(f"Invalid JSON in mono_names_fixed.json: {e}")
+
+        # Load constants.json (window names extracted during update_offsets.py)
+        constants_file = self.config_dir / 'constants.json'
+        if not constants_file.exists():
+            raise ConfigError(
+                f"constants.json not found at {constants_file}. "
+                f"Run update_offsets.py to generate it."
+            )
+
+        try:
+            with open(constants_file) as f:
+                self.constants = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ConfigError(f"Invalid JSON in constants.json: {e}")
+
+    def _find_window(self, window_name: str) -> Optional[int]:
+        """Find Window instance in memory by name
+
+        Args:
+            window_name: Name of window to find
+
+        Returns:
+            Memory address of Window instance, or None if not found
+        """
+        # Return window address from cache (populated by init())
+        if not hasattr(self, '_windows_cache'):
+            raise MemoryReadError("Scanner not initialized - call init() first")
+
+        window_data = self._windows_cache.get(window_name)
+        if window_data:
+            return window_data[0]  # Return window_addr
+        return None
+
+    def _scan_windows(self) -> None:
+        """Scan memory for all Window instances and cache them
+
+        Populates _windows_cache with {name: (window_addr, tmp_addr)}
+        """
+        self._windows_cache = {}
+
+        # Find Window class vtable
+        window_vtable = self._find_window_vtable()
+        if not window_vtable:
+            return
+
+        # Scan memory regions for Window instances
+        window_vtable_bytes = struct.pack('<Q', window_vtable)
+        regions = self._get_memory_regions()
+
+        for start, end in regions:
+            try:
+                data = self.memory_reader.read(start, end - start)
+            except MemoryReadError:
+                continue
+
+            # Search for vtable pointer in this region
+            pos = 0
+            while True:
+                pos = data.find(window_vtable_bytes, pos)
+                if pos == -1:
+                    break
+
+                window_addr = start + pos
+
+                # Read window name
+                name_offset = self.offsets.get('window_name', 0x90)
+                try:
+                    name_ptr = self._read_pointer(window_addr + name_offset)
+                    if name_ptr and name_ptr != 0:
+                        name = self._read_mono_string(name_ptr)
+
+                        # If name matches one of the known windows, cache it
+                        if name in self.constants['window_names']:
+                            # Get TMP instance via gui_text pointer
+                            gui_text_offset = self.offsets.get('window_gui_text', 0x58)
+                            tmp_ptr = self._read_pointer(window_addr + gui_text_offset)
+
+                            if tmp_ptr and tmp_ptr != 0:
+                                self._windows_cache[name] = (window_addr, tmp_ptr)
+                except (MemoryReadError, struct.error):
+                    pass
+
+                pos += 8
+
+    def _find_window_vtable(self) -> Optional[int]:
+        """Find hackmud.Window class vtable
+
+        Returns:
+            Vtable address, or None if not found
+        """
+        heap = self._get_heap_region()
+        if not heap:
+            return None
+
+        start, end = heap
+        try:
+            data = self.memory_reader.read(start, end - start)
+        except MemoryReadError:
+            return None
+
+        # MonoClass offsets
+        name_offset = self.offsets.get('mono_class_name', 0x40)
+        namespace_offset = self.offsets.get('mono_class_namespace', 0x48)
+        runtime_info_offset = self.offsets.get('mono_class_runtime_info', 0xC8)
+        vtable_offset = self.offsets.get('mono_runtime_info_vtable', 0x8)
+
+        # Get target class and namespace names
+        window_class = self.names_fixed.get('window_class', 'Window')
+        window_namespace = self.names_fixed.get('window_namespace', 'hackmud')
+
+        # Scan heap for MonoClass
+        for offset in range(0, len(data) - 0x100, 8):
+            try:
+                # Read class name pointer
+                name_ptr_bytes = data[offset + name_offset:offset + name_offset + 8]
+                if len(name_ptr_bytes) < 8:
+                    continue
+                name_ptr = struct.unpack('<Q', name_ptr_bytes)[0]
+
+                if not self._is_valid_pointer(name_ptr):
+                    continue
+
+                # Read class name
+                name = self._read_cstring(name_ptr, 32)
+                if name != window_class:
+                    continue
+
+                # Read namespace pointer
+                ns_ptr_bytes = data[offset + namespace_offset:offset + namespace_offset + 8]
+                if len(ns_ptr_bytes) < 8:
+                    continue
+                ns_ptr = struct.unpack('<Q', ns_ptr_bytes)[0]
+
+                if not self._is_valid_pointer(ns_ptr):
+                    continue
+
+                # Read namespace
+                namespace = self._read_cstring(ns_ptr, 64)
+                if namespace != window_namespace:
+                    continue
+
+                # Found the class! Get vtable from runtime_info
+                runtime_info_bytes = data[offset + runtime_info_offset:offset + runtime_info_offset + 8]
+                if len(runtime_info_bytes) < 8:
+                    continue
+                runtime_info = struct.unpack('<Q', runtime_info_bytes)[0]
+
+                if runtime_info and self._is_valid_pointer(runtime_info):
+                    vtable = self._read_pointer(runtime_info + vtable_offset)
+                    if vtable:
+                        return vtable
+
+            except (struct.error, MemoryReadError):
+                continue
+
+        return None
+
+    def _get_memory_regions(self) -> List[Tuple[int, int]]:
+        """Get readable/writable memory regions from /proc/PID/maps
+
+        Returns:
+            List of (start, end) address tuples
+        """
+        regions = []
+        try:
+            with open(f'/proc/{self.pid}/maps') as f:
+                for line in f:
+                    if 'rw-p' in line:
+                        addrs = line.split()[0].split('-')
+                        start = int(addrs[0], 16)
+                        end = int(addrs[1], 16)
+                        # Skip huge regions (> 100MB)
+                        if end - start < 100 * 1024 * 1024:
+                            regions.append((start, end))
+        except (FileNotFoundError, PermissionError):
+            pass
+        return regions
+
+    def _get_heap_region(self) -> Optional[Tuple[int, int]]:
+        """Get heap memory region from /proc/PID/maps
+
+        Returns:
+            (start, end) tuple or None
+        """
+        try:
+            with open(f'/proc/{self.pid}/maps') as f:
+                for line in f:
+                    if '[heap]' in line:
+                        addrs = line.split()[0].split('-')
+                        return (int(addrs[0], 16), int(addrs[1], 16))
+        except (FileNotFoundError, PermissionError):
+            pass
+        return None
+
+    def _read_cstring(self, address: int, max_len: int = 256) -> Optional[str]:
+        """Read null-terminated C string from memory
+
+        Args:
+            address: Memory address to read from
+            max_len: Maximum length to read
+
+        Returns:
+            String content or None if read fails
+        """
+        try:
+            data = self.memory_reader.read(address, max_len)
+            null_idx = data.index(b'\x00')
+            return data[:null_idx].decode('utf-8', errors='ignore')
+        except (MemoryReadError, ValueError, UnicodeDecodeError):
+            return None
+
+    def _is_valid_pointer(self, ptr: int) -> bool:
+        """Check if pointer looks valid
+
+        Args:
+            ptr: Pointer value to check
+
+        Returns:
+            True if pointer is in valid range
+        """
+        return 0x1000 < ptr < 0x7FFFFFFFFFFF
+
+    def _load_cached_vtable(self) -> Optional[int]:
+        """Load cached Window vtable address from config
+
+        Returns:
+            Cached vtable address or None
+        """
+        try:
+            config_file = self.config_dir / 'scanner_config.json'
+            if not config_file.exists():
+                return None
+
+            with open(config_file) as f:
+                data = json.load(f)
+                vtable_hex = data.get('window_vtable')
+                if vtable_hex:
+                    return int(vtable_hex, 16)
+        except:
+            pass
+        return None
+
+    def _save_vtable_cache(self, vtable: int) -> None:
+        """Save Window vtable address to config for faster subsequent scans
+
+        Args:
+            vtable: Vtable address to cache
+        """
+        try:
+            config_file = self.config_dir / 'scanner_config.json'
+
+            # Load existing config
+            data = {}
+            if config_file.exists():
+                with open(config_file) as f:
+                    data = json.load(f)
+
+            # Update with vtable
+            data['window_vtable'] = hex(vtable)
+
+            # Save back
+            with open(config_file, 'w') as f:
+                json.dump(data, f, indent=2)
+        except:
+            pass  # Cache is optional, don't fail if we can't save
+
+    def _read_window_text(self, window_addr: int) -> str:
+        """Read text content from Window instance
+
+        Args:
+            window_addr: Memory address of Window object
+
+        Returns:
+            Text content from window
+        """
+        # Get gui_text pointer (Window.gui_text)
+        gui_text_offset = self.offsets.get('window_gui_text', 0x58)
+        gui_text_ptr = self._read_pointer(window_addr + gui_text_offset)
+
+        if gui_text_ptr == 0:
+            raise MemoryReadError("Window.gui_text is null")
+
+        # Read m_text field pointer (TMP_Text.m_text is a MonoString*)
+        m_text_offset = self.offsets.get('tmp_m_text', 0xc8)
+        m_text_ptr = self._read_pointer(gui_text_ptr + m_text_offset)
+
+        if m_text_ptr == 0:
+            return ""
+
+        # Read the MonoString
+        text = self._read_mono_string(m_text_ptr)
+
+        return text
+
+    def _read_pointer(self, address: int) -> int:
+        """Read 64-bit pointer from memory
+
+        Args:
+            address: Memory address to read from
+
+        Returns:
+            Pointer value
+        """
+        data = self.memory_reader.read(address, 8)
+        return struct.unpack('<Q', data)[0]
+
+    def _read_mono_string(self, string_ptr: int) -> str:
+        """Read MonoString from memory
+
+        Args:
+            string_ptr: Pointer to MonoString object (not a pointer to a pointer)
+
+        Returns:
+            String content
+        """
+        if not string_ptr or string_ptr == 0:
+            return ""
+
+        # Get MonoString field offsets
+        length_offset = self.offsets.get('mono_string_length', 0x10)
+        data_offset = self.offsets.get('mono_string_data', 0x14)
+
+        # Read length (int32)
+        try:
+            length_data = self.memory_reader.read(string_ptr + length_offset, 4)
+            length = struct.unpack('<i', length_data)[0]
+        except:
+            return ""
+
+        if length <= 0 or length > 1000000:  # Sanity check
+            return ""
+
+        # Read UTF-16 string data
+        try:
+            string_data = self.memory_reader.read(string_ptr + data_offset, length * 2)
+            return string_data.decode('utf-16le', errors='ignore')
+        except:
+            return ""
+
+    def _read_mono_string_at(self, obj_addr: int, offset: int) -> str:
+        """Read MonoString from an object field
+
+        Args:
+            obj_addr: Address of the object
+            offset: Offset to the string pointer field
+
+        Returns:
+            String content
+        """
+        try:
+            # Read pointer to MonoString
+            ptr_data = self.memory_reader.read(obj_addr + offset, 8)
+            string_ptr = struct.unpack('<Q', ptr_data)[0]
+            return self._read_mono_string(string_ptr)
+        except:
+            return ""
+
+    def _find_mono_class(self, class_name: str, namespace: str) -> Optional[int]:
+        """Find MonoClass in Mono runtime
+
+        Args:
+            class_name: Class name to find
+            namespace: Namespace of the class
+
+        Returns:
+            Address of MonoClass, or None if not found
+        """
+        # This is a simplified implementation
+        # In practice, we'd need to walk the Mono assembly structures
+        # For now, return None and rely on version window fallback
+        return None
+
+    def _get_class_vtable(self, class_addr: int) -> Optional[int]:
+        """Get vtable address from MonoClass
+
+        Args:
+            class_addr: Address of MonoClass
+
+        Returns:
+            Vtable address, or None if failed
+        """
+        try:
+            # Read runtime_info (+0xC8)
+            runtime_info_data = self.memory_reader.read(class_addr + 0xC8, 8)
+            runtime_info = struct.unpack('<Q', runtime_info_data)[0]
+
+            if runtime_info == 0:
+                return None
+
+            # Read vtable (+0x8 from runtime_info)
+            vtable_data = self.memory_reader.read(runtime_info + 0x8, 8)
+            vtable = struct.unpack('<Q', vtable_data)[0]
+
+            return vtable if vtable != 0 else None
+        except:
+            return None
+
+    def _strip_colors(self, text: str) -> str:
+        """Strip Unity color tags from text
+
+        Args:
+            text: Text with color tags
+
+        Returns:
+            Text without color tags
+        """
+        import re
+        # Remove <color=...> and </color> tags
+        text = re.sub(r'<color=[^>]+>', '', text)
+        text = re.sub(r'</color>', '', text)
+        return text

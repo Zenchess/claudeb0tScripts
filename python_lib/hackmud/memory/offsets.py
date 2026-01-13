@@ -7,6 +7,7 @@ import subprocess
 import re
 import json
 import shutil
+import os
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
@@ -16,6 +17,15 @@ try:
 except ImportError:
     # Fallback for direct execution
     import config
+
+
+# Debug flag from environment
+DEBUG = os.getenv('HACKMUD_DEBUG', '').lower() in ('1', 'true', 'yes')
+
+def _debug_print(*args, **kwargs):
+    """Print debug message if DEBUG is enabled"""
+    if DEBUG:
+        print('[DEBUG offsets]', *args, **kwargs)
 
 
 # Default decompilation output directory
@@ -229,8 +239,9 @@ def load_offsets(offsets_file: Path) -> Dict:
 def generate_constants(constants_file: Path) -> Dict:
     """Generate runtime constants
 
-    This creates constants.json with default values. In a future version,
-    this could be enhanced to scan game memory for actual runtime values.
+    DEPRECATED: Window names are now dynamically extracted from level0
+    using config.extract_window_names(). This function is kept for
+    backwards compatibility only and creates a fallback constants.json.
 
     Args:
         constants_file: Path to save constants.json
@@ -290,48 +301,67 @@ def update_offsets(
         RuntimeError: If regeneration is needed but fails
     """
     # Try to load existing config and names
+    _debug_print("Checking if class names need regeneration...")
+    _debug_print(f"  config_file: {config_file}")
+    _debug_print(f"  names_file: {names_file}")
+    _debug_print(f"  core_dll: {core_dll}")
+
     need_regen = False
     reason = ""
 
     if not config_file.exists():
         need_regen = True
         reason = "Config file doesn't exist"
+        _debug_print(f"  → {reason}")
     elif not names_file.exists():
         need_regen = True
         reason = "Names file doesn't exist"
+        _debug_print(f"  → {reason}")
     else:
         try:
-            # Load config to get stored hash and PID
+            # Load config to get stored checksum and PID
             cfg = config.load_config(config_file)
-            stored_hash = cfg.get('core_dll_hash')
+            stored_checksum = cfg.get('checksum') or cfg.get('core_dll_hash')  # Backward compat
             stored_pid = cfg.get('game_pid')
+            _debug_print(f"  stored checksum: {stored_checksum[:16] if stored_checksum else None}...")
+            _debug_print(f"  stored PID: {stored_pid}")
 
             # PID optimization: if game PID matches, skip expensive hash check
             if stored_pid is not None:
                 current_pid = config.get_game_pid()
+                _debug_print(f"  current PID: {current_pid}")
                 if current_pid == stored_pid:
                     # Game hasn't restarted - use cached names without hashing
+                    _debug_print("  → PID matches, using cached names")
                     print(f"Game PID matches ({current_pid}) - using existing class names (hash check skipped)")
                     return load_names(names_file), False
 
-            if not stored_hash:
+            if not stored_checksum:
                 need_regen = True
-                reason = "No hash in config"
+                reason = "No checksum in config"
+                _debug_print(f"  → {reason}")
             else:
-                # Compute current hash
-                current_hash = config.compute_dll_hash(core_dll)
+                # Compute current combined hash
+                plat = cfg.get('platform', config.get_platform())
+                game_path = Path(cfg['game_path'])
+                level0 = config.get_level0_path(game_path, plat)
+                _debug_print("  Computing current checksum...")
+                current_checksum = config.compute_combined_hash(core_dll, level0)
 
-                if stored_hash != current_hash:
+                if stored_checksum != current_checksum:
                     need_regen = True
-                    reason = f"Hash mismatch (stored: {stored_hash[:8]}..., current: {current_hash[:8]}...)"
+                    reason = f"Checksum mismatch (stored: {stored_checksum[:8]}..., current: {current_checksum[:8]}...)"
+                    _debug_print(f"  → {reason}")
                 else:
-                    # Hash matches - use existing names
-                    print(f"Core.dll hash matches ({current_hash[:8]}...) - using existing class names")
+                    # Checksum matches - use existing names
+                    _debug_print("  → Checksum matches, using cached names")
+                    print(f"Game files checksum matches ({current_checksum[:8]}...) - using existing class names")
                     return load_names(names_file), False
 
         except Exception as e:
             need_regen = True
             reason = f"Error loading config/names: {e}"
+            _debug_print(f"  → {reason}")
 
     # Need to regenerate
     if need_regen:

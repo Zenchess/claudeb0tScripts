@@ -1,6 +1,5 @@
 {
   "last_updated": "2026-01-04",
-
   "class_names": {
     "window_class": "Window",
     "window_namespace": "hackmud",
@@ -12,7 +11,6 @@
     "hardline_class": "HardlineCoordinator",
     "hardline_ip_field": "PKOJPLFOEMK"
   },
-
   "mono_offsets": {
     "mono_class_name": "0x40",
     "mono_class_namespace": "0x48",
@@ -21,27 +19,22 @@
     "mono_string_length": "0x10",
     "mono_string_data": "0x14"
   },
-
   "window_offsets": {
     "name": "0x90",
     "gui_text": "0x58"
   },
-
   "tmp_offsets": {
     "m_text": "0xc8"
   },
-
   "hardline_offsets": {
     "ip_string": "0x80",
     "instructions": "0x98",
     "text_m_text": "0xA0"
   },
-
   "paths": {
     "core_dll": "/home/jacob/.local/share/Steam/steamapps/common/hackmud/hackmud_lin_Data/Managed/Core.dll",
     "decompiled": "/tmp/hackmud_decompiled/Core.decompiled.cs"
   },
-
   "vtables": {
     "comment": "Vtables discovered 2026-01-04 - may change on game update",
     "window": "0x7f30740be210",
@@ -49,7 +42,6 @@
     "image": "0x7f30740070a0",
     "text_main": "0x7f307405e748"
   },
-
   "native_rect_transform": {
     "comment": "Offsets from native RectTransform cachedPtr",
     "position": "0xC8",

@@ -7,6 +7,7 @@ Uses Mono vtables to locate Window objects and read TextMeshProUGUI text.
 import json
 import struct
 import os
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Tuple
 
@@ -111,9 +112,24 @@ class Scanner:
         scanner.close()
 
     Args:
-        config_dir: Directory containing scanner_config.json (defaults to CWD/data/)
+        config_dir: Directory containing scanner_config.json (defaults to script_dir/data/)
         memory_reader: Custom memory reader for testing (defaults to ProcMemReader)
     """
+
+    @staticmethod
+    def _get_caller_script_dir() -> Path:
+        """Get the directory of the script that's using the Scanner API
+
+        Returns the directory containing the main script that imported and
+        is using the Scanner. Falls back to current working directory if
+        running in interactive mode.
+        """
+        if hasattr(sys.modules['__main__'], '__file__'):
+            main_file = sys.modules['__main__'].__file__
+            if main_file:
+                return Path(main_file).resolve().parent
+        # Fallback to cwd if running in interactive mode (REPL, Jupyter, etc.)
+        return Path.cwd()
 
     def __init__(
         self,
@@ -122,8 +138,8 @@ class Scanner:
     ):
         # Set config directory
         if config_dir is None:
-            # Default to data/ in current working directory
-            config_dir = Path.cwd() / 'data'
+            # Default to data/ in the same folder as the calling script
+            config_dir = self._get_caller_script_dir() / 'data'
         self.config_dir = Path(config_dir)
 
         # Set memory reader (allows mocking for tests)

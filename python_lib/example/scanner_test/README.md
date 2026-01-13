@@ -15,10 +15,10 @@ Simple examples demonstrating the hackmud memory scanner API with automatic conf
 
 ## Auto-Configuration
 
-**New in v1.2.1:** The Scanner automatically generates configuration files on first use!
+**New in v1.2.2:** The Scanner automatically generates configuration files on first use!
 
 When you first call `scanner.connect()`, the Scanner will:
-1. Create a `data/` folder in your current working directory
+1. Create a `data/` folder in the same directory as your Python script
 2. Auto-detect your hackmud installation path
 3. Decompile Core.dll to extract current offsets
 4. Generate all required config files:
@@ -28,6 +28,8 @@ When you first call `scanner.connect()`, the Scanner will:
    - `constants.json` - Game version and window names
 
 **First run takes ~5-10 seconds** (decompilation). Subsequent runs are instant.
+
+**Note:** The `data/` folder is created next to your script file, not in your current working directory. This means if you run your script from a different directory, the config files will still be found in the same place.
 
 ## Usage
 

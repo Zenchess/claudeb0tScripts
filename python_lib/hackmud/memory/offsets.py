@@ -8,7 +8,14 @@ import re
 import json
 import shutil
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
+
+# Import config module for hash computation
+try:
+    from . import config
+except ImportError:
+    # Fallback for direct execution
+    import config
 
 
 # Default decompilation output directory
@@ -211,3 +218,77 @@ def load_offsets(offsets_file: Path) -> Dict:
     """
     with open(offsets_file, 'r') as f:
         return json.load(f)
+
+
+def generate_offsets_if_needed(
+    core_dll: Path,
+    config_file: Path,
+    offsets_file: Path,
+    output_dir: Optional[Path] = None
+) -> Tuple[Dict, bool]:
+    """Generate offsets only if Core.dll hash has changed
+
+    This function checks if the Core.dll hash in the config matches the
+    current Core.dll file. If it matches, existing offsets are returned.
+    If it doesn't match (or config doesn't exist), offsets are regenerated.
+
+    Args:
+        core_dll: Path to Core.dll
+        config_file: Path to config.json
+        offsets_file: Path to mono_offsets.json
+        output_dir: Output directory for decompilation (optional)
+
+    Returns:
+        Tuple of (offsets_dict, regenerated_bool) where:
+        - offsets_dict: The offset dictionary
+        - regenerated_bool: True if offsets were regenerated, False if cached
+
+    Raises:
+        RuntimeError: If regeneration is needed but fails
+    """
+    # Try to load existing config and offsets
+    need_regen = False
+    reason = ""
+
+    if not config_file.exists():
+        need_regen = True
+        reason = "Config file doesn't exist"
+    elif not offsets_file.exists():
+        need_regen = True
+        reason = "Offsets file doesn't exist"
+    else:
+        try:
+            # Load config to get stored hash
+            cfg = config.load_config(config_file)
+            stored_hash = cfg.get('core_dll_hash')
+
+            if not stored_hash:
+                need_regen = True
+                reason = "No hash in config"
+            else:
+                # Compute current hash
+                current_hash = config.compute_dll_hash(core_dll)
+
+                if stored_hash != current_hash:
+                    need_regen = True
+                    reason = f"Hash mismatch (stored: {stored_hash[:8]}..., current: {current_hash[:8]}...)"
+                else:
+                    # Hash matches - use existing offsets
+                    print(f"Core.dll hash matches ({current_hash[:8]}...) - using existing offsets")
+                    return load_offsets(offsets_file), False
+
+        except Exception as e:
+            need_regen = True
+            reason = f"Error loading config/offsets: {e}"
+
+    # Need to regenerate
+    if need_regen:
+        print(f"Regenerating offsets: {reason}")
+        class_info = generate_offsets(core_dll, output_dir)
+        save_offsets(class_info, offsets_file)
+
+        # Return the regenerated offsets
+        return load_offsets(offsets_file), True
+
+    # Should never reach here, but just in case
+    raise RuntimeError("Unexpected state in generate_offsets_if_needed")

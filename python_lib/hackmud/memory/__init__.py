@@ -1,6 +1,6 @@
 """hackmud memory scanner package"""
 
-__version__ = '1.2.2'
+__version__ = '1.2.3'
 
 from .scanner import Scanner
 from .exceptions import (

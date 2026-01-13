@@ -334,7 +334,7 @@ def generate_configs(output_dir: Path, game_path: Optional[Path] = None) -> Tupl
 
     # Generate constants.json
     constants = {
-        "version": "v2.016",  # Default, can be updated later
+        "version": None,  # Will be detected from memory on first get_version() call
         "window_names": [
             "shell",
             "chat",

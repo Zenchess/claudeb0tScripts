@@ -203,19 +203,6 @@ def save_names(class_info: Dict[str, str], names_file: Path) -> None:
     print(f"Class names saved to {names_file}")
 
 
-def save_offsets(class_info: Dict[str, str], offsets_file: Path) -> None:
-    """Save offset information to mono_offsets.json (deprecated, use save_names)
-
-    Args:
-        class_info: Dictionary with class names
-        offsets_file: Path to mono_offsets.json
-    """
-    # This function is deprecated and kept for backward compatibility
-    # It now delegates to save_names
-    print("Warning: save_offsets is deprecated, use save_names instead")
-    save_names(class_info, offsets_file)
-
-
 def load_names(names_file: Path) -> Dict:
     """Load class names from mono_names.json
 
@@ -234,7 +221,7 @@ def load_names(names_file: Path) -> Dict:
 
 
 def load_offsets(offsets_file: Path) -> Dict:
-    """Load offsets from mono_offsets.json (deprecated, use load_names for class names)
+    """Load numeric offsets from mono_offsets.json
 
     Args:
         offsets_file: Path to mono_offsets.json

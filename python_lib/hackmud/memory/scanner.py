@@ -10,9 +10,10 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Tuple
 
-# Import config and exceptions
+# Import config, exceptions, and config generator
 try:
     from . import config
+    from . import config_generator
     from .exceptions import (
         GameNotFoundError,
         ConfigError,
@@ -23,6 +24,7 @@ try:
 except ImportError:
     # Fallback for direct execution
     import config
+    import config_generator
     from exceptions import (
         GameNotFoundError,
         ConfigError,
@@ -109,7 +111,7 @@ class Scanner:
         scanner.close()
 
     Args:
-        config_dir: Directory containing scanner_config.json (defaults to memory_scanner/)
+        config_dir: Directory containing scanner_config.json (defaults to CWD/data/)
         memory_reader: Custom memory reader for testing (defaults to ProcMemReader)
     """
 
@@ -120,8 +122,8 @@ class Scanner:
     ):
         # Set config directory
         if config_dir is None:
-            # Default to memory_scanner/ in project root
-            config_dir = Path(__file__).parent.parent.parent.parent / 'memory_scanner'
+            # Default to data/ in current working directory
+            config_dir = Path.cwd() / 'data'
         self.config_dir = Path(config_dir)
 
         # Set memory reader (allows mocking for tests)
@@ -372,15 +374,44 @@ class Scanner:
     def _load_config(self) -> None:
         """Load configuration files
 
+        Auto-generates config files in data/ folder if they don't exist.
+
         Raises:
             ConfigError: If config files are missing or invalid
         """
-        # Load mono_offsets.json
+        # Check if config files exist, if not - auto-generate them
         offsets_file = self.config_dir / 'mono_offsets.json'
+        config_file = self.config_dir / 'scanner_config.json'
+        names_file = self.config_dir / 'mono_names_fixed.json'
+        constants_file = self.config_dir / 'constants.json'
+
+        files_missing = (
+            not offsets_file.exists() or
+            not config_file.exists() or
+            not names_file.exists() or
+            not constants_file.exists()
+        )
+
+        if files_missing:
+            if self._debug:
+                print(f"[DEBUG scanner] Config files missing in {self.config_dir}")
+                print(f"[DEBUG scanner] Auto-generating config files...")
+
+            try:
+                config_generator.generate_configs(self.config_dir)
+                if self._debug:
+                    print(f"[DEBUG scanner] Config files generated successfully")
+            except Exception as e:
+                raise ConfigError(
+                    f"Failed to auto-generate config files: {e}\n"
+                    f"Make sure hackmud is installed and ilspycmd is available."
+                )
+
+        # Load mono_offsets.json
         if not offsets_file.exists():
             raise ConfigError(
-                f"mono_offsets.json not found at {offsets_file}. "
-                f"Run update_offsets.py to generate offsets."
+                f"mono_offsets.json not found at {offsets_file} after generation. "
+                f"This should not happen - please report as a bug."
             )
 
         try:

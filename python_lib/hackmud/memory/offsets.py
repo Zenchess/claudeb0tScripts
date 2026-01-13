@@ -220,13 +220,13 @@ def load_offsets(offsets_file: Path) -> Dict:
         return json.load(f)
 
 
-def generate_offsets_if_needed(
+def update_offsets(
     core_dll: Path,
     config_file: Path,
     offsets_file: Path,
     output_dir: Optional[Path] = None
 ) -> Tuple[Dict, bool]:
-    """Generate offsets only if Core.dll hash has changed
+    """Update offsets only if Core.dll hash has changed
 
     This function checks if the Core.dll hash in the config matches the
     current Core.dll file. If it matches, existing offsets are returned.
@@ -291,4 +291,4 @@ def generate_offsets_if_needed(
         return load_offsets(offsets_file), True
 
     # Should never reach here, but just in case
-    raise RuntimeError("Unexpected state in generate_offsets_if_needed")
+    raise RuntimeError("Unexpected state in update_offsets")

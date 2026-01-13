@@ -169,42 +169,72 @@ def generate_offsets(core_dll: Path, output_dir: Optional[Path] = None) -> Dict[
     return class_info
 
 
+def save_names(class_info: Dict[str, str], names_file: Path) -> None:
+    """Save class names to mono_names.json
+
+    Args:
+        class_info: Dictionary with class names
+        names_file: Path to mono_names.json
+    """
+    # Read existing names to preserve other entries
+    if names_file.exists():
+        with open(names_file, 'r') as f:
+            names = json.load(f)
+    else:
+        names = {}
+
+    # Update class names
+    names.update({
+        'window_class': class_info.get('window_class'),
+        'window_namespace': class_info.get('window_namespace'),
+        'output_class': class_info.get('output_class'),
+        'queue_field': class_info.get('queue_field'),
+        'kernel_class': names.get('kernel_class', 'Kernel'),
+        'tmp_class': names.get('tmp_class', 'TextMeshProUGUI'),
+        'tmp_namespace': names.get('tmp_namespace', 'TMPro'),
+        'hardline_class': names.get('hardline_class', 'HardlineCoordinator'),
+        'hardline_ip_field': names.get('hardline_ip_field')
+    })
+
+    # Save names
+    with open(names_file, 'w') as f:
+        json.dump(names, f, indent=2)
+
+    print(f"Class names saved to {names_file}")
+
+
 def save_offsets(class_info: Dict[str, str], offsets_file: Path) -> None:
-    """Save offset information to mono_offsets.json
+    """Save offset information to mono_offsets.json (deprecated, use save_names)
 
     Args:
         class_info: Dictionary with class names
         offsets_file: Path to mono_offsets.json
     """
-    # Read existing offsets to preserve version/metadata
-    if offsets_file.exists():
-        with open(offsets_file, 'r') as f:
-            offsets = json.load(f)
-    else:
-        offsets = {}
+    # This function is deprecated and kept for backward compatibility
+    # It now delegates to save_names
+    print("Warning: save_offsets is deprecated, use save_names instead")
+    save_names(class_info, offsets_file)
 
-    # Update class names only
-    offsets['class_names'] = {
-        'window_class': class_info.get('window_class'),
-        'window_namespace': class_info.get('window_namespace'),
-        'output_class': class_info.get('output_class'),
-        'queue_field': class_info.get('queue_field'),
-        'kernel_class': offsets.get('class_names', {}).get('kernel_class', 'Kernel'),
-        'tmp_class': offsets.get('class_names', {}).get('tmp_class', 'TextMeshProUGUI'),
-        'tmp_namespace': offsets.get('class_names', {}).get('tmp_namespace', 'TMPro'),
-        'hardline_class': offsets.get('class_names', {}).get('hardline_class', 'HardlineCoordinator'),
-        'hardline_ip_field': offsets.get('class_names', {}).get('hardline_ip_field')
-    }
 
-    # Save offsets
-    with open(offsets_file, 'w') as f:
-        json.dump(offsets, f, indent=2)
+def load_names(names_file: Path) -> Dict:
+    """Load class names from mono_names.json
 
-    print(f"Offsets saved to {offsets_file}")
+    Args:
+        names_file: Path to mono_names.json
+
+    Returns:
+        Class names dictionary
+
+    Raises:
+        FileNotFoundError: If names file doesn't exist
+        json.JSONDecodeError: If names file is invalid
+    """
+    with open(names_file, 'r') as f:
+        return json.load(f)
 
 
 def load_offsets(offsets_file: Path) -> Dict:
-    """Load offsets from mono_offsets.json
+    """Load offsets from mono_offsets.json (deprecated, use load_names for class names)
 
     Args:
         offsets_file: Path to mono_offsets.json
@@ -223,39 +253,41 @@ def load_offsets(offsets_file: Path) -> Dict:
 def update_offsets(
     core_dll: Path,
     config_file: Path,
-    offsets_file: Path,
+    names_file: Path,
+    offsets_file: Optional[Path] = None,
     output_dir: Optional[Path] = None
 ) -> Tuple[Dict, bool]:
-    """Update offsets only if Core.dll hash has changed
+    """Update class names only if Core.dll hash has changed
 
     This function checks if the Core.dll hash in the config matches the
-    current Core.dll file. If it matches, existing offsets are returned.
-    If it doesn't match (or config doesn't exist), offsets are regenerated.
+    current Core.dll file. If it matches, existing names are returned.
+    If it doesn't match (or config doesn't exist), names are regenerated.
 
     Args:
         core_dll: Path to Core.dll
         config_file: Path to config.json
-        offsets_file: Path to mono_offsets.json
+        names_file: Path to mono_names.json
+        offsets_file: Path to mono_offsets.json (optional, for backward compatibility)
         output_dir: Output directory for decompilation (optional)
 
     Returns:
-        Tuple of (offsets_dict, regenerated_bool) where:
-        - offsets_dict: The offset dictionary
-        - regenerated_bool: True if offsets were regenerated, False if cached
+        Tuple of (names_dict, regenerated_bool) where:
+        - names_dict: The class names dictionary
+        - regenerated_bool: True if names were regenerated, False if cached
 
     Raises:
         RuntimeError: If regeneration is needed but fails
     """
-    # Try to load existing config and offsets
+    # Try to load existing config and names
     need_regen = False
     reason = ""
 
     if not config_file.exists():
         need_regen = True
         reason = "Config file doesn't exist"
-    elif not offsets_file.exists():
+    elif not names_file.exists():
         need_regen = True
-        reason = "Offsets file doesn't exist"
+        reason = "Names file doesn't exist"
     else:
         try:
             # Load config to get stored hash
@@ -273,22 +305,22 @@ def update_offsets(
                     need_regen = True
                     reason = f"Hash mismatch (stored: {stored_hash[:8]}..., current: {current_hash[:8]}...)"
                 else:
-                    # Hash matches - use existing offsets
-                    print(f"Core.dll hash matches ({current_hash[:8]}...) - using existing offsets")
-                    return load_offsets(offsets_file), False
+                    # Hash matches - use existing names
+                    print(f"Core.dll hash matches ({current_hash[:8]}...) - using existing class names")
+                    return load_names(names_file), False
 
         except Exception as e:
             need_regen = True
-            reason = f"Error loading config/offsets: {e}"
+            reason = f"Error loading config/names: {e}"
 
     # Need to regenerate
     if need_regen:
-        print(f"Regenerating offsets: {reason}")
+        print(f"Regenerating class names: {reason}")
         class_info = generate_offsets(core_dll, output_dir)
-        save_offsets(class_info, offsets_file)
+        save_names(class_info, names_file)
 
-        # Return the regenerated offsets
-        return load_offsets(offsets_file), True
+        # Return the regenerated names
+        return load_names(names_file), True
 
     # Should never reach here, but just in case
     raise RuntimeError("Unexpected state in update_offsets")

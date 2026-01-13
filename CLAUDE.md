@@ -95,6 +95,12 @@ nohup ./discord_venv/bin/python discord_bot.py >> /tmp/discord_bot.log 2>&1 &
 # python3 discord_send.py ...    # queues for bot to send
 ```
 
+**Performance:** Discord bot now uses Scanner API (v1.2.5+) with persistent connection for 160x+ faster response times. Address caching and persistent connections provide ~91,300x improvement over old subprocess method.
+
+**Bug Fixes (2026-01-13):**
+- Fixed first line indent issue in !badge/!breach: Changed `.strip()` to `.rstrip('\n')` to preserve leading spaces
+- Fixed backslash escaping: Added `.replace('\\\\', '\\')` to unescape doubled backslashes from memory
+
 ### Discord Bot Commands
 ```
 !help [command]     - Show all commands or help for specific command

@@ -215,9 +215,9 @@ class Scanner:
         self.connected = True
 
         # Initialize vtable scanning
-        self.init()
+        self._init()
 
-    def init(self) -> None:
+    def _init(self) -> None:
         """Initialize scanner by finding vtables and scanning for windows
 
         This performs the expensive vtable and window scanning (~5s).
@@ -929,7 +929,14 @@ class Scanner:
             pass  # Cache is optional, don't fail if we can't save
 
     def _read_window_text(self, window_addr: int) -> str:
-        """Read text content from Window instance
+        """Read text content from Window instance via Queue<string> or TMP_Text fallback
+
+        Tries to read from Window.NMOPNOICKDJ.Queue first (unwrapped lines).
+        Falls back to TMP_Text.m_text if Queue is unavailable (wrapped lines).
+
+        Structure:
+            Window +0x78 -> NMOPNOICKDJ instance
+            NMOPNOICKDJ +0x10 -> Queue<string> FFAKOMDAHHC
 
         Args:
             window_addr: Memory address of Window object
@@ -937,24 +944,65 @@ class Scanner:
         Returns:
             Text content from window
         """
-        # Get gui_text pointer (Window.gui_text)
-        gui_text_offset = self.offsets.get('window_gui_text', 0x58)
-        gui_text_ptr = self._read_pointer(window_addr + gui_text_offset)
+        # Try reading from Window.NMOPNOICKDJ.Queue first (preferred method)
+        # Window +0x78 points to NMOPNOICKDJ instance (not +0x80!)
+        nmop_offset = 0x78
+        nmop_ptr = self._read_pointer(window_addr + nmop_offset)
 
-        if gui_text_ptr == 0:
-            raise MemoryReadError("Window.gui_text is null")
+        self._debug_print(f"  Window at {hex(window_addr)}")
+        self._debug_print(f"  Trying NMOPNOICKDJ at +{hex(nmop_offset)} = {hex(nmop_ptr)}")
 
-        # Read m_text field pointer (TMP_Text.m_text is a MonoString*)
+        if nmop_ptr != 0:
+            # NMOPNOICKDJ.FFAKOMDAHHC (Queue<string>) is at +0x10
+            queue_offset = 0x10
+            queue_ptr = self._read_pointer(nmop_ptr + queue_offset)
+
+            self._debug_print(f"  Queue<string> FFAKOMDAHHC at +{hex(queue_offset)} = {hex(queue_ptr)}")
+
+            if queue_ptr != 0:
+                lines = self._read_queue_strings(queue_ptr)
+                if lines:
+                    self._debug_print(f"  ✓ Read {len(lines)} lines from Queue (unwrapped)")
+                    return '\n'.join(lines)
+
+        # Fallback to TMP_Text.m_text (old method)
+        self._debug_print("  Queue unavailable, falling back to TMP_Text.m_text")
+
+        # Get TMP_Text address from cache
+        window_data = self._windows_cache.get(self._get_window_name_by_addr(window_addr))
+        if not window_data:
+            return ""
+
+        _, tmp_addr = window_data
+        if tmp_addr == 0:
+            return ""
+
+        # Read m_text pointer
         m_text_offset = self.offsets.get('tmp_m_text', 0xc8)
-        m_text_ptr = self._read_pointer(gui_text_ptr + m_text_offset)
+        m_text_ptr = self._read_pointer(tmp_addr + m_text_offset)
 
         if m_text_ptr == 0:
             return ""
 
-        # Read the MonoString
+        # Read MonoString content
         text = self._read_mono_string(m_text_ptr)
+        self._debug_print(f"  ✓ Read {len(text)} chars from TMP_Text (wrapped)")
 
         return text
+
+    def _get_window_name_by_addr(self, window_addr: int) -> str:
+        """Find window name by address in cache
+
+        Args:
+            window_addr: Window address to look up
+
+        Returns:
+            Window name or empty string if not found
+        """
+        for name, (addr, _) in self._windows_cache.items():
+            if addr == window_addr:
+                return name
+        return ""
 
     def _read_pointer(self, address: int) -> int:
         """Read 64-bit pointer from memory
@@ -1018,6 +1066,130 @@ class Scanner:
             return self._read_mono_string(string_ptr)
         except:
             return ""
+
+    def _read_queue_strings(self, queue_ptr: int, max_lines: int = 2000) -> List[str]:
+        """Read Queue<string> from memory (circular buffer)
+
+        C# Queue<T> structure:
+            T[] _array;    // +0x10
+            int _head;     // +0x18
+            int _tail;     // +0x1c
+            int _size;     // +0x20
+            int _version;  // +0x24
+
+        Args:
+            queue_ptr: Pointer to Queue<string> object
+            max_lines: Maximum lines to read (default 2000 - full buffer)
+
+        Returns:
+            List of strings from queue (in order from oldest to newest)
+        """
+        if not queue_ptr or queue_ptr == 0:
+            self._debug_print("  Queue ptr is null")
+            return []
+
+        try:
+            # Read Queue fields
+            array_offset = 0x10
+            head_offset = 0x18
+            size_offset = 0x20
+
+            # Read array pointer
+            array_ptr = self._read_pointer(queue_ptr + array_offset)
+            self._debug_print(f"    Queue._array at +{hex(array_offset)} = {hex(array_ptr)}")
+
+            if not array_ptr or array_ptr == 0:
+                self._debug_print("    array_ptr is null!")
+                return []
+
+            # Read head and size
+            head_data = self.memory_reader.read(queue_ptr + head_offset, 4)
+            size_data = self.memory_reader.read(queue_ptr + size_offset, 4)
+
+            head = struct.unpack('<i', head_data)[0]
+            size = struct.unpack('<i', size_data)[0]
+
+            self._debug_print(f"    Queue._head = {head}, Queue._size = {size}")
+
+            if size <= 0:
+                self._debug_print("    size <= 0!")
+                return []
+
+            # Read array capacity from MonoArray
+            capacity = self._read_mono_array_length(array_ptr)
+            self._debug_print(f"    Array capacity = {capacity}")
+
+            if capacity <= 0:
+                self._debug_print("    capacity <= 0!")
+                return []
+
+            # Read strings in circular buffer order
+            lines = []
+            read_count = min(size, capacity, max_lines)
+            self._debug_print(f"    Reading {read_count} elements...")
+
+            for offset in range(read_count):
+                slot = (head + offset) % capacity
+                # Read array element (pointer to MonoString)
+                element_ptr = self._read_mono_array_element(array_ptr, slot)
+                if element_ptr and element_ptr != 0:
+                    string_val = self._read_mono_string(element_ptr)
+                    if string_val:  # Only add non-empty strings
+                        lines.append(string_val)
+
+            self._debug_print(f"    Got {len(lines)} non-empty strings")
+            return lines
+
+        except (MemoryReadError, struct.error) as e:
+            self._debug_print(f"Failed to read Queue<string>: {e}")
+            import traceback
+            if self._debug:
+                traceback.print_exc()
+            return []
+
+    def _read_mono_array_length(self, array_ptr: int) -> int:
+        """Read length of MonoArray
+
+        MonoArray structure:
+            MonoObject obj;  // +0x0 (object header)
+            uintptr_t bounds; // +0x10 (unused for single-dim arrays)
+            uintptr_t max_length; // +0x18
+
+        Args:
+            array_ptr: Pointer to MonoArray object
+
+        Returns:
+            Array length
+        """
+        try:
+            length_offset = 0x18
+            length_data = self.memory_reader.read(array_ptr + length_offset, 8)
+            return struct.unpack('<Q', length_data)[0]
+        except:
+            return 0
+
+    def _read_mono_array_element(self, array_ptr: int, index: int) -> int:
+        """Read pointer from MonoArray element
+
+        For reference arrays (like string[]), each element is a pointer.
+        Data starts at +0x20 (after object header and length fields).
+
+        Args:
+            array_ptr: Pointer to MonoArray object
+            index: Element index
+
+        Returns:
+            Element value (pointer for reference types)
+        """
+        try:
+            data_offset = 0x20  # Array data starts after header
+            element_size = 8   # Pointers are 8 bytes on 64-bit
+            element_addr = array_ptr + data_offset + (index * element_size)
+
+            element_data = self.memory_reader.read(element_addr, element_size)
+            return struct.unpack('<Q', element_data)[0]
+        except:
+            return 0
 
     def _find_mono_class(self, class_name: str, namespace: str) -> Optional[int]:
         """Find MonoClass in Mono runtime

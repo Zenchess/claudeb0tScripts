@@ -72,11 +72,25 @@
         .main-display {
             background: var(--bg-panel);
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 10px;
+            grid-template-columns: 1fr 6px var(--right-panel-width, 400px);
+            gap: 0;
             padding: 10px;
             height: calc(100vh - 60px);
             overflow: hidden;
+            cursor: url('/cross_cursor.png') 8 8, crosshair;
+        }
+
+        .resize-handle {
+            width: 6px;
+            background: transparent;
+            cursor: url('/resize_cursor.png') 8 8, col-resize;
+            position: relative;
+            z-index: 100;
+        }
+
+        .resize-handle:hover,
+        .resize-handle.dragging {
+            background: transparent;
         }
 
         .panel {
@@ -164,10 +178,10 @@
             width: 100%;
             height: 100%;
             background: url('crtscans.png') repeat;
-            background-size: 75px auto;
+            background-size: 250px auto;
             pointer-events: none;
             z-index: 999;
-            opacity: 0.07;
+            opacity: 0.044;
         }
 
         /* Noise Effect - covers entire visible main-display */
@@ -179,10 +193,34 @@
             width: 100%;
             height: 100%;
             background: url('noise.png') repeat;
-            background-size: 150px 150px;
+            background-size: 450px 450px;
             pointer-events: none;
             z-index: 998;
-            opacity: 0.13;
+            opacity: 0.0975;
+        }
+
+        /* SFX toggle - hide effects when disabled */
+        .main-display.no-sfx::before,
+        .main-display.no-sfx::after {
+            display: none;
+        }
+
+        #sfxToggle {
+            background: var(--bg-panel);
+            color: var(--default);
+            border: 1px solid var(--default);
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        #sfxToggle:hover {
+            background: var(--default);
+            color: var(--bg-panel);
+        }
+
+        #sfxToggle.off {
+            opacity: 0.5;
         }
 
         .right-side {
@@ -250,7 +288,11 @@
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: var(--default);
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+            background: var(--default);
         }
 
         /* Hackmud color classes */
@@ -757,9 +799,11 @@ log('Got ' + terminal.length + ' chars from terminal');
             </div>
         </div>
 
+        <!-- Resize Handle -->
+        <div class="resize-handle" id="resizeHandle"></div>
 
         <!-- Right Side Panels -->
-        <div class="right-side">
+        <div class="right-side" id="rightSide">
             <!-- Badge -->
             <div class="panel right-panel badge-panel">
                 <div class="panel-extended-border-left"></div>
@@ -879,9 +923,16 @@ log('Got ' + terminal.length + ' chars from terminal');
                 if (data.shell) {
                     const html = convertUnityColorsToHTML(data.shell);
                     const shellContent = document.getElementById('shell-content');
+                    // Save scroll state before update
+                    const scrollTop = shellContent.scrollTop;
+                    const wasAtBottom = shellContent.scrollHeight - scrollTop - shellContent.clientHeight < 50;
                     shellContent.innerHTML = html;
-                    // Auto-scroll to bottom
-                    shellContent.scrollTop = shellContent.scrollHeight;
+                    // Restore scroll position or scroll to bottom
+                    if (wasAtBottom) {
+                        shellContent.scrollTop = shellContent.scrollHeight;
+                    } else {
+                        shellContent.scrollTop = scrollTop;
+                    }
                 }
 
                 // Update badge
@@ -900,9 +951,16 @@ log('Got ' + terminal.length + ' chars from terminal');
                 if (data.chat) {
                     const html = convertUnityColorsToHTML(data.chat);
                     const chatContent = document.getElementById('chat-content');
+                    // Save scroll state before update
+                    const scrollTop = chatContent.scrollTop;
+                    const wasAtBottom = chatContent.scrollHeight - scrollTop - chatContent.clientHeight < 50;
                     chatContent.innerHTML = html;
-                    // Auto-scroll to bottom
-                    chatContent.scrollTop = chatContent.scrollHeight;
+                    // Restore scroll position or scroll to bottom
+                    if (wasAtBottom) {
+                        chatContent.scrollTop = chatContent.scrollHeight;
+                    } else {
+                        chatContent.scrollTop = scrollTop;
+                    }
                 }
 
             } catch (error) {
@@ -917,6 +975,101 @@ log('Got ' + terminal.length + ' chars from terminal');
                 document.getElementById('breach-content').innerHTML = errorMsg;
                 document.getElementById('chat-content').innerHTML = errorMsg;
             }
+        }
+
+        // SSE for live updates (push-based - only sends when content changes)
+        let eventSource = null;
+        let sseRetryCount = 0;
+        const SSE_MAX_RETRIES = 5;
+
+        function initSSE() {
+            // Fetch initial data first
+            fetchTerminalData();
+
+            // Set up SSE connection
+            const sseUrl = window.location.origin + '/api/terminal/stream';
+            console.log('Connecting to SSE:', sseUrl);
+
+            eventSource = new EventSource(sseUrl);
+
+            eventSource.onopen = function() {
+                console.log('SSE connected');
+                sseRetryCount = 0;
+                document.getElementById('status').textContent = 'LIVE (SSE)';
+                document.getElementById('status').classList.add('live');
+            };
+
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    if (data.error) {
+                        console.error('SSE error:', data.error);
+                        return;
+                    }
+
+                    // Update only changed windows
+                    if (data.shell !== undefined) {
+                        const html = convertUnityColorsToHTML(data.shell);
+                        const shellContent = document.getElementById('shell-content');
+                        const scrollTop = shellContent.scrollTop;
+                        const wasAtBottom = shellContent.scrollHeight - scrollTop - shellContent.clientHeight < 50;
+                        shellContent.innerHTML = html;
+                        if (wasAtBottom) {
+                            shellContent.scrollTop = shellContent.scrollHeight;
+                        } else {
+                            shellContent.scrollTop = scrollTop;
+                        }
+                    }
+
+                    if (data.badge !== undefined) {
+                        const html = convertUnityColorsToHTML(data.badge);
+                        document.getElementById('badge-content').innerHTML = html;
+                    }
+
+                    if (data.breach !== undefined) {
+                        const html = convertUnityColorsToHTML(data.breach);
+                        document.getElementById('breach-content').innerHTML = html;
+                    }
+
+                    if (data.chat !== undefined) {
+                        const html = convertUnityColorsToHTML(data.chat);
+                        const chatContent = document.getElementById('chat-content');
+                        const scrollTop = chatContent.scrollTop;
+                        const wasAtBottom = chatContent.scrollHeight - scrollTop - chatContent.clientHeight < 50;
+                        chatContent.innerHTML = html;
+                        if (wasAtBottom) {
+                            chatContent.scrollTop = chatContent.scrollHeight;
+                        } else {
+                            chatContent.scrollTop = scrollTop;
+                        }
+                    }
+
+                } catch (e) {
+                    console.error('SSE parse error:', e);
+                }
+            };
+
+            eventSource.onerror = function(error) {
+                console.error('SSE error:', error);
+                document.getElementById('status').textContent = 'RECONNECTING...';
+                document.getElementById('status').classList.remove('live');
+
+                // Close and retry
+                eventSource.close();
+                sseRetryCount++;
+
+                if (sseRetryCount <= SSE_MAX_RETRIES) {
+                    console.log(`SSE retry ${sseRetryCount}/${SSE_MAX_RETRIES} in 2s...`);
+                    setTimeout(initSSE, 2000);
+                } else {
+                    console.log('SSE max retries reached, falling back to polling');
+                    document.getElementById('status').textContent = 'LIVE (polling)';
+                    document.getElementById('status').classList.add('live');
+                    // Fallback to polling
+                    updateInterval = setInterval(fetchTerminalData, 1000);
+                }
+            };
         }
 
         // Check user authentication status
@@ -963,12 +1116,89 @@ log('Got ' + terminal.length + ' chars from terminal');
             }
         }
 
+        // Toggle SFX (CRT scanlines and noise) effects
+        function toggleSFX() {
+            const mainDisplay = document.querySelector('.main-display');
+            const sfxBtn = document.getElementById('sfxToggle');
+
+            mainDisplay.classList.toggle('no-sfx');
+            sfxBtn.classList.toggle('off');
+
+            // Save preference to localStorage
+            const sfxEnabled = !mainDisplay.classList.contains('no-sfx');
+            localStorage.setItem('hackmud_sfx', sfxEnabled ? 'on' : 'off');
+
+            sfxBtn.textContent = sfxEnabled ? 'SFX' : 'SFX OFF';
+        }
+
+        // Restore SFX preference on load
+        (function() {
+            const sfxPref = localStorage.getItem('hackmud_sfx');
+            if (sfxPref === 'off') {
+                document.querySelector('.main-display').classList.add('no-sfx');
+                const sfxBtn = document.getElementById('sfxToggle');
+                if (sfxBtn) {
+                    sfxBtn.classList.add('off');
+                    sfxBtn.textContent = 'SFX OFF';
+                }
+            }
+        })();
+
+        // Panel resize functionality
+        (function() {
+            const resizeHandle = document.getElementById('resizeHandle');
+            const mainDisplay = document.querySelector('.main-display');
+            let isResizing = false;
+            let startX, startWidth;
+
+            // Restore saved width
+            const savedWidth = localStorage.getItem('hackmud_right_panel_width');
+            if (savedWidth) {
+                mainDisplay.style.setProperty('--right-panel-width', savedWidth + 'px');
+            }
+
+            resizeHandle.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                startX = e.clientX;
+                const rightSide = document.getElementById('rightSide');
+                startWidth = rightSide.offsetWidth;
+                resizeHandle.classList.add('dragging');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+                const diff = startX - e.clientX;
+                const newWidth = Math.max(200, Math.min(800, startWidth + diff));
+                mainDisplay.style.setProperty('--right-panel-width', newWidth + 'px');
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isResizing) {
+                    isResizing = false;
+                    resizeHandle.classList.remove('dragging');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    // Save width preference
+                    const rightSide = document.getElementById('rightSide');
+                    localStorage.setItem('hackmud_right_panel_width', rightSide.offsetWidth);
+                }
+            });
+        })();
+
         // Send command to hackmud
         async function sendCommand() {
+            console.log('sendCommand() called');
             const commandInput = document.getElementById('commandInput');
             const command = commandInput.value.trim();
+            console.log('Command:', command);
 
-            if (!command) return;
+            if (!command) {
+                console.log('Empty command, returning');
+                return;
+            }
 
             try {
                 const sendButton = document.getElementById('sendCommand');
@@ -1160,14 +1390,24 @@ log('Got ' + terminal.length + ' chars from terminal');
                 });
                 const data = await response.json();
 
-                if (data.authenticated) {
-                    // Session authenticated!
+                if (data.authenticated && data.authorized) {
+                    // Session authenticated and authorized!
                     clearInterval(sessionPollInterval);
-                    document.getElementById('sessionInfo').innerHTML = '';
-                    document.getElementById('sessionButton').style.display = 'inline-block';
+                    document.getElementById('sessionInfo').innerHTML =
+                        `<span style="color: #0f0;">✓ Authenticated as ${data.username}</span>`;
+                    document.getElementById('sessionButton').style.display = 'none';
 
-                    // Update auth status
-                    checkAuthStatus();
+                    // Enable command input directly
+                    const commandInput = document.getElementById('commandInput');
+                    const sendButton = document.getElementById('sendCommand');
+                    commandInput.disabled = false;
+                    commandInput.placeholder = '> Enter hackmud command...';
+                    sendButton.disabled = false;
+                    console.log('Session auth successful - commands enabled');
+                } else if (data.authenticated && !data.authorized) {
+                    // Authenticated but not authorized
+                    document.getElementById('sessionInfo').innerHTML =
+                        `<span style="color: #f00;">✗ Not authorized</span>`;
                 }
             } catch (error) {
                 console.error('Failed to check session status:', error);
@@ -1538,8 +1778,8 @@ log('Got ' + terminal.length + ' chars from terminal');
             });
         }
 
-        // Update every 2 seconds
-        updateInterval = setInterval(fetchTerminalData, 2000);
+        // Initialize SSE for live updates (push-based, no polling)
+        initSSE();
         setInterval(checkAuthStatus, 10000); // Check auth every 10 seconds
 
         // =====================================================================
@@ -1730,6 +1970,7 @@ log('Got ' + terminal.length + ' chars from terminal');
             />
         </div>
         <button id="sendCommand" onclick="sendCommand()" disabled>Send</button>
+        <button id="sfxToggle" onclick="toggleSFX()" title="Toggle CRT effects">SFX</button>
     </div>
 </body>
 </html>

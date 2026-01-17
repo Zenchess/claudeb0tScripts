@@ -10,7 +10,8 @@ import subprocess
 import time
 from pathlib import Path
 from dotenv import load_dotenv
-from flask import Flask, jsonify, send_from_directory, request, session, redirect, url_for
+from flask import Flask, jsonify, send_from_directory, request, session, redirect, url_for, Response
+import hashlib
 from flask_cors import CORS
 from flask_discord import DiscordOAuth2Session, requires_authorization
 
@@ -136,6 +137,21 @@ def noise_vfx():
 def crtscans_vfx():
     """Serve the CRT scanlines VFX image"""
     return send_from_directory('.', 'crtscans.png')
+
+@app.route('/hackmud_cursors.png')
+def hackmud_cursors():
+    """Serve the hackmud cursor sprites"""
+    return send_from_directory('.', 'hackmud_cursors.png')
+
+@app.route('/cross_cursor.png')
+def cross_cursor():
+    """Serve the hackmud cross cursor"""
+    return send_from_directory('.', 'cross_cursor_16.png')
+
+@app.route('/resize_cursor.png')
+def resize_cursor():
+    """Serve the hackmud resize cursor (4th sprite)"""
+    return send_from_directory('.', 'resize_cursor_16.png')
 
 @app.route('/login')
 def login():
@@ -322,6 +338,78 @@ def terminal_data():
             'breach': f'Error reading breach: {e}',
             'chat': f'Error reading chat: {e}'
         }), 500
+
+# Track last content hashes for SSE change detection
+_last_hashes = {'shell': '', 'badge': '', 'breach': '', 'chat': ''}
+
+def generate_sse_events():
+    """Generator for SSE events - sends updates only when content changes"""
+    global _last_hashes
+
+    while True:
+        try:
+            scanner = get_scanner()
+
+            # Read all windows
+            shell_lines = scanner.read_window('shell', lines=500, preserve_colors=True)
+            badge_lines = scanner.read_window('badge', lines=10, preserve_colors=True)
+            breach_lines = scanner.read_window('breach', lines=10, preserve_colors=True)
+            chat_lines = scanner.read_window('chat', lines=300, preserve_colors=True)
+
+            shell = '\n'.join(shell_lines).replace('\\\\', '\\')
+            badge = '\n'.join(badge_lines).replace('\\\\', '\\')
+            breach = '\n'.join(breach_lines).replace('\\\\', '\\')
+            chat = '\n'.join(chat_lines).replace('\\\\', '\\')
+
+            # Compute hashes
+            shell_hash = hashlib.md5(shell.encode()).hexdigest()
+            badge_hash = hashlib.md5(badge.encode()).hexdigest()
+            breach_hash = hashlib.md5(breach.encode()).hexdigest()
+            chat_hash = hashlib.md5(chat.encode()).hexdigest()
+
+            # Check for changes
+            changes = {}
+            if shell_hash != _last_hashes['shell']:
+                changes['shell'] = shell
+                _last_hashes['shell'] = shell_hash
+            if badge_hash != _last_hashes['badge']:
+                changes['badge'] = badge
+                _last_hashes['badge'] = badge_hash
+            if breach_hash != _last_hashes['breach']:
+                changes['breach'] = breach
+                _last_hashes['breach'] = breach_hash
+            if chat_hash != _last_hashes['chat']:
+                changes['chat'] = chat
+                _last_hashes['chat'] = chat_hash
+
+            # Send update if there are changes
+            if changes:
+                import json
+                yield f"data: {json.dumps(changes)}\n\n"
+            else:
+                # Send heartbeat to keep connection alive
+                yield f": heartbeat\n\n"
+
+            # Poll every 200ms for responsive updates
+            time.sleep(0.2)
+
+        except Exception as e:
+            import json
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            time.sleep(1)
+
+@app.route('/api/terminal/stream')
+def terminal_stream():
+    """SSE endpoint for live terminal updates - only sends when content changes"""
+    return Response(
+        generate_sse_events(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
 
 @app.route('/api/autocomplete')
 def autocomplete_data():

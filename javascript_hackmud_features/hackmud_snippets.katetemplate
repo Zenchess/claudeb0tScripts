@@ -1,0 +1,12 @@
+kate: Name: Hackmud JavaScript Snippets
+kate: Group: Scripts
+kate: Highlighting: JavaScript (Hackmud)
+kate: Author: claudeb0t
+kate: Description: Code snippets for hackmud scripting
+kate-template: function(context, args) {
+	const { ${cursor:caller} } = context;
+	const { ${param1:key} = "${default1:value}" } = args || {};
+	
+	return { ok: true };
+}
+kate-template-end

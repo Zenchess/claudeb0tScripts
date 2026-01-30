@@ -1,0 +1,401 @@
+# Hackmud JavaScript Keywords for Kate Autocomplete
+# Place in ~/.local/share/ktexteditor_wordcompletion/
+# Or configure in Kate: Settings > Configure Kate > Plugins > Word Completion
+
+# ============================================
+# KEYWORDS (ES6)
+# ============================================
+var
+let
+const
+function
+class
+extends
+constructor
+static
+get
+set
+if
+else
+switch
+case
+default
+for
+while
+do
+break
+continue
+return
+throw
+try
+catch
+finally
+new
+delete
+typeof
+instanceof
+in
+of
+void
+this
+super
+true
+false
+null
+undefined
+NaN
+Infinity
+
+# ============================================
+# BUILT-IN OBJECTS (Supported)
+# ============================================
+Object
+Array
+String
+Number
+Boolean
+Function
+Symbol
+BigInt
+Math
+Date
+RegExp
+Error
+TypeError
+ReferenceError
+SyntaxError
+RangeError
+JSON
+Map
+Set
+WeakMap
+WeakSet
+ArrayBuffer
+DataView
+Int8Array
+Uint8Array
+Uint8ClampedArray
+Int16Array
+Uint16Array
+Int32Array
+Uint32Array
+Float32Array
+Float64Array
+WebAssembly
+
+# ============================================
+# HACKMUD GLOBALS
+# ============================================
+context
+args
+_START
+_END
+_TIMEOUT
+_G
+_ST
+_DB
+
+# ============================================
+# HACKMUD SCRIPTOR SYNTAX
+# ============================================
+#fs.
+#hs.
+#ls.
+#ms.
+#ns.
+#s.
+#db.f
+#db.i
+#db.r
+#db.u
+#db.u1
+#db.us
+#D
+#G
+#FMCL
+#4S
+
+# ============================================
+# ARRAY METHODS (All Supported)
+# ============================================
+push
+pop
+shift
+unshift
+slice
+splice
+concat
+join
+reverse
+sort
+indexOf
+lastIndexOf
+forEach
+map
+filter
+reduce
+reduceRight
+some
+every
+find
+findIndex
+includes
+flat
+flatMap
+fill
+copyWithin
+entries
+keys
+values
+Array.isArray
+Array.from
+Array.of
+
+# ============================================
+# OBJECT METHODS (All Supported)
+# ============================================
+hasOwnProperty
+isPrototypeOf
+propertyIsEnumerable
+toString
+valueOf
+Object.assign
+Object.create
+Object.defineProperty
+Object.defineProperties
+Object.freeze
+Object.seal
+Object.keys
+Object.values
+Object.entries
+Object.fromEntries
+Object.getOwnPropertyNames
+Object.getOwnPropertyDescriptor
+Object.getPrototypeOf
+Object.is
+Object.isFrozen
+Object.isSealed
+Object.isExtensible
+Object.preventExtensions
+
+# ============================================
+# STRING METHODS (All Supported)
+# ============================================
+charAt
+charCodeAt
+codePointAt
+substring
+substr
+toLowerCase
+toUpperCase
+toLocaleLowerCase
+toLocaleUpperCase
+trim
+trimStart
+trimEnd
+split
+match
+replace
+replaceAll
+search
+indexOf
+lastIndexOf
+startsWith
+endsWith
+includes
+padStart
+padEnd
+repeat
+normalize
+localeCompare
+String.fromCharCode
+String.fromCodePoint
+
+# ============================================
+# NUMBER METHODS
+# ============================================
+toFixed
+toPrecision
+toExponential
+Number.isFinite
+Number.isInteger
+Number.isNaN
+Number.isSafeInteger
+Number.parseFloat
+Number.parseInt
+Number.MAX_VALUE
+Number.MIN_VALUE
+Number.MAX_SAFE_INTEGER
+Number.MIN_SAFE_INTEGER
+Number.POSITIVE_INFINITY
+Number.NEGATIVE_INFINITY
+Number.EPSILON
+
+# ============================================
+# MATH METHODS (All Supported)
+# ============================================
+Math.abs
+Math.acos
+Math.acosh
+Math.asin
+Math.asinh
+Math.atan
+Math.atan2
+Math.atanh
+Math.cbrt
+Math.ceil
+Math.clz32
+Math.cos
+Math.cosh
+Math.exp
+Math.expm1
+Math.floor
+Math.fround
+Math.hypot
+Math.imul
+Math.log
+Math.log1p
+Math.log2
+Math.log10
+Math.max
+Math.min
+Math.pow
+Math.random
+Math.round
+Math.sign
+Math.sin
+Math.sinh
+Math.sqrt
+Math.tan
+Math.tanh
+Math.trunc
+Math.PI
+Math.E
+Math.LN2
+Math.LN10
+Math.LOG2E
+Math.LOG10E
+Math.SQRT2
+Math.SQRT1_2
+
+# ============================================
+# DATE METHODS
+# ============================================
+Date.now
+Date.parse
+Date.UTC
+getFullYear
+getMonth
+getDate
+getDay
+getHours
+getMinutes
+getSeconds
+getMilliseconds
+getTime
+getTimezoneOffset
+getUTCFullYear
+getUTCMonth
+getUTCDate
+getUTCDay
+getUTCHours
+getUTCMinutes
+getUTCSeconds
+getUTCMilliseconds
+setFullYear
+setMonth
+setDate
+setHours
+setMinutes
+setSeconds
+setMilliseconds
+setTime
+setUTCFullYear
+setUTCMonth
+setUTCDate
+setUTCHours
+setUTCMinutes
+setUTCSeconds
+setUTCMilliseconds
+toDateString
+toTimeString
+toISOString
+toJSON
+toLocaleDateString
+toLocaleTimeString
+toLocaleString
+toUTCString
+
+# ============================================
+# JSON METHODS
+# ============================================
+JSON.parse
+JSON.stringify
+
+# ============================================
+# MAP/SET METHODS
+# ============================================
+clear
+delete
+get
+has
+set
+size
+add
+forEach
+entries
+keys
+values
+
+# ============================================
+# WEBASSEMBLY (Supported)
+# ============================================
+WebAssembly.Module
+WebAssembly.Instance
+WebAssembly.Memory
+WebAssembly.compile
+WebAssembly.instantiate
+WebAssembly.validate
+
+# ============================================
+# REGEXP METHODS
+# ============================================
+test
+exec
+source
+flags
+global
+ignoreCase
+multiline
+sticky
+unicode
+
+# ============================================
+# ERROR PROPERTIES
+# ============================================
+message
+name
+stack
+
+# ============================================
+# COMMON PATTERNS
+# ============================================
+caller
+calling_script
+this_script
+is_scriptor
+is_brain
+cols
+rows
+GC
+prototype
+length
+constructor
+
+# ============================================
+# TEMPLATE - Hackmud Script Skeleton
+# ============================================
+# function(context, args) {
+#   const { caller } = context;
+#   return { ok: true };
+# }

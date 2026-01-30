@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<!--
+  Hackmud JavaScript Syntax Highlighting for Kate Editor
+  Based on comprehensive testing of hackmud's JavaScript runtime.
+  
+  Hackmud supports ~ES2019 runtime with ES6 parser.
+  This definition highlights:
+  - Supported features (green/blue)
+  - Blocked/unsupported features (red/warning)
+  
+  Author: claudeb0t
+  Date: 2026-01-30
+  License: MIT
+-->
+<language name="JavaScript (Hackmud)" version="1.0" kateversion="5.0"
+          section="Scripts" extensions="*.js" mimetype="text/javascript"
+          author="claudeb0t" license="MIT" priority="15">
+  
+  <highlighting>
+    <list name="keywords">
+      <!-- Declarations -->
+      <item>var</item>
+      <item>let</item>
+      <item>const</item>
+      <item>function</item>
+      <item>class</item>
+      <item>extends</item>
+      <item>constructor</item>
+      <item>static</item>
+      <item>get</item>
+      <item>set</item>
+      
+      <!-- Control Flow -->
+      <item>if</item>
+      <item>else</item>
+      <item>switch</item>
+      <item>case</item>
+      <item>default</item>
+      <item>for</item>
+      <item>while</item>
+      <item>do</item>
+      <item>break</item>
+      <item>continue</item>
+      <item>return</item>
+      <item>throw</item>
+      <item>try</item>
+      <item>catch</item>
+      <item>finally</item>
+      
+      <!-- Operators & Values -->
+      <item>new</item>
+      <item>delete</item>
+      <item>typeof</item>
+      <item>instanceof</item>
+      <item>in</item>
+      <item>of</item>
+      <item>void</item>
+      <item>this</item>
+      <item>super</item>
+      
+      <!-- Boolean -->
+      <item>true</item>
+      <item>false</item>
+      <item>null</item>
+      <item>undefined</item>
+      <item>NaN</item>
+      <item>Infinity</item>
+    </list>
+    
+    <list name="unsupported_keywords">
+      <!-- These cause PARSE ERROR in hackmud -->
+      <item>async</item>
+      <item>await</item>
+      <item>yield</item>
+      <item>import</item>
+      <item>export</item>
+      <item>from</item>
+      <item>as</item>
+    </list>
+    
+    <list name="builtin_objects">
+      <!-- Fully supported -->
+      <item>Object</item>
+      <item>Array</item>
+      <item>String</item>
+      <item>Number</item>
+      <item>Boolean</item>
+      <item>Function</item>
+      <item>Symbol</item>
+      <item>BigInt</item>
+      <item>Math</item>
+      <item>Date</item>
+      <item>RegExp</item>
+      <item>Error</item>
+      <item>JSON</item>
+      <item>Map</item>
+      <item>Set</item>
+      <item>WeakMap</item>
+      <item>WeakSet</item>
+      <item>ArrayBuffer</item>
+      <item>DataView</item>
+      <item>Int8Array</item>
+      <item>Uint8Array</item>
+      <item>Int16Array</item>
+      <item>Uint16Array</item>
+      <item>Int32Array</item>
+      <item>Uint32Array</item>
+      <item>Float32Array</item>
+      <item>Float64Array</item>
+      <item>WebAssembly</item>
+    </list>
+    
+    <list name="unsupported_objects">
+      <!-- Runtime errors or blocked -->
+      <item>Promise</item>
+      <item>Proxy</item>
+      <item>Reflect</item>
+      <item>globalThis</item>
+      <item>Generator</item>
+      <item>AsyncFunction</item>
+    </list>
+    
+    <list name="hackmud_globals">
+      <!-- Hackmud-specific globals -->
+      <item>context</item>
+      <item>args</item>
+      <item>_START</item>
+      <item>_END</item>
+      <item>_TIMEOUT</item>
+      <item>_G</item>
+      <item>_ST</item>
+      <item>_DB</item>
+    </list>
+    
+    <list name="hackmud_scriptor">
+      <!-- Hackmud scriptor calls -->
+      <item>#fs</item>
+      <item>#hs</item>
+      <item>#ls</item>
+      <item>#ms</item>
+      <item>#ns</item>
+      <item>#s</item>
+      <item>#db</item>
+      <item>#D</item>
+      <item>#G</item>
+      <item>#FMCL</item>
+      <item>#4S</item>
+    </list>
+    
+    <list name="array_methods">
+      <!-- Supported array methods -->
+      <item>push</item>
+      <item>pop</item>
+      <item>shift</item>
+      <item>unshift</item>
+      <item>slice</item>
+      <item>splice</item>
+      <item>concat</item>
+      <item>join</item>
+      <item>reverse</item>
+      <item>sort</item>
+      <item>indexOf</item>
+      <item>lastIndexOf</item>
+      <item>forEach</item>
+      <item>map</item>
+      <item>filter</item>
+      <item>reduce</item>
+      <item>reduceRight</item>
+      <item>some</item>
+      <item>every</item>
+      <item>find</item>
+      <item>findIndex</item>
+      <item>includes</item>
+      <item>flat</item>
+      <item>flatMap</item>
+      <item>fill</item>
+      <item>copyWithin</item>
+      <item>entries</item>
+      <item>keys</item>
+      <item>values</item>
+      <item>isArray</item>
+      <item>from</item>
+    </list>
+    
+    <list name="unsupported_methods">
+      <!-- ES2022+ methods that don't work -->
+      <item>at</item>
+      <item>findLast</item>
+      <item>findLastIndex</item>
+      <item>toSorted</item>
+      <item>toReversed</item>
+      <item>toSpliced</item>
+      <item>with</item>
+      <item>hasOwn</item>
+    </list>
+    
+    <list name="object_methods">
+      <!-- Supported Object methods -->
+      <item>hasOwnProperty</item>
+      <item>isPrototypeOf</item>
+      <item>propertyIsEnumerable</item>
+      <item>toString</item>
+      <item>valueOf</item>
+      <item>assign</item>
+      <item>create</item>
+      <item>defineProperty</item>
+      <item>defineProperties</item>
+      <item>freeze</item>
+      <item>seal</item>
+      <item>getOwnPropertyNames</item>
+      <item>getOwnPropertyDescriptor</item>
+      <item>getPrototypeOf</item>
+      <item>fromEntries</item>
+    </list>
+    
+    <list name="string_methods">
+      <!-- Supported String methods -->
+      <item>charAt</item>
+      <item>charCodeAt</item>
+      <item>codePointAt</item>
+      <item>substring</item>
+      <item>substr</item>
+      <item>toLowerCase</item>
+      <item>toUpperCase</item>
+      <item>trim</item>
+      <item>trimStart</item>
+      <item>trimEnd</item>
+      <item>split</item>
+      <item>match</item>
+      <item>replace</item>
+      <item>replaceAll</item>
+      <item>search</item>
+      <item>startsWith</item>
+      <item>endsWith</item>
+      <item>padStart</item>
+      <item>padEnd</item>
+      <item>repeat</item>
+      <item>normalize</item>
+      <item>localeCompare</item>
+    </list>
+    
+    <list name="math_members">
+      <item>abs</item>
+      <item>acos</item>
+      <item>asin</item>
+      <item>atan</item>
+      <item>atan2</item>
+      <item>ceil</item>
+      <item>cos</item>
+      <item>exp</item>
+      <item>floor</item>
+      <item>log</item>
+      <item>max</item>
+      <item>min</item>
+      <item>pow</item>
+      <item>random</item>
+      <item>round</item>
+      <item>sin</item>
+      <item>sqrt</item>
+      <item>tan</item>
+      <item>trunc</item>
+      <item>sign</item>
+      <item>cbrt</item>
+      <item>hypot</item>
+      <item>log2</item>
+      <item>log10</item>
+      <item>PI</item>
+      <item>E</item>
+      <item>LN2</item>
+      <item>LN10</item>
+      <item>SQRT2</item>
+    </list>
+    
+    <contexts>
+      <context name="Normal" attribute="Normal Text" lineEndContext="#stay">
+        <!-- Comments -->
+        <Detect2Chars char="/" char1="/" attribute="Comment" context="SingleLineComment"/>
+        <Detect2Chars char="/" char1="*" attribute="Comment" context="MultiLineComment" beginRegion="Comment"/>
+        
+        <!-- Strings -->
+        <DetectChar char="&quot;" attribute="String" context="DoubleQuoteString"/>
+        <DetectChar char="'" attribute="String" context="SingleQuoteString"/>
+        <DetectChar char="`" attribute="Template String" context="TemplateString"/>
+        
+        <!-- Regex -->
+        <RegExpr String="/[^/\n]+/[gimsuvy]*" attribute="Regular Expression" context="#stay"/>
+        
+        <!-- Numbers -->
+        <RegExpr String="0[xX][0-9a-fA-F]+n?" attribute="Number" context="#stay"/>
+        <RegExpr String="0[oO][0-7]+n?" attribute="Number" context="#stay"/>
+        <RegExpr String="0[bB][01]+n?" attribute="Number" context="#stay"/>
+        <RegExpr String="\d+\.?\d*([eE][-+]?\d+)?n?" attribute="Number" context="#stay"/>
+        <RegExpr String="\.\d+([eE][-+]?\d+)?" attribute="Number" context="#stay"/>
+        
+        <!-- Keywords -->
+        <keyword String="keywords" attribute="Keyword" context="#stay"/>
+        <keyword String="unsupported_keywords" attribute="Unsupported" context="#stay"/>
+        
+        <!-- Built-in Objects -->
+        <keyword String="builtin_objects" attribute="Built-in Object" context="#stay"/>
+        <keyword String="unsupported_objects" attribute="Unsupported" context="#stay"/>
+        
+        <!-- Hackmud Globals -->
+        <keyword String="hackmud_globals" attribute="Hackmud Global" context="#stay"/>
+        
+        <!-- Hackmud Scriptor (special syntax) -->
+        <RegExpr String="#[fhlmns]s\.[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*" attribute="Hackmud Scriptor" context="#stay"/>
+        <RegExpr String="#s\.[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*" attribute="Hackmud Scriptor" context="#stay"/>
+        <RegExpr String="#db\.[a-z]+\b" attribute="Hackmud DB" context="#stay"/>
+        <RegExpr String="#D\b|#G\b|#FMCL\b|#4S\b" attribute="Hackmud Macro" context="#stay"/>
+        
+        <!-- Arrow Function -->
+        <RegExpr String="=&gt;" attribute="Arrow" context="#stay"/>
+        
+        <!-- Unsupported Operators (parse error) -->
+        <Detect2Chars char="?" char1="." attribute="Unsupported" context="#stay"/>
+        <Detect2Chars char="?" char1="?" attribute="Unsupported" context="#stay"/>
+        <Detect2Chars char="*" char1="*" attribute="Unsupported" context="#stay"/>
+        
+        <!-- Supported Methods -->
+        <keyword String="array_methods" attribute="Method" context="#stay"/>
+        <keyword String="object_methods" attribute="Method" context="#stay"/>
+        <keyword String="string_methods" attribute="Method" context="#stay"/>
+        <keyword String="math_members" attribute="Method" context="#stay"/>
+        <keyword String="unsupported_methods" attribute="Unsupported" context="#stay"/>
+        
+        <!-- Identifiers -->
+        <RegExpr String="[a-zA-Z_$][a-zA-Z0-9_$]*" attribute="Normal Text" context="#stay"/>
+        
+        <!-- Operators -->
+        <AnyChar String="{}[]().,;:+-*/%&amp;|^~!&lt;&gt;=?" attribute="Symbol" context="#stay"/>
+      </context>
+      
+      <!-- Comments -->
+      <context name="SingleLineComment" attribute="Comment" lineEndContext="#pop">
+        <IncludeRules context="##Comments"/>
+      </context>
+      
+      <context name="MultiLineComment" attribute="Comment" lineEndContext="#stay">
+        <Detect2Chars char="*" char1="/" attribute="Comment" context="#pop" endRegion="Comment"/>
+        <IncludeRules context="##Comments"/>
+      </context>
+      
+      <!-- Strings -->
+      <context name="DoubleQuoteString" attribute="String" lineEndContext="#pop">
+        <DetectChar char="&quot;" attribute="String" context="#pop"/>
+        <RegExpr String="\\." attribute="String Escape" context="#stay"/>
+      </context>
+      
+      <context name="SingleQuoteString" attribute="String" lineEndContext="#pop">
+        <DetectChar char="'" attribute="String" context="#pop"/>
+        <RegExpr String="\\." attribute="String Escape" context="#stay"/>
+      </context>
+      
+      <context name="TemplateString" attribute="Template String" lineEndContext="#stay">
+        <DetectChar char="`" attribute="Template String" context="#pop"/>
+        <Detect2Chars char="$" char1="{" attribute="Template Interpolation" context="TemplateInterpolation"/>
+        <RegExpr String="\\." attribute="String Escape" context="#stay"/>
+      </context>
+      
+      <context name="TemplateInterpolation" attribute="Normal Text" lineEndContext="#stay">
+        <DetectChar char="}" attribute="Template Interpolation" context="#pop"/>
+        <IncludeRules context="Normal"/>
+      </context>
+    </contexts>
+    
+    <itemDatas>
+      <!-- VS Code Dark+ Theme Colors -->
+      <itemData name="Normal Text"           defStyleNum="dsNormal"     spellChecking="false" color="#D4D4D4"/>
+      <itemData name="Keyword"               defStyleNum="dsKeyword"    spellChecking="false" color="#569CD6" bold="false"/>
+      <itemData name="Built-in Object"       defStyleNum="dsDataType"   spellChecking="false" color="#4EC9B0"/>
+      <itemData name="Method"                defStyleNum="dsFunction"   spellChecking="false" color="#DCDCAA"/>
+      <itemData name="String"                defStyleNum="dsString"     spellChecking="false" color="#CE9178"/>
+      <itemData name="Template String"       defStyleNum="dsString"     spellChecking="false" color="#CE9178"/>
+      <itemData name="Template Interpolation" defStyleNum="dsSpecialChar" spellChecking="false" color="#569CD6"/>
+      <itemData name="String Escape"         defStyleNum="dsSpecialChar" spellChecking="false" color="#D7BA7D"/>
+      <itemData name="Number"                defStyleNum="dsDecVal"     spellChecking="false" color="#B5CEA8"/>
+      <itemData name="Regular Expression"    defStyleNum="dsSpecialString" spellChecking="false" color="#D16969"/>
+      <itemData name="Comment"               defStyleNum="dsComment"    spellChecking="true"  color="#6A9955" italic="true"/>
+      <itemData name="Symbol"                defStyleNum="dsOperator"   spellChecking="false" color="#D4D4D4"/>
+      <itemData name="Arrow"                 defStyleNum="dsOperator"   spellChecking="false" color="#569CD6"/>
+      <itemData name="Hackmud Global"        defStyleNum="dsVariable"   spellChecking="false" color="#9CDCFE"/>
+      <itemData name="Hackmud Scriptor"      defStyleNum="dsPreprocessor" spellChecking="false" color="#C586C0" bold="true"/>
+      <itemData name="Hackmud DB"            defStyleNum="dsPreprocessor" spellChecking="false" color="#C586C0"/>
+      <itemData name="Hackmud Macro"         defStyleNum="dsPreprocessor" spellChecking="false" color="#C586C0" bold="true"/>
+      <itemData name="Unsupported"           defStyleNum="dsError"      spellChecking="false" color="#F44747" underline="true" bold="true"/>
+    </itemDatas>
+  </highlighting>
+  
+  <general>
+    <comments>
+      <comment name="singleLine" start="//"/>
+      <comment name="multiLine" start="/*" end="*/"/>
+    </comments>
+    <keywords casesensitive="true"/>
+  </general>
+</language>

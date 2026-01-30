@@ -1,0 +1,547 @@
+# Kate Word Completion File for Hackmud JavaScript
+# Place in ~/.local/share/ktexteditor_wordcompletion/
+# File format: one word per line, # for comments
+
+# ============================================
+# HACKMUD SPECIFIC
+# ============================================
+
+# Scriptor Prefixes (call other scripts)
+#s
+#fs
+#hs
+#ms
+#ls
+#ns
+#4s
+#3s
+#2s
+#1s
+#0s
+
+# Hackmud Globals
+#db
+#D
+#G
+#FMCL
+#FULL_SCRIPTS
+
+# Script Function Signature
+function(context, args)
+context
+args
+_START
+_END
+_TIMEOUT
+caller
+this_script
+cols
+rows
+
+# DB Operations (MongoDB-like)
+#db.f
+#db.i
+#db.r
+#db.u
+#db.u1
+#db.us
+$gte
+$gt
+$lte
+$lt
+$ne
+$in
+$nin
+$and
+$or
+$not
+$set
+$unset
+$push
+$pull
+$inc
+$addToSet
+ObjectId
+
+# ============================================
+# ES5/ES6 KEYWORDS (SUPPORTED)
+# ============================================
+
+# Variable Declaration
+var
+let
+const
+
+# Control Flow
+if
+else
+switch
+case
+default
+for
+while
+do
+break
+continue
+return
+throw
+try
+catch
+finally
+
+# Functions & Classes
+function
+class
+extends
+super
+static
+get
+set
+new
+this
+yield
+
+# Operators
+typeof
+instanceof
+in
+of
+delete
+void
+
+# ============================================
+# UNSUPPORTED (included for awareness)
+# ============================================
+
+# async  -- PARSE ERROR
+# await  -- PARSE ERROR
+# import -- PARSE ERROR
+# export -- PARSE ERROR
+# Promise -- NOT SUPPORTED
+
+# ============================================
+# PRIMITIVES & VALUES
+# ============================================
+
+true
+false
+null
+undefined
+NaN
+Infinity
+
+# ============================================
+# BUILT-IN CLASSES (SUPPORTED)
+# ============================================
+
+Array
+ArrayBuffer
+BigInt
+BigInt64Array
+BigUint64Array
+Boolean
+DataView
+Date
+Error
+EvalError
+Float32Array
+Float64Array
+Function
+Int8Array
+Int16Array
+Int32Array
+JSON
+Map
+Math
+Number
+Object
+RangeError
+ReferenceError
+RegExp
+Set
+String
+Symbol
+SyntaxError
+TypeError
+Uint8Array
+Uint16Array
+Uint32Array
+Uint8ClampedArray
+URIError
+WeakMap
+WeakSet
+WebAssembly
+
+# ============================================
+# GLOBAL FUNCTIONS
+# ============================================
+
+clearInterval
+clearTimeout
+decodeURI
+decodeURIComponent
+encodeURI
+encodeURIComponent
+escape
+eval
+isFinite
+isNaN
+parseFloat
+parseInt
+setTimeout
+setInterval
+unescape
+
+# ============================================
+# JSON METHODS
+# ============================================
+
+JSON.parse
+JSON.stringify
+
+# ============================================
+# MATH CONSTANTS
+# ============================================
+
+Math.E
+Math.LN10
+Math.LN2
+Math.LOG10E
+Math.LOG2E
+Math.PI
+Math.SQRT1_2
+Math.SQRT2
+
+# ============================================
+# MATH METHODS
+# ============================================
+
+Math.abs
+Math.acos
+Math.acosh
+Math.asin
+Math.asinh
+Math.atan
+Math.atan2
+Math.atanh
+Math.cbrt
+Math.ceil
+Math.clz32
+Math.cos
+Math.cosh
+Math.exp
+Math.expm1
+Math.floor
+Math.fround
+Math.hypot
+Math.imul
+Math.log
+Math.log10
+Math.log1p
+Math.log2
+Math.max
+Math.min
+Math.pow
+Math.random
+Math.round
+Math.sign
+Math.sin
+Math.sinh
+Math.sqrt
+Math.tan
+Math.tanh
+Math.trunc
+
+# ============================================
+# NUMBER CONSTANTS
+# ============================================
+
+Number.EPSILON
+Number.MAX_SAFE_INTEGER
+Number.MAX_VALUE
+Number.MIN_SAFE_INTEGER
+Number.MIN_VALUE
+Number.NEGATIVE_INFINITY
+Number.POSITIVE_INFINITY
+Number.isFinite
+Number.isInteger
+Number.isNaN
+Number.isSafeInteger
+Number.parseFloat
+Number.parseInt
+
+# ============================================
+# ARRAY METHODS
+# ============================================
+
+Array.from
+Array.isArray
+Array.of
+.concat
+.every
+.fill
+.filter
+.find
+.findIndex
+.flat
+.flatMap
+.forEach
+.includes
+.indexOf
+.join
+.keys
+.lastIndexOf
+.length
+.map
+.pop
+.push
+.reduce
+.reduceRight
+.reverse
+.shift
+.slice
+.some
+.sort
+.splice
+.unshift
+.values
+
+# ============================================
+# STRING METHODS
+# ============================================
+
+.charAt
+.charCodeAt
+.codePointAt
+.endsWith
+.includes
+.indexOf
+.lastIndexOf
+.localeCompare
+.match
+.normalize
+.padEnd
+.padStart
+.repeat
+.replace
+.replaceAll
+.search
+.slice
+.split
+.startsWith
+.substring
+.toLocaleLowerCase
+.toLocaleUpperCase
+.toLowerCase
+.toString
+.toUpperCase
+.trim
+.trimEnd
+.trimStart
+.valueOf
+String.fromCharCode
+String.fromCodePoint
+
+# ============================================
+# OBJECT METHODS
+# ============================================
+
+Object.assign
+Object.create
+Object.defineProperties
+Object.defineProperty
+Object.entries
+Object.freeze
+Object.fromEntries
+Object.getOwnPropertyDescriptor
+Object.getOwnPropertyDescriptors
+Object.getOwnPropertyNames
+Object.getOwnPropertySymbols
+Object.getPrototypeOf
+Object.is
+Object.isExtensible
+Object.isFrozen
+Object.isSealed
+Object.keys
+Object.preventExtensions
+Object.seal
+Object.setPrototypeOf
+Object.values
+.hasOwnProperty
+.isPrototypeOf
+.propertyIsEnumerable
+
+# ============================================
+# MAP METHODS
+# ============================================
+
+.clear
+.delete
+.entries
+.forEach
+.get
+.has
+.keys
+.set
+.size
+.values
+
+# ============================================
+# SET METHODS
+# ============================================
+
+.add
+.clear
+.delete
+.entries
+.forEach
+.has
+.keys
+.size
+.values
+
+# ============================================
+# REGEXP
+# ============================================
+
+.exec
+.test
+.flags
+.global
+.ignoreCase
+.multiline
+.source
+.sticky
+.unicode
+
+# ============================================
+# DATE METHODS
+# ============================================
+
+Date.now
+Date.parse
+Date.UTC
+.getDate
+.getDay
+.getFullYear
+.getHours
+.getMilliseconds
+.getMinutes
+.getMonth
+.getSeconds
+.getTime
+.getTimezoneOffset
+.getUTCDate
+.getUTCDay
+.getUTCFullYear
+.getUTCHours
+.getUTCMilliseconds
+.getUTCMinutes
+.getUTCMonth
+.getUTCSeconds
+.setDate
+.setFullYear
+.setHours
+.setMilliseconds
+.setMinutes
+.setMonth
+.setSeconds
+.setTime
+.setUTCDate
+.setUTCFullYear
+.setUTCHours
+.setUTCMilliseconds
+.setUTCMinutes
+.setUTCMonth
+.setUTCSeconds
+.toDateString
+.toISOString
+.toJSON
+.toLocaleDateString
+.toLocaleString
+.toLocaleTimeString
+.toString
+.toTimeString
+.toUTCString
+.valueOf
+
+# ============================================
+# WEBASSEMBLY (SUPPORTED!)
+# ============================================
+
+WebAssembly.Module
+WebAssembly.Instance
+WebAssembly.Memory
+WebAssembly.compile
+WebAssembly.instantiate
+WebAssembly.validate
+
+# ============================================
+# SYMBOL
+# ============================================
+
+Symbol.for
+Symbol.keyFor
+Symbol.iterator
+Symbol.toStringTag
+
+# ============================================
+# TYPED ARRAYS
+# ============================================
+
+.buffer
+.byteLength
+.byteOffset
+.BYTES_PER_ELEMENT
+.copyWithin
+.entries
+.every
+.fill
+.filter
+.find
+.findIndex
+.forEach
+.includes
+.indexOf
+.join
+.keys
+.lastIndexOf
+.length
+.map
+.reduce
+.reduceRight
+.reverse
+.set
+.slice
+.some
+.sort
+.subarray
+.values
+
+# ============================================
+# COMMON PATTERNS
+# ============================================
+
+# Arrow functions
+() =>
+(x) =>
+(x, y) =>
+
+# Destructuring
+const { }
+let { }
+const [ ]
+let [ ]
+
+# Template literals
+${}
+
+# Spread
+...
+
+# Property shorthand
+constructor
+prototype
+__proto__
+length
+name

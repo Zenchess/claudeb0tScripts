@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE snippets>
+<!--
+  Hackmud JavaScript Code Completion Snippets for Kate
+  Install to: ~/.local/share/ktexteditor_snippets/data/
+-->
+<snippets name="Hackmud JavaScript" filetypes="*.js;*.hmjs" authors="claudeb0t" license="MIT">
+  
+  <!-- Basic Script Template -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>script</match>
+    <displaypostfix> - Basic hackmud script</displaypostfix>
+    <fillin>function(context, args) {
+	const { caller } = context;
+	const { ${param:key} = "${default:value}" } = args || {};
+	
+	${cursor}
+	
+	return { ok: true };
+}</fillin>
+  </item>
+  
+  <!-- Script with DB access -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>script-db</match>
+    <displaypostfix> - Script with database</displaypostfix>
+    <fillin>function(context, args) {
+	const { caller } = context;
+	
+	// Database operations
+	const data = #db.f({ owner: caller }).first();
+	
+	if (!data) {
+		return { ok: false, msg: "No data found" };
+	}
+	
+	${cursor}
+	
+	return { ok: true, data };
+}</fillin>
+  </item>
+  
+  <!-- Scriptor call -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>scriptor</match>
+    <displaypostfix> - Call another script</displaypostfix>
+    <fillin>#fs.${user:scripts}.${script:name}({ ${args} })</fillin>
+  </item>
+  
+  <!-- Fullsec scriptor -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>fs</match>
+    <displaypostfix> - Fullsec script call</displaypostfix>
+    <fillin>#fs.${user}.${script}({ ${cursor} })</fillin>
+  </item>
+  
+  <!-- Highsec scriptor -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>hs</match>
+    <displaypostfix> - Highsec script call</displaypostfix>
+    <fillin>#hs.${user}.${script}({ ${cursor} })</fillin>
+  </item>
+  
+  <!-- Midsec scriptor -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>ms</match>
+    <displaypostfix> - Midsec script call</displaypostfix>
+    <fillin>#ms.${user}.${script}({ ${cursor} })</fillin>
+  </item>
+  
+  <!-- Lowsec scriptor -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>ls</match>
+    <displaypostfix> - Lowsec script call</displaypostfix>
+    <fillin>#ls.${user}.${script}({ ${cursor} })</fillin>
+  </item>
+  
+  <!-- Nullsec scriptor -->
+  <item>
+    <displayprefix>hm</displayprefix>
+    <match>ns</match>
+    <displaypostfix> - Nullsec script call</displaypostfix>
+    <fillin>#ns.${user}.${script}({ ${cursor} })</fillin>
+  </item>
+  
+  <!-- DB Find -->
+  <item>
+    <displayprefix>db</displayprefix>
+    <match>find</match>
+    <displaypostfix> - Database find</displaypostfix>
+    <fillin>#db.f({ ${query} }).array()</fillin>
+  </item>
+  
+  <!-- DB Find One -->
+  <item>
+    <displayprefix>db</displayprefix>
+    <match>findOne</match>
+    <displaypostfix> - Database find first</displaypostfix>
+    <fillin>#db.f({ ${query} }).first()</fillin>
+  </item>
+  
+  <!-- DB Insert -->
+  <item>
+    <displayprefix>db</displayprefix>
+    <match>insert</match>
+    <displaypostfix> - Database insert</displaypostfix>
+    <fillin>#db.i({ ${document} })</fillin>
+  </item>
+  
+  <!-- DB Update -->
+  <item>
+    <displayprefix>db</displayprefix>
+    <match>update</match>
+    <displaypostfix> - Database update</displaypostfix>
+    <fillin>#db.u({ ${query} }, { \$set: { ${update} } })</fillin>
+  </item>
+  
+  <!-- DB Upsert -->
+  <item>
+    <displayprefix>db</displayprefix>
+    <match>upsert</match>
+    <displaypostfix> - Database upsert</displaypostfix>
+    <fillin>#db.us({ ${query} }, { \$set: { ${update} } })</fillin>
+  </item>
+  
+  <!-- DB Remove -->
+  <item>
+    <displayprefix>db</displayprefix>
+    <match>remove</match>
+    <displaypostfix> - Database remove</displaypostfix>
+    <fillin>#db.r({ ${query} })</fillin>
+  </item>
+  
+  <!-- DB Delete -->
+  <item>
+    <displayprefix>db</displayprefix>
+    <match>delete</match>
+    <displaypostfix> - Database delete</displaypostfix>
+    <fillin>#db.d({ ${query} })</fillin>
+  </item>
+  
+  <!-- Context destructure -->
+  <item>
+    <displayprefix>ctx</displayprefix>
+    <match>context</match>
+    <displaypostfix> - Context destructure</displaypostfix>
+    <fillin>const { caller, this_script, calling_script, cols, rows } = context;</fillin>
+  </item>
+  
+  <!-- Args destructure with defaults -->
+  <item>
+    <displayprefix>args</displayprefix>
+    <match>args</match>
+    <displaypostfix> - Args with defaults</displaypostfix>
+    <fillin>const { ${key} = ${defaultValue} } = args || {};</fillin>
+  </item>
+  
+  <!-- Return OK -->
+  <item>
+    <displayprefix>ret</displayprefix>
+    <match>ok</match>
+    <displaypostfix> - Return success</displaypostfix>
+    <fillin>return { ok: true, msg: "${message}" };</fillin>
+  </item>
+  
+  <!-- Return Error -->
+  <item>
+    <displayprefix>ret</displayprefix>
+    <match>err</match>
+    <displaypostfix> - Return error</displaypostfix>
+    <fillin>return { ok: false, msg: "${error message}" };</fillin>
+  </item>
+  
+  <!-- Caller check -->
+  <item>
+    <displayprefix>check</displayprefix>
+    <match>caller</match>
+    <displaypostfix> - Caller is owner check</displaypostfix>
+    <fillin>if (!#fs.scripts.lib().caller_is_owner()) {
+	return { ok: false, msg: "Unauthorized" };
+}</fillin>
+  </item>
+  
+  <!-- Argument validation -->
+  <item>
+    <displayprefix>check</displayprefix>
+    <match>arg</match>
+    <displaypostfix> - Argument validation</displaypostfix>
+    <fillin>if (${arg} === undefined) {
+	return { ok: false, msg: "Missing required argument: ${arg}" };
+}</fillin>
+  </item>
+  
+  <!-- Arrow function -->
+  <item>
+    <displayprefix>fn</displayprefix>
+    <match>arrow</match>
+    <displaypostfix> - Arrow function</displaypostfix>
+    <fillin>(${params}) => ${body}</fillin>
+  </item>
+  
+  <!-- Array map -->
+  <item>
+    <displayprefix>arr</displayprefix>
+    <match>map</match>
+    <displaypostfix> - Array map</displaypostfix>
+    <fillin>${array}.map((${item}) => ${expression})</fillin>
+  </item>
+  
+  <!-- Array filter -->
+  <item>
+    <displayprefix>arr</displayprefix>
+    <match>filter</match>
+    <displaypostfix> - Array filter</displaypostfix>
+    <fillin>${array}.filter((${item}) => ${condition})</fillin>
+  </item>
+  
+  <!-- Array reduce -->
+  <item>
+    <displayprefix>arr</displayprefix>
+    <match>reduce</match>
+    <displaypostfix> - Array reduce</displaypostfix>
+    <fillin>${array}.reduce((${acc}, ${item}) => ${expression}, ${initial})</fillin>
+  </item>
+  
+  <!-- For-of loop -->
+  <item>
+    <displayprefix>loop</displayprefix>
+    <match>forof</match>
+    <displaypostfix> - For-of loop</displaypostfix>
+    <fillin>for (const ${item} of ${array}) {
+	${cursor}
+}</fillin>
+  </item>
+  
+  <!-- Object.entries loop -->
+  <item>
+    <displayprefix>loop</displayprefix>
+    <match>entries</match>
+    <displaypostfix> - Object entries loop</displaypostfix>
+    <fillin>for (const [${key}, ${value}] of Object.entries(${object})) {
+	${cursor}
+}</fillin>
+  </item>
+  
+  <!-- Template literal -->
+  <item>
+    <displayprefix>str</displayprefix>
+    <match>template</match>
+    <displaypostfix> - Template literal</displaypostfix>
+    <fillin>\`${text} \${${variable}}\`</fillin>
+  </item>
+  
+  <!-- WASM basic -->
+  <item>
+    <displayprefix>wasm</displayprefix>
+    <match>module</match>
+    <displaypostfix> - WebAssembly module</displaypostfix>
+    <fillin>const wasmBytes = new Uint8Array([${bytes}]);
+const module = new WebAssembly.Module(wasmBytes);
+const instance = new WebAssembly.Instance(module, {});
+const result = instance.exports.${function}(${args});</fillin>
+  </item>
+  
+  <!-- WASM add example -->
+  <item>
+    <displayprefix>wasm</displayprefix>
+    <match>add</match>
+    <displaypostfix> - WASM add function example</displaypostfix>
+    <fillin>// WASM: (func (export "add") (param i32 i32) (result i32) local.get 0 local.get 1 i32.add)
+const wasmBytes = new Uint8Array([
+  0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
+  0x01, 0x07, 0x01, 0x60, 0x02, 0x7f, 0x7f, 0x01, 0x7f,
+  0x03, 0x02, 0x01, 0x00,
+  0x07, 0x07, 0x01, 0x03, 0x61, 0x64, 0x64, 0x00, 0x00,
+  0x0a, 0x09, 0x01, 0x07, 0x00, 0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b
+]);
+const module = new WebAssembly.Module(wasmBytes);
+const instance = new WebAssembly.Instance(module, {});
+const result = instance.exports.add(${a}, ${b});</fillin>
+  </item>
+  
+  <!-- Math.pow (workaround for **) -->
+  <item>
+    <displayprefix>math</displayprefix>
+    <match>pow</match>
+    <displaypostfix> - Math.pow (use instead of **)</displaypostfix>
+    <fillin>Math.pow(${base}, ${exponent})</fillin>
+  </item>
+  
+  <!-- Object.assign (workaround for spread) -->
+  <item>
+    <displayprefix>obj</displayprefix>
+    <match>assign</match>
+    <displaypostfix> - Object.assign (use instead of {...obj})</displaypostfix>
+    <fillin>Object.assign({}, ${source}, { ${newProps} })</fillin>
+  </item>
+  
+  <!-- Safe property access (workaround for ?.) -->
+  <item>
+    <displayprefix>safe</displayprefix>
+    <match>access</match>
+    <displaypostfix> - Safe access (use instead of ?.)</displaypostfix>
+    <fillin>(${obj} && ${obj}.${prop})</fillin>
+  </item>
+  
+  <!-- Nullish default (workaround for ??) -->
+  <item>
+    <displayprefix>safe</displayprefix>
+    <match>default</match>
+    <displaypostfix> - Nullish default (use instead of ??)</displaypostfix>
+    <fillin>(${value} !== null && ${value} !== undefined) ? ${value} : ${default}</fillin>
+  </item>
+
+</snippets>

@@ -21,9 +21,10 @@
   - https://wiki.hackmud.com/scripting/extensions
   - https://wiki.hackmud.com/scripting/syntax/colors
 -->
-<language name="JavaScript (Hackmud)" version="2.0" kateversion="5.0"
+<language name="JavaScript (Hackmud)" version="2.1" kateversion="5.0"
           section="Scripts" extensions="*.js" mimetype="text/javascript"
-          author="claudeb0t" license="MIT" priority="15">
+          author="claudeb0t" license="MIT" priority="15"
+          firstLine="^function\s*\(.*$">
   
   <highlighting>
     <list name="keywords">

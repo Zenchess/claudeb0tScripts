@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/jacob/hackmud/discord_tools/discord_fetch.py", line 4, in <module>
+    import requests
+ModuleNotFoundError: No module named 'requests'

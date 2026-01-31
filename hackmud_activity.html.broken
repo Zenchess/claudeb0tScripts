@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hackmud Terminal - Live View</title>
+    <style>
+        @font-face {
+            font-family: 'WhiteRabbit';
+            src: url('WhiteRabbitHackmudExtended.ttf') format('truetype');
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-panel: #111;
+            --green: #1EFF00;
+            --orange: #FF8000;
+            --cyan: #00FFFF;
+            --magenta: #FF00EC;
+            --blue: #0070DD;
+            --gray: #9B9B9B;
+            --dark-gray: #3F3F3F;
+            --red: #FF4444;
+            --yellow: #FBC803;
+            --white: #CCC;
+            --purple: #B035EE;
+            --default: #83B0F2;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--default);
+            font-family: 'WhiteRabbit', monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* CCTV Flicker Animation */
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.95; }
+            10% { opacity: 0.98; }
+            15% { opacity: 0.96; }
+            20% { opacity: 0.99; }
+            25% { opacity: 0.94; }
+            30% { opacity: 0.98; }
+            35% { opacity: 0.96; }
+            40% { opacity: 0.99; }
+            45% { opacity: 0.95; }
+            50% { opacity: 0.97; }
+            55% { opacity: 0.98; }
+            60% { opacity: 0.96; }
+            65% { opacity: 0.99; }
+            70% { opacity: 0.95; }
+            75% { opacity: 0.98; }
+            80% { opacity: 0.97; }
+            85% { opacity: 0.96; }
+            90% { opacity: 0.99; }
+            95% { opacity: 0.95; }
+            100% { opacity: 0.97; }
+        }
+
+        .header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--dark-gray);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--orange);
+            font-size: 1.5em;
+            text-shadow: 0 0 10px rgba(255, 128, 0, 0.5);
+        }
+
+        .status {
+            color: var(--gray);
+            font-size: 0.9em;
+        }
+
+        .status.live {
+            color: var(--green);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        :root {
+            /* border */
+            --border-size: 2px;
+            --border-type: solid;
+            --border-color: var(--default);
+            --border-width: 6px;
+        }
+
+        .panel {
+            color: var(--default);
+            display: flex;
+            background-color: var(--bg-dark);
+            padding: 50px;
+        }
+
+        .panel-content-container {
+            display: flex;
+        }
+
+        .panel-extended-border-left {
+            border: var(--border-size) var(--border-type) var(--border-color);
+            border-color: var(--default);
+            border-right: none;
+            min-width:  var(--border-width);
+        }
+
+        .panel-content-border {
+            border: var(--border-size) var(--border-type) var(--border-color);
+        }
+
+        .panel-extended-border-right {
+            margin-left: auto;
+            border: var(--border-size) var(--border-type) var(--border-color);
+            border-color: var(--default);
+            border-left: none;
+            min-width:  var(--border-width);
+        }
+
+        .panel-content {
+            background-color: var(--bg-panel);
+            margin: 12px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            font-size: 14px;
+            line-height: 1;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .panel-header {
+            color: var(--bg-panel);
+            width: 90px;
+            padding-left: 11px;
+
+            /* triangular end */
+            border-bottom: 15px solid var(--default);
+            border-left: 0px solid transparent;
+            border-right: 8px solid transparent;
+            height: 0;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            font-size: 14px;
+            line-height: 1;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* CCTV Effects - applied to entire panel */
+        .panel {
+            position: relative;
+        }
+
+        /* CCTV Scanline Effect - covers entire visible panel */
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.35) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.65;
+        }
+
+        /* Brightness filter on panel content only */
+        .panel-content {
+            filter: brightness(1.08) contrast(1.2) saturate(1.25);
+        }
+
+        .right-side {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .right-panel {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .badge-panel {
+            flex: 0 0 auto !important;
+            max-height: fit-content;
+        }
+
+        .breach-panel {
+            flex: 0 0 auto !important;
+            max-height: fit-content;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark-gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Hackmud color classes */
+        .c-green { color: var(--green); }
+        .c-orange { color: var(--orange); }
+        .c-cyan { color: var(--cyan); }
+        .c-magenta { color: var(--magenta); }
+        .c-blue { color: var(--blue); }
+        .c-gray { color: var(--gray); }
+        .c-dark-gray { color: var(--dark-gray); }
+        .c-red { color: var(--red); }
+        .c-yellow { color: var(--yellow); }
+        .c-white { color: var(--white); }
+        .c-purple { color: var(--purple); }
+        .c-default { color: var(--default); }
+
+        .error {
+            color: var(--red);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading {
+            color: var(--gray);
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Command Bar */
+        .command-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-panel);
+            border-top: 2px solid var(--orange);
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .command-bar input {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            color: transparent;
+            caret-color: #1EFF00;  /* Explicit green for cursor */
+            padding: 8px 12px;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 14px;
+            line-height: 1;
+            position: relative;
+        }
+
+        .command-bar input:focus {
+            outline: none;
+            border-color: var(--green);
+            caret-color: #1EFF00;  /* Ensure cursor is visible when focused */
+        }
+
+        .command-bar input::selection {
+            background: #1EFF0033;  /* Show text selection */
+        }
+
+        /* Visual selection highlight in overlay */
+        .selection-highlight {
+            background: #1EFF0033;
+        }
+
+        /* Cursor in overlay */
+        .overlay-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #1EFF00;
+            animation: blink 1s step-end infinite;
+            margin-left: -1px;
+            vertical-align: baseline;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .command-bar input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-overlay {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            padding: 8px 12px;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 14px;
+            line-height: 1;
+            color: var(--green);
+            background: var(--bg-dark);
+            pointer-events: none;
+            white-space: nowrap;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .command-bar button {
+            background: var(--bg-dark);
+            border: 1px solid var(--green);
+            color: var(--green);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .command-bar button:hover:not(:disabled) {
+            background: var(--green);
+            color: var(--bg-dark);
+        }
+
+        .command-bar button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: var(--dark-gray);
+            color: var(--dark-gray);
+        }
+
+        /* Auth Status */
+        .auth-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85em;
+        }
+
+        .auth-button {
+            background: var(--bg-dark);
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .auth-button:hover {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .auth-button.logout {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .auth-button.logout:hover {
+            background: var(--red);
+            color: var(--bg-dark);
+        }
+
+        .user-info {
+            color: var(--cyan);
+        }
+
+        .session-code {
+            background: var(--bg-dark);
+            border: 1px solid var(--green);
+            color: var(--green);
+            padding: 8px 12px;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .session-info {
+            color: var(--green);
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+
+        .auth-button.session {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .auth-button.session:hover {
+            background: var(--green);
+            color: var(--bg-dark);
+        }
+
+        .container {
+            padding-bottom: 60px; /* Space for command bar */
+        }
+
+        /* Autocomplete Options */
+        .autocomplete-options {
+            position: fixed;
+            bottom: 60px; /* Above command bar */
+            left: 0;
+            right: 0;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--dark-gray);
+            padding: 10px 15px;
+            display: none; /* Hidden by default */
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        .autocomplete-options.visible {
+            display: block;
+        }
+
+        .autocomplete-option {
+            padding: 5px 10px;
+            color: var(--cyan);
+            cursor: pointer;
+            border-bottom: 1px solid var(--dark-gray);
+        }
+
+        .autocomplete-option:hover {
+            background: var(--dark-gray);
+        }
+
+        .autocomplete-option.selected {
+            background: var(--green);
+            color: var(--bg-dark);
+        }
+
+        /* Autocomplete syntax highlighting colors */
+        .ac-trust { color: #FF8000; }  /* Orange - trust scripts */
+        .ac-user { color: #9B9B9B; }   /* Gray - user scripts */
+        .ac-method { color: #1EFF00; } /* Green - method names */
+        .ac-param { color: #00FFFF; }  /* Cyan - parameter names */
+        .ac-sep { color: #FFFFFF; }    /* White - separators */
+
+        /* Script Editor Styles */
+        .script-toggle-btn {
+            padding: 5px 15px;
+            background: var(--bg-dark);
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            cursor: pointer;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 0.9em;
+            margin-left: 15px;
+        }
+
+        .script-toggle-btn:hover {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .script-toggle-btn.active {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        .script-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-panel);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .script-overlay.visible {
+            display: flex;
+        }
+
+        .script-overlay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--dark-gray);
+        }
+
+        .script-overlay-header h2 {
+            color: var(--cyan);
+            font-size: 1.2em;
+            margin: 0;
+        }
+
+        .script-close-btn {
+            padding: 5px 15px;
+            background: transparent;
+            border: 1px solid var(--gray);
+            color: var(--gray);
+            cursor: pointer;
+            font-family: 'WhiteRabbit', monospace;
+        }
+
+        .script-close-btn:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .script-panel {
+            margin-top: 10px;
+        }
+
+        .script-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .script-tab {
+            padding: 5px 15px;
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            color: var(--gray);
+            cursor: pointer;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 0.8em;
+        }
+
+        .script-tab.active {
+            background: var(--dark-gray);
+            color: var(--green);
+            border-color: var(--green);
+        }
+
+        .script-editor {
+            width: 100%;
+            flex: 1;
+            min-height: 200px;
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            color: var(--green);
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 0.9em;
+            padding: 10px;
+            resize: none;
+            tab-size: 2;
+        }
+
+        .script-editor:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+
+        .script-logs {
+            width: 100%;
+            flex: 1;
+            min-height: 200px;
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            color: var(--cyan);
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 0.85em;
+            padding: 10px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .script-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .script-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .script-btn {
+            padding: 5px 15px;
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            color: var(--gray);
+            cursor: pointer;
+            font-family: 'WhiteRabbit', monospace;
+            font-size: 0.8em;
+        }
+
+        .script-btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .script-btn.start {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .script-btn.start:hover {
+            background: var(--green);
+            color: var(--bg-dark);
+        }
+
+        .script-btn.stop {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .script-btn.stop:hover {
+            background: var(--red);
+            color: var(--bg-dark);
+        }
+
+        .script-status {
+            font-size: 0.75em;
+            color: var(--gray);
+            margin-left: auto;
+            padding: 5px;
+        }
+
+        .script-status.running {
+            color: var(--green);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&gt;&gt;hackmud.terminal{live:true}</h1>
+        <div class="auth-status" id="authStatus">
+            <button class="script-toggle-btn" id="scriptToggleBtn" onclick="toggleScriptPanel()">Script</button>
+            <div class="status" id="status">Connecting...</div>
+            <a href="/login" class="auth-button" id="loginButton">Login with Discord</a>
+            <button class="auth-button session" id="sessionButton" onclick="startSessionAuth()">Session Auth</button>
+            <span class="session-info" id="sessionInfo"></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Shell/Terminal -->
+        <div class="panel">
+            <div class="panel-extended-border-left"></div>
+
+            <div class="panel-inner-container">
+                <div class="panel-header">TERMINAL / SHELL</div>
+
+                <div class="panel-content-container">
+                    <div class="panel-content-border">
+                        <div class="panel-content" id="shell-content">
+                            <div class="loading">Loading terminal...</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-extended-border-right"></div>
+                </div>
+            </div>
+        </div>
+
+            <!-- Script Overlay -->
+            <div class="script-overlay" id="scriptOverlay">
+                <div class="script-overlay-header">
+                    <h2>&gt;&gt;script.runner{}</h2>
+                    <button class="script-close-btn" onclick="toggleScriptPanel()">Close [X]</button>
+                </div>
+                <div class="script-tabs">
+                    <button class="script-tab active" onclick="switchScriptTab('editor')">Editor</button>
+                    <button class="script-tab" onclick="switchScriptTab('logs')">Logs</button>
+                </div>
+                <div class="script-content">
+                    <div id="scriptEditorTab" style="display: flex; flex-direction: column; flex: 1;">
+                        <textarea class="script-editor" id="scriptCode" placeholder="// Bot automation script
+// Available API:
+//   bot.sendCommand(cmd) - Send command to game
+//   bot.readTerminal(lines) - Get terminal text
+//   bot.readChat(lines) - Get chat text
+//   bot.sleep(ms) - Wait milliseconds
+//   bot.log(msg) - Output to logs
+//   bot.getBalance() - Read badge/balance
+//
+// Shortcuts: send(), log(), sleep()
+
+log('Hello from script!');
+send('accts.balance');
+sleep(2000);
+let terminal = bot.readTerminal(20);
+log('Got ' + terminal.length + ' chars from terminal');
+"></textarea>
+                    </div>
+                    <div id="scriptLogsTab" class="hidden" style="display: none; flex-direction: column; flex: 1;">
+                        <div class="script-logs" id="scriptLogs">No logs yet...</div>
+                    </div>
+                </div>
+                <div class="script-controls">
+                    <button class="script-btn" onclick="saveScript()">Save</button>
+                    <button class="script-btn start" id="startBtn" onclick="startScript()">Start</button>
+                    <button class="script-btn stop hidden" id="stopBtn" onclick="stopScript()">Stop</button>
+                    <span class="script-status" id="scriptStatus">Not running</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side Panels -->
+        <div class="right-side">
+            <!-- Badge -->
+            <div class="panel right-panel">
+                <div class="panel-extended-border-left"></div>
+
+                <div class="panel-inner-container">
+                    <div class="panel-header">BADGE</div>
+
+                    <div class="panel-content-container">
+                        <div class="panel-content-border">
+                            <div class="panel-content" id="badge-content">
+                                <div class="loading">Loading badge...</div>
+                            </div>
+                        </div>
+
+                        <div class="panel-extended-border-right"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Breach -->
+            <div class="panel right-panel">
+                <div class="panel-extended-border-left"></div>
+
+                <div class="panel-inner-container">
+                    <div class="panel-header">BREACH STATUS</div>
+
+                    <div class="panel-content-container">
+                        <div class="panel-content-border">
+                            <div class="panel-content" id="breach-content">
+                                <div class="loading">Loading breach...</div>
+                            </div>
+                        </div>
+
+                        <div class="panel-extended-border-right"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="panel right-panel">
+                <div class="panel-extended-border-left"></div>
+
+                <div class="panel-inner-container">
+                    <div class="panel-header">CHAT</div>
+
+                    <div class="panel-content-container">
+                        <div class="panel-content-border">
+                            <div class="panel-content" id="chat-content">
+                                <div class="loading">Loading chat...</div>
+                            </div>
+                        </div>
+
+                        <div class="panel-extended-border-right"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/terminal';
+        let updateInterval;
+
+        // Color mapping from Unity colors to our CSS variables
+        const colorMap = {
+            '#1EFF00': 'c-green',
+            '#FF8000': 'c-orange',
+            '#00FFFF': 'c-cyan',
+            '#FF00EC': 'c-magenta',
+            '#0070DD': 'c-blue',
+            '#9B9B9B': 'c-gray',
+            '#3F3F3F': 'c-dark-gray',
+            '#FF4444': 'c-red',
+            '#FBC803': 'c-yellow',
+            '#CCCCCC': 'c-white',
+            '#B035EE': 'c-purple',
+            '#83B0F2': 'c-default',
+            '#FFFFFF': 'c-white'
+        };
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function convertUnityColorsToHTML(text) {
+            // Convert Unity <color=#RRGGBB> or <color=#RRGGBBAA> tags to inline styled spans
+            // Process nested tags by repeatedly replacing innermost tags first
+
+            let prevText;
+            let iterations = 0;
+            const maxIterations = 30;
+
+            do {
+                prevText = text;
+                // Match color tags whose content doesn't contain other color tags
+                text = text.replace(/<color=(#[0-9A-Fa-f]{6,8})>((?:(?!<color).)*?)<\/color>/gs, (match, color, content) => {
+                    // Use the full color including alpha if present (browsers support it)
+                    return `<span style="color:${color};">${content}</span>`;
+                });
+
+                iterations++;
+            } while (prevText !== text && iterations < maxIterations);
+
+            return text;
+        }
+
+        async function fetchTerminalData() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Update status
+                document.getElementById('status').textContent = 'LIVE';
+                document.getElementById('status').classList.add('live');
+
+                // Update shell
+                if (data.shell) {
+                    const html = convertUnityColorsToHTML(data.shell);
+                    const shellContent = document.getElementById('shell-content');
+                    shellContent.innerHTML = html;
+                    // Auto-scroll to bottom
+                    shellContent.scrollTop = shellContent.scrollHeight;
+                }
+
+                // Update badge
+                if (data.badge) {
+                    const html = convertUnityColorsToHTML(data.badge);
+                    document.getElementById('badge-content').innerHTML = html;
+                }
+
+                // Update breach
+                if (data.breach) {
+                    const html = convertUnityColorsToHTML(data.breach);
+                    document.getElementById('breach-content').innerHTML = html;
+                }
+
+                // Update chat
+                if (data.chat) {
+                    const html = convertUnityColorsToHTML(data.chat);
+                    const chatContent = document.getElementById('chat-content');
+                    chatContent.innerHTML = html;
+                    // Auto-scroll to bottom
+                    chatContent.scrollTop = chatContent.scrollHeight;
+                }
+
+            } catch (error) {
+                console.error('Error fetching terminal data:', error);
+                document.getElementById('status').textContent = 'ERROR: ' + error.message;
+                document.getElementById('status').classList.remove('live');
+
+                // Show error in panels
+                const errorMsg = `<div class="error">Failed to fetch data: ${error.message}</div>`;
+                document.getElementById('shell-content').innerHTML = errorMsg;
+                document.getElementById('badge-content').innerHTML = errorMsg;
+                document.getElementById('breach-content').innerHTML = errorMsg;
+                document.getElementById('chat-content').innerHTML = errorMsg;
+            }
+        }
+
+        // Check user authentication status
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/user', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                const authStatus = document.getElementById('authStatus');
+                const loginButton = document.getElementById('loginButton');
+                const commandInput = document.getElementById('commandInput');
+                const sendButton = document.getElementById('sendCommand');
+
+                if (data.authenticated && data.authorized) {
+                    // User is logged in and authorized
+                    loginButton.textContent = `${data.username} | Logout`;
+                    loginButton.href = '/logout';
+                    loginButton.classList.add('logout');
+
+                    // Enable command input
+                    commandInput.disabled = false;
+                    commandInput.placeholder = '> Enter hackmud command...';
+                    sendButton.disabled = false;
+                } else if (data.authenticated && !data.authorized) {
+                    // User is logged in but not authorized
+                    loginButton.textContent = 'Unauthorized | Logout';
+                    loginButton.href = '/logout';
+                    loginButton.classList.add('logout');
+                } else {
+                    // User is not logged in
+                    loginButton.textContent = 'Login with Discord';
+                    loginButton.href = '/login';
+                    loginButton.classList.remove('logout');
+
+                    // Disable command input
+                    commandInput.disabled = true;
+                    commandInput.placeholder = '> Login to send commands...';
+                    sendButton.disabled = true;
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+            }
+        }
+
+        // Send command to hackmud
+        async function sendCommand() {
+            const commandInput = document.getElementById('commandInput');
+            const command = commandInput.value.trim();
+
+            if (!command) return;
+
+            try {
+                const sendButton = document.getElementById('sendCommand');
+                sendButton.disabled = true;
+                sendButton.textContent = 'Sending...';
+
+                const response = await fetch('/api/command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ command })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    commandInput.value = '';
+                    // Terminal will update automatically on next fetch
+                } else {
+                    alert('Command failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Command execution failed: ' + error.message);
+            } finally {
+                const sendButton = document.getElementById('sendCommand');
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send';
+            }
+        }
+
+        // Tab completion for hackmud commands
+        let commandTemplates = {};
+
+        // Load autocomplete data from hackmud settings
+        async function loadAutocomplete() {
+            try {
+                const response = await fetch('/api/autocomplete');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                if (!data.userAutos) return;
+
+                // Convert hackmud autocomplete format to command templates
+                for (const [namespace, commands] of Object.entries(data.userAutos)) {
+                    for (const [cmd, args] of Object.entries(commands)) {
+                        const fullCmd = `${namespace}.${cmd}`;
+
+                        if (args === null) {
+                            // Simple command with no arguments
+                            commandTemplates[fullCmd] = fullCmd;
+                        } else {
+                            // Command with arguments - build template
+                            const argParts = [];
+                            for (const [key, val] of Object.entries(args)) {
+                                if (typeof val === 'string') {
+                                    // String argument - put marker inside quotes
+                                    argParts.push(`${key}:"█"`);
+                                } else {
+                                    // Non-string argument - put marker after colon
+                                    argParts.push(`${key}:█`);
+                                }
+                            }
+
+                            commandTemplates[fullCmd] = `${fullCmd}{${argParts.join(',')}}`;
+                        }
+                    }
+                }
+
+                console.log(`Loaded ${Object.keys(commandTemplates).length} autocomplete templates`);
+            } catch (error) {
+                console.error('Failed to load autocomplete:', error);
+            }
+        }
+
+        // Load autocomplete on page load
+        loadAutocomplete();
+
+        let tabCompletionState = {
+            active: false,
+            template: '',
+            positions: [],
+            currentIndex: 0
+        };
+
+        function handleTabCompletion(event) {
+            // CRITICAL: Prevent Tab from being sent to the game
+            event.preventDefault();
+
+            const input = document.getElementById('commandInput');
+            const currentValue = input.value;
+            const cursorPos = input.selectionStart;
+
+            // Check if we're in the middle of tab completion
+            if (tabCompletionState.active) {
+                // Move to next argument position
+                tabCompletionState.currentIndex++;
+                if (tabCompletionState.currentIndex < tabCompletionState.positions.length) {
+                    const pos = tabCompletionState.positions[tabCompletionState.currentIndex];
+                    input.setSelectionRange(pos, pos);
+                } else {
+                    // End of arguments, reset
+                    tabCompletionState.active = false;
+                    input.setSelectionRange(input.value.length, input.value.length);
+                }
+                return;
+            }
+
+            // Find matching command template
+            for (const [cmd, template] of Object.entries(commandTemplates)) {
+                if (currentValue.startsWith(cmd)) {
+                    // Already matched, don't re-complete
+                    if (currentValue.includes('{')) continue;
+
+                    // Insert template
+                    const completed = template.replace(/█/g, '');
+                    input.value = completed;
+                    updateInputOverlay();
+
+                    // Find argument positions (█ markers in original template)
+                    const positions = [];
+                    let searchPos = 0;
+                    const templateCopy = template;
+                    while (true) {
+                        const idx = templateCopy.indexOf('█', searchPos);
+                        if (idx === -1) break;
+                        positions.push(idx - positions.length); // Adjust for removed markers
+                        searchPos = idx + 1;
+                    }
+
+                    if (positions.length > 0) {
+                        tabCompletionState = {
+                            active: true,
+                            template: template,
+                            positions: positions,
+                            currentIndex: 0
+                        };
+                        input.setSelectionRange(positions[0], positions[0]);
+                    }
+                    return;
+                }
+
+                // Partial match - complete the command name
+                if (cmd.startsWith(currentValue) && currentValue.length > 0) {
+                    input.value = cmd;
+                    input.setSelectionRange(cmd.length, cmd.length);
+                    return;
+                }
+            }
+        }
+
+        // Session-based authentication
+        let sessionPollInterval = null;
+
+        async function startSessionAuth() {
+            try {
+                // Create a new session
+                const response = await fetch('/api/session/create', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.session_code) {
+                    // Save session code to localStorage
+                    localStorage.setItem('hackmud_session_code', data.session_code);
+
+                    // Display session code
+                    document.getElementById('sessionInfo').innerHTML =
+                        `Code: <span class="session-code">${data.session_code}</span> - Type <code>!auth ${data.session_code}</code> in Discord`;
+
+                    // Hide session button
+                    document.getElementById('sessionButton').style.display = 'none';
+
+                    // Start polling for auth
+                    sessionPollInterval = setInterval(checkSessionStatus, 2000);
+                }
+            } catch (error) {
+                console.error('Failed to create session:', error);
+                alert('Failed to create session: ' + error.message);
+            }
+        }
+
+        async function checkSessionStatus() {
+            try {
+                const response = await fetch('/api/session/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.authenticated) {
+                    // Session authenticated!
+                    clearInterval(sessionPollInterval);
+                    document.getElementById('sessionInfo').innerHTML = '';
+                    document.getElementById('sessionButton').style.display = 'inline-block';
+
+                    // Update auth status
+                    checkAuthStatus();
+                }
+            } catch (error) {
+                console.error('Failed to check session status:', error);
+            }
+        }
+
+        // Autocomplete suggestions state
+        let selectedSuggestionIndex = -1;
+        let currentSuggestions = [];
+
+        function showAutocompleteSuggestions(input) {
+            const autocompleteDiv = document.getElementById('autocompleteOptions');
+            const value = input.value.trim();
+
+            // Hide if empty
+            if (!value) {
+                autocompleteDiv.classList.remove('visible');
+                currentSuggestions = [];
+                selectedSuggestionIndex = -1;
+                return;
+            }
+
+            // Find matching commands
+            const matches = [];
+            for (const cmd of Object.keys(commandTemplates)) {
+                if (cmd.startsWith(value) && cmd !== value) {
+                    matches.push(cmd);
+                }
+            }
+
+            // Trust script namespaces (colored orange)
+            const trustNamespaces = ['accts', 'chats', 'scripts', 'sys', 'gui', 'escrow', 'kernel', 'market', 'users'];
+
+            // Format template with hackmud colors using CSS classes
+            function formatHackmudStyle(template, cmd) {
+                const namespace = cmd.split('.')[0];
+                const method = cmd.split('.')[1] || '';
+                const isTrust = trustNamespaces.includes(namespace);
+                const nsClass = isTrust ? 'ac-trust' : 'ac-user';
+
+                // Remove █ markers before formatting (for autocomplete display)
+                let text = template.replace(/█/g, '');
+
+                // Parse the command structure manually
+                // Format: namespace.method{param1:"",param2:""}
+
+                let html = '';
+
+                // Parse namespace
+                html += `<span class="${nsClass}">${namespace}</span>`;
+
+                // Parse method if present
+                if (method) {
+                    html += `<span class="ac-sep">.</span><span class="ac-method">${method}</span>`;
+                }
+
+                // Parse arguments if present
+                const argsMatch = text.match(/\{(.+)\}$/);
+                if (argsMatch) {
+                    html += `<span class="ac-sep">{</span>`;
+
+                    // Parse individual arguments
+                    const argsText = argsMatch[1];
+                    const argParts = argsText.split(',');
+
+                    argParts.forEach((arg, i) => {
+                        const colonIdx = arg.indexOf(':');
+                        if (colonIdx > 0) {
+                            const paramName = arg.substring(0, colonIdx).trim();
+                            const paramValue = arg.substring(colonIdx + 1).trim();
+
+                            html += `<span class="ac-param">${paramName}</span>`;
+                            html += `<span class="ac-sep">:</span>`;
+                            html += paramValue;  // Value (quotes, etc)
+                        } else {
+                            html += arg;
+                        }
+
+                        if (i < argParts.length - 1) {
+                            html += `<span class="ac-sep">,</span>`;
+                        }
+                    });
+
+                    html += `<span class="ac-sep">}</span>`;
+                }
+
+                return html;
+            }
+
+            // Show suggestions if we have matches
+            if (matches.length > 0) {
+                currentSuggestions = matches;
+                selectedSuggestionIndex = -1;
+
+                // Build HTML for suggestions (hackmud style with colors)
+                let html = '';
+                matches.forEach((cmd, index) => {
+                    const template = commandTemplates[cmd];
+                    const coloredTemplate = formatHackmudStyle(template, cmd);
+
+                    html += `<div class="autocomplete-option" data-index="${index}" data-command="${cmd}">${coloredTemplate}</div>`;
+                });
+
+                autocompleteDiv.innerHTML = html;
+                autocompleteDiv.classList.add('visible');
+
+                // Add click handlers
+                autocompleteDiv.querySelectorAll('.autocomplete-option').forEach(option => {
+                    option.addEventListener('click', function() {
+                        const cmd = this.getAttribute('data-command');
+                        const template = commandTemplates[cmd];
+                        if (template) {
+                            input.value = template.replace(/█/g, '');
+                        } else {
+                            input.value = cmd;
+                        }
+                        updateInputOverlay();
+                        autocompleteDiv.classList.remove('visible');
+                        input.focus();
+                    });
+                });
+            } else {
+                autocompleteDiv.classList.remove('visible');
+                currentSuggestions = [];
+                selectedSuggestionIndex = -1;
+            }
+        }
+
+        function selectSuggestion(index) {
+            const autocompleteDiv = document.getElementById('autocompleteOptions');
+            const options = autocompleteDiv.querySelectorAll('.autocomplete-option');
+
+            // Remove previous selection
+            options.forEach(opt => opt.classList.remove('selected'));
+
+            // Add new selection
+            if (index >= 0 && index < options.length) {
+                options[index].classList.add('selected');
+                selectedSuggestionIndex = index;
+
+                // Scroll into view
+                options[index].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function acceptSuggestion() {
+            if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < currentSuggestions.length) {
+                const cmd = currentSuggestions[selectedSuggestionIndex];
+                const input = document.getElementById('commandInput');
+
+                // Get the template for this command
+                const template = commandTemplates[cmd];
+                if (template) {
+                    // Insert template without █ markers
+                    const completed = template.replace(/█/g, '');
+                    input.value = completed;
+                } else {
+                    // Fallback to just the command name
+                    input.value = cmd;
+                }
+
+                updateInputOverlay();
+
+                // Hide suggestions
+                document.getElementById('autocompleteOptions').classList.remove('visible');
+                currentSuggestions = [];
+                selectedSuggestionIndex = -1;
+
+                return true;
+            }
+            return false;
+        }
+
+        // Update input overlay with syntax highlighting
+        function updateInputOverlay() {
+            const input = document.getElementById('commandInput');
+            const overlay = document.getElementById('inputOverlay');
+            if (!input || !overlay) return;
+
+            const text = input.value;
+            const cursorPos = input.selectionStart;
+            const selectionEnd = input.selectionEnd;
+
+            if (!text) {
+                // Show cursor even when empty
+                overlay.innerHTML = '<span class="overlay-cursor"></span>';
+                input.classList.remove('has-overlay');
+                return;
+            }
+
+            // Build colored HTML character by character so we can insert cursor at any position
+            const trustNamespaces = ['accts', 'chats', 'scripts', 'sys', 'gui', 'escrow', 'kernel', 'market', 'users'];
+
+            let html = '';
+            let currentClass = '';
+
+            // Determine what class each character should have
+            const hasSelection = cursorPos !== selectionEnd;
+            const selStart = Math.min(cursorPos, selectionEnd);
+            const selEnd = Math.max(cursorPos, selectionEnd);
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+
+                // Insert cursor before this character if needed (only if no selection)
+                if (i === cursorPos && !hasSelection) {
+                    html += '<span class="overlay-cursor"></span>';
+                }
+
+                // Check if this character is selected
+                const isSelected = hasSelection && i >= selStart && i < selEnd;
+
+                // Determine character color class based on position in command
+                let charClass = '';
+
+                // Simple heuristic: color based on character type and position
+                if (char === '.') {
+                    charClass = 'ac-sep';
+                } else if (char === '{' || char === '}' || char === ',' || char === ':') {
+                    charClass = 'ac-sep';
+                } else if (text.indexOf('.') > 0 && i < text.indexOf('.')) {
+                    // Before first dot = namespace
+                    const namespace = text.substring(0, text.indexOf('.'));
+                    charClass = trustNamespaces.includes(namespace) ? 'ac-trust' : 'ac-user';
+                } else if (text.indexOf('.') > 0 && i > text.indexOf('.') && (text.indexOf('{') < 0 || i < text.indexOf('{'))) {
+                    // After dot but before { = method
+                    charClass = 'ac-method';
+                } else if (text.indexOf('{') > 0 && i > text.indexOf('{')) {
+                    // Inside {} = parameters
+                    // Check if we're a parameter name (before :)
+                    let inParamName = false;
+                    for (let j = i; j >= 0; j--) {
+                        if (text[j] === ':' || text[j] === '{' || text[j] === ',') {
+                            inParamName = (text[j] === '{' || text[j] === ',');
+                            break;
+                        }
+                    }
+                    charClass = inParamName ? 'ac-param' : '';
+                } else {
+                    // Default (single word, no dots)
+                    charClass = text.includes('.') ? '' : (trustNamespaces.includes(text.split('{')[0]) ? 'ac-trust' : 'ac-user');
+                }
+
+                // Add character with appropriate class (and selection if needed)
+                const fullClass = charClass + (isSelected ? ' selection-highlight' : '');
+
+                if (fullClass !== currentClass) {
+                    if (currentClass) html += '</span>';
+                    if (fullClass) html += `<span class="${fullClass}">`;
+                    currentClass = fullClass;
+                }
+
+                html += char;
+            }
+
+            // Close last span
+            if (currentClass) html += '</span>';
+
+            // Add cursor at the end if cursor is at the end and no selection
+            if (cursorPos >= text.length && !hasSelection) {
+                html += '<span class="overlay-cursor"></span>';
+            }
+
+            overlay.innerHTML = html;
+            input.classList.add('has-overlay');  // Hide input text, show colored overlay
+        }
+
+        // Initial fetch
+        fetchTerminalData();
+        checkAuthStatus();
+
+        // Set up tab completion and autocomplete on commandInput (after DOM is ready)
+        document.addEventListener('DOMContentLoaded', function() {
+            const commandInput = document.getElementById('commandInput');
+            const autocompleteDiv = document.getElementById('autocompleteOptions');
+
+            if (commandInput) {
+                // Show suggestions as user types AND update overlay
+                commandInput.addEventListener('input', function() {
+                    showAutocompleteSuggestions(this);
+                    updateInputOverlay();
+                });
+
+                // Update overlay when cursor moves (click, arrow keys, etc.)
+                commandInput.addEventListener('click', updateInputOverlay);
+                commandInput.addEventListener('keyup', updateInputOverlay);
+                commandInput.addEventListener('select', updateInputOverlay);
+
+                // Handle keyboard navigation
+                commandInput.addEventListener('keydown', function(event) {
+                    const autocompleteVisible = autocompleteDiv.classList.contains('visible');
+
+                    if (event.key === 'ArrowDown' && autocompleteVisible) {
+                        event.preventDefault();
+                        const nextIndex = Math.min(selectedSuggestionIndex + 1, currentSuggestions.length - 1);
+                        selectSuggestion(nextIndex);
+                    } else if (event.key === 'ArrowUp' && autocompleteVisible) {
+                        event.preventDefault();
+                        const prevIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                        if (prevIndex === -1) {
+                            // Deselect all
+                            autocompleteDiv.querySelectorAll('.autocomplete-option').forEach(opt => {
+                                opt.classList.remove('selected');
+                            });
+                            selectedSuggestionIndex = -1;
+                        } else {
+                            selectSuggestion(prevIndex);
+                        }
+                    } else if (event.key === 'Tab') {
+                        event.preventDefault();
+                        // Tab accepts suggestion if dropdown is visible
+                        if (autocompleteVisible) {
+                            // Auto-select first suggestion if none selected
+                            if (selectedSuggestionIndex === -1 && currentSuggestions.length > 0) {
+                                selectSuggestion(0);
+                            }
+                            if (acceptSuggestion()) {
+                                // Suggestion accepted
+                                return;
+                            }
+                        }
+                        // Otherwise do normal tab completion
+                        handleTabCompletion(event);
+                    } else if (event.key === 'Enter') {
+                        if (autocompleteVisible && selectedSuggestionIndex >= 0) {
+                            event.preventDefault();
+                            acceptSuggestion();
+                        } else {
+                            sendCommand();
+                        }
+                    } else if (event.key === 'Escape') {
+                        autocompleteDiv.classList.remove('visible');
+                        currentSuggestions = [];
+                        selectedSuggestionIndex = -1;
+                    }
+                });
+
+                // Hide suggestions when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!commandInput.contains(event.target) && !autocompleteDiv.contains(event.target)) {
+                        autocompleteDiv.classList.remove('visible');
+                        currentSuggestions = [];
+                        selectedSuggestionIndex = -1;
+                    }
+                });
+
+                console.log('Tab completion and autocomplete suggestions enabled');
+            } else {
+                console.error('commandInput element not found!');
+            }
+        });
+
+        // Check for stored session code on page load
+        const storedSessionCode = localStorage.getItem('hackmud_session_code');
+        if (storedSessionCode) {
+            console.log('Found stored session code, checking if still valid...');
+            checkSessionStatus();  // This will update auth status if session is still valid
+        }
+
+        // Clear localStorage on logout
+        const loginButton = document.getElementById('loginButton');
+        if (loginButton) {
+            loginButton.addEventListener('click', function(event) {
+                if (this.href && this.href.includes('/logout')) {
+                    localStorage.removeItem('hackmud_session_code');
+                    console.log('Cleared stored session code');
+                }
+            });
+        }
+
+        // Update every 2 seconds
+        updateInterval = setInterval(fetchTerminalData, 2000);
+        setInterval(checkAuthStatus, 10000); // Check auth every 10 seconds
+
+        // =====================================================================
+        // Script Runner Functions
+        // =====================================================================
+
+        let scriptLogInterval = null;
+        let scriptPanelVisible = false;
+
+        function toggleScriptPanel() {
+            const overlay = document.getElementById('scriptOverlay');
+            const toggleBtn = document.getElementById('scriptToggleBtn');
+
+            scriptPanelVisible = !scriptPanelVisible;
+
+            if (scriptPanelVisible) {
+                overlay.classList.add('visible');
+                toggleBtn.classList.add('active');
+                loadSavedScript();
+            } else {
+                overlay.classList.remove('visible');
+                toggleBtn.classList.remove('active');
+            }
+        }
+
+        function switchScriptTab(tab) {
+            const editorTab = document.getElementById('scriptEditorTab');
+            const logsTab = document.getElementById('scriptLogsTab');
+            const tabs = document.querySelectorAll('.script-tab');
+
+            tabs.forEach(t => t.classList.remove('active'));
+
+            if (tab === 'editor') {
+                editorTab.style.display = 'flex';
+                logsTab.style.display = 'none';
+                tabs[0].classList.add('active');
+            } else {
+                editorTab.style.display = 'none';
+                logsTab.style.display = 'flex';
+                tabs[1].classList.add('active');
+                fetchScriptLogs();
+            }
+        }
+
+        async function saveScript() {
+            const code = document.getElementById('scriptCode').value;
+            try {
+                const response = await fetch('/api/script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('scriptStatus').textContent = 'Script saved';
+                } else {
+                    document.getElementById('scriptStatus').textContent = 'Error: ' + data.error;
+                }
+            } catch (error) {
+                document.getElementById('scriptStatus').textContent = 'Save failed: ' + error;
+            }
+        }
+
+        async function startScript() {
+            // Save first
+            await saveScript();
+
+            try {
+                const response = await fetch('/api/script/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    updateScriptUI(true);
+                    // Start polling logs
+                    scriptLogInterval = setInterval(fetchScriptLogs, 1000);
+                    // Switch to logs tab
+                    switchScriptTab('logs');
+                } else {
+                    document.getElementById('scriptStatus').textContent = 'Error: ' + data.error;
+                }
+            } catch (error) {
+                document.getElementById('scriptStatus').textContent = 'Start failed: ' + error;
+            }
+        }
+
+        async function stopScript() {
+            try {
+                const response = await fetch('/api/script/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                updateScriptUI(false);
+                if (scriptLogInterval) {
+                    clearInterval(scriptLogInterval);
+                    scriptLogInterval = null;
+                }
+            } catch (error) {
+                document.getElementById('scriptStatus').textContent = 'Stop failed: ' + error;
+            }
+        }
+
+        function updateScriptUI(running) {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const status = document.getElementById('scriptStatus');
+
+            if (running) {
+                startBtn.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+                status.textContent = 'Running...';
+                status.classList.add('running');
+            } else {
+                startBtn.classList.remove('hidden');
+                stopBtn.classList.add('hidden');
+                status.textContent = 'Stopped';
+                status.classList.remove('running');
+            }
+        }
+
+        async function fetchScriptLogs() {
+            try {
+                const response = await fetch('/api/script/logs?last=100');
+                const data = await response.json();
+
+                const logsDiv = document.getElementById('scriptLogs');
+                if (data.logs && data.logs.length > 0) {
+                    logsDiv.textContent = data.logs.join('\n');
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                }
+
+                // Update status
+                if (data.status) {
+                    updateScriptUI(data.status.running);
+                    if (data.status.error) {
+                        document.getElementById('scriptStatus').textContent = 'Error: ' + data.status.error.substring(0, 50);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch logs:', error);
+            }
+        }
+
+        // Load saved script on page load
+        async function loadSavedScript() {
+            try {
+                const response = await fetch('/api/script');
+                const data = await response.json();
+                if (data.code) {
+                    document.getElementById('scriptCode').value = data.code;
+                }
+                if (data.status && data.status.running) {
+                    updateScriptUI(true);
+                    scriptLogInterval = setInterval(fetchScriptLogs, 1000);
+                }
+            } catch (error) {
+                console.error('Failed to load script:', error);
+            }
+        }
+
+        // Load script when page loads (if authorized)
+        setTimeout(loadSavedScript, 2000);
+    </script>
+
+    <!-- Autocomplete Options -->
+    <div class="autocomplete-options" id="autocompleteOptions">
+        <!-- Options will be populated dynamically -->
+    </div>
+
+    <!-- Command Bar -->
+    <div class="command-bar">
+        <div class="input-wrapper">
+            <div id="inputOverlay" class="input-overlay"></div>
+            <input
+                type="text"
+                id="commandInput"
+                placeholder="> Login to send commands..."
+                disabled
+            />
+        </div>
+        <button id="sendCommand" onclick="sendCommand()" disabled>Send</button>
+    </div>
+</body>
+</html>

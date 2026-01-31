@@ -1,0 +1,30 @@
+{
+  "running": false,
+  "last_heartbeat": 1768906089.2821276,
+  "emergency_stop": true,
+  "emergency_stop_reason": "High error rate (5+ failures)",
+  "current_balance": 5000,
+  "current_location": "unknown",
+  "active_tasks": [],
+  "last_discord_message_id": "",
+  "pending_responses": [],
+  "budget": {
+    "per_transaction_limit": 1000000,
+    "hourly_limit": 5000000,
+    "daily_limit": 20000000,
+    "gc_spent_this_transaction": 0,
+    "gc_spent_this_hour": 0,
+    "gc_spent_today": 0,
+    "hourly_reset_time": 1768438455.116309,
+    "daily_reset_time": 1768438455.116309
+  },
+  "failed_actions": 1,
+  "last_error_time": 0,
+  "error_count_in_window": 0,
+  "total_actions_executed": 80,
+  "total_commands_sent": 78,
+  "total_errors": 45,
+  "uptime_seconds": 19.234546422958374,
+  "created_at": 1768438455.116311,
+  "last_updated": 1768906092.285591
+}

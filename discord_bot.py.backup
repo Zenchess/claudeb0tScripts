@@ -1,0 +1,1093 @@
+#!/usr/bin/env python3
+"""
+Discord bot for Claude to communicate with Discord servers.
+Usage:
+    ./discord_venv/bin/python discord_bot.py --token YOUR_TOKEN
+
+Or set DISCORD_BOT_TOKEN environment variable.
+"""
+
+import discord
+import asyncio
+import argparse
+import os
+import json
+import aiohttp
+import subprocess
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env file if it exists
+load_dotenv()
+
+# Add python_lib to path for Scanner API
+sys.path.insert(0, str(Path(__file__).parent / 'python_lib'))
+from hackmud.memory import Scanner
+
+# File to store messages for Claude to read
+INBOX_FILE = "discord_inbox.json"
+OUTBOX_FILE = "discord_outbox.json"
+IMAGES_DIR = "discord_images"
+
+# Trusted users who can execute dangerous commands (shell run, chat send)
+TRUSTED_USERS = {
+    190743971469721600,    # Zenchess
+    1081873483300093952,   # Kaj
+    626075347225411584,    # dunce
+}
+
+# Ensure images directory exists
+Path(IMAGES_DIR).mkdir(exist_ok=True)
+
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
+intents.members = True  # Required for profile lookups
+
+client = discord.Client(intents=intents)
+
+# Store channel references
+channels = {}
+
+# Helper functions - defined at module level to avoid shadowing issues
+def hex_to_rgb(hex_color):
+    """Convert #RRGGBB or #RRGGBBFF to (r, g, b)"""
+    hex_color = hex_color.lstrip('#')
+    if len(hex_color) >= 6:
+        return (int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16))
+    return (255, 255, 255)
+
+def rgb_to_ansi(r, g, b):
+    """Map RGB to nearest ANSI 8-color (30-37)"""
+    intensity = (r + g + b) / 3
+    # Very dark = black
+    if intensity < 40:
+        return '\x1b[30m'
+    # Check for grayscale
+    if abs(r - g) < 30 and abs(g - b) < 30 and abs(r - b) < 30:
+        return '\x1b[37m' if intensity > 100 else '\x1b[30m'
+    # Find dominant colors - use 0.5 threshold so orange (#FF8000) maps to yellow
+    max_val = max(r, g, b)
+    threshold = max_val * 0.5
+    has_r, has_g, has_b = r >= threshold, g >= threshold, b >= threshold
+    if has_r and has_g and has_b:
+        return '\x1b[37m'  # white
+    elif has_r and has_g:
+        return '\x1b[33m'  # yellow
+    elif has_r and has_b:
+        return '\x1b[35m'  # magenta
+    elif has_g and has_b:
+        return '\x1b[36m'  # cyan
+    elif has_r:
+        return '\x1b[31m'  # red
+    elif has_g:
+        return '\x1b[32m'  # green
+    elif has_b:
+        return '\x1b[34m'  # blue
+    return '\x1b[37m'  # default white
+
+def unity_to_ansi(text):
+    """Convert Unity color tags to Discord ANSI codes using nearest color matching"""
+    # White colors to strip (save characters since they're default)
+    skip_colors = {'#FFFFFF', '#CACACA'}
+    # Gray colors map to ANSI black (per Kaj's request)
+    gray_to_black = {'#9B9B9B', '#3F3F3F'}
+
+    # Track color state to only add resets after actual colors
+    result = []
+    color_stack = []  # Stack of whether each <color> was kept or stripped
+    i = 0
+    while i < len(text):
+        # Check for opening color tag
+        match = re.match(r'<color=(#[0-9A-Fa-f]+)(?:FF)?>', text[i:])
+        if match:
+            hex_color = match.group(1).upper()[:7]
+            if hex_color in skip_colors:
+                color_stack.append(False)  # Stripped (white)
+            elif hex_color in gray_to_black:
+                result.append('\x1b[30m')  # Gray -> Black
+                color_stack.append(True)
+            else:
+                # Convert to nearest ANSI color
+                r, g, b = hex_to_rgb(hex_color)
+                ansi = rgb_to_ansi(r, g, b)
+                # Skip if it maps to white (37) - save characters
+                if ansi == '\x1b[37m':
+                    color_stack.append(False)
+                else:
+                    result.append(ansi)
+                    color_stack.append(True)
+            i += match.end()
+            continue
+        # Check for closing color tag
+        if text[i:i+8] == '</color>':
+            if color_stack:
+                was_colored = color_stack.pop()
+                if was_colored:
+                    result.append('\x1b[0m')
+            i += 8
+            continue
+        result.append(text[i])
+        i += 1
+    return ''.join(result)
+
+# Global Scanner instance for persistent connection (better performance)
+_scanner = None
+
+def get_scanner():
+    """Get or create Scanner instance"""
+    global _scanner
+    if _scanner is None:
+        _scanner = Scanner()
+        _scanner.connect()
+    return _scanner
+
+def read_game_window(window_name='shell', lines=30, preserve_colors=True):
+    """
+    Read from game window using Scanner API
+
+    Args:
+        window_name: Window to read ('shell', 'chat', 'badge', 'breach', etc.)
+        lines: Number of lines to return
+        preserve_colors: Keep Unity color tags for conversion
+
+    Returns:
+        String with window content (newline-separated)
+    """
+    try:
+        scanner = get_scanner()
+        result_lines = scanner.read_window(window_name, lines=lines, preserve_colors=preserve_colors)
+        return '\n'.join(result_lines)
+    except Exception as e:
+        return f"Error reading {window_name}: {e}"
+
+def get_game_version():
+    """Get game version using Scanner API"""
+    try:
+        scanner = get_scanner()
+        return scanner.get_version()
+    except Exception as e:
+        return f"Error: {e}"
+
+async def send_split_message(channel, header, content, code_type='ansi', max_len=1900):
+    """Send content split into multiple messages if needed"""
+    # Account for header + code block markup
+    lines = content.split('\n')
+    current_chunk = []
+    current_len = 0
+
+    for line in lines:
+        line_len = len(line) + 1  # +1 for newline
+        if current_len + line_len > max_len and current_chunk:
+            # Send current chunk
+            chunk_text = '\n'.join(current_chunk)
+            await channel.send(f"{header}\n```{code_type}\n{chunk_text}\n```")
+            current_chunk = [line]
+            current_len = line_len
+            header = "(continued)"  # Subsequent messages
+        else:
+            current_chunk.append(line)
+            current_len += line_len
+
+    # Send remaining
+    if current_chunk:
+        chunk_text = '\n'.join(current_chunk)
+        await channel.send(f"{header}\n```{code_type}\n{chunk_text}\n```")
+
+def filter_corruption(text):
+    """Replace only null bytes and true control characters, fix angle brackets, replace corruption chars"""
+    # Fix hackmud's encoded angle brackets - replace individually
+    text = text.replace('È', '<').replace('É', '>')
+    # Replace hackmud corruption characters with ▒
+    corruption_chars = '¡¢Á¤Ã¦§¨©ª'
+    for c in corruption_chars:
+        text = text.replace(c, '▒')
+    cleaned = []
+    for char in text:
+        code = ord(char)
+        if code == 0:
+            continue
+        elif 1 <= code <= 8 or 11 <= code <= 12 or 14 <= code <= 31:
+            continue
+        else:
+            cleaned.append(char)
+    return ''.join(cleaned)
+
+def load_inbox():
+    if os.path.exists(INBOX_FILE):
+        with open(INBOX_FILE, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_inbox(messages):
+    with open(INBOX_FILE, 'w') as f:
+        json.dump(messages, f, indent=2)
+
+def load_outbox():
+    if os.path.exists(OUTBOX_FILE):
+        with open(OUTBOX_FILE, 'r') as f:
+            return json.load(f)
+    return []
+
+def clear_outbox():
+    with open(OUTBOX_FILE, 'w') as f:
+        json.dump([], f)
+
+@client.event
+async def on_ready():
+    print(f'Bot connected as {client.user}')
+    print(f'Bot is in {len(client.guilds)} server(s):')
+    for guild in client.guilds:
+        print(f'  - {guild.name} (id: {guild.id})')
+        for channel in guild.text_channels:
+            channels[f"{guild.name}#{channel.name}"] = channel
+            print(f'    - #{channel.name} (id: {channel.id})')
+    print("\nBot is ready! Listening for messages...")
+    print("Messages will be saved to discord_inbox.json")
+    print("To send messages, write to discord_outbox.json and the bot will send them")
+
+    # Start outbox checking loop
+    client.loop.create_task(check_outbox())
+
+async def download_attachment(attachment, message_id):
+    """Download an attachment and save it locally"""
+    try:
+        # Create filename with message_id for uniqueness
+        ext = Path(attachment.filename).suffix or '.png'
+        filename = f"{message_id}_{attachment.id}{ext}"
+        filepath = Path(IMAGES_DIR) / filename
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(attachment.url) as resp:
+                if resp.status == 200:
+                    with open(filepath, 'wb') as f:
+                        f.write(await resp.read())
+                    return str(filepath.absolute())
+    except Exception as e:
+        print(f"Failed to download attachment: {e}")
+    return None
+
+async def process_single_command(message, content):
+    """Process a single command and return response text, or None if not a command"""
+    from datetime import datetime
+
+    # Screenshot commands
+    if content.startswith('!screenshot') or content.startswith('!sc'):
+        parts = content.split(maxsplit=1)
+        area = parts[1].strip().lower() if len(parts) == 2 else 'full'
+        valid_areas = ['shell', 'chat', 'badge', 'breach', 'scratch', 'right_side', 'full']
+
+        if area in valid_areas:
+            if area == 'full':
+                window_result = subprocess.run(
+                    ['xdotool', 'search', '--name', 'hackmud'],
+                    capture_output=True, text=True,
+                    env={**os.environ, 'DISPLAY': ':0'}
+                )
+                window_id = window_result.stdout.strip().split('\n')[0]
+                screenshot_path = '/tmp/hackmud_full.png'
+                subprocess.run(
+                    ['maim', '-i', window_id, screenshot_path],
+                    env={**os.environ, 'DISPLAY': ':0'},
+                    capture_output=True
+                )
+            else:
+                subprocess.run(
+                    ['python3', '/home/jacob/hackmud/screenshot.py', area],
+                    capture_output=True, text=True,
+                    env={**os.environ, 'DISPLAY': ':0'}
+                )
+                screenshot_path = f'/tmp/hackmud_{area}.png'
+
+            if os.path.exists(screenshot_path):
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                await message.channel.send(f"[{timestamp}] {area} screenshot:", file=discord.File(screenshot_path))
+                return f"[screenshot: {area}]"
+            else:
+                return f"Failed to take {area} screenshot"
+        else:
+            return f"Unknown area: {area}. Valid: {', '.join(valid_areas)}"
+
+    # Balance command - read from badge pointer
+    if content.startswith('!balance'):
+        output = read_game_window('badge', lines=10, preserve_colors=True)
+        output = filter_corruption(output.strip('\n'))
+        # Extract GC balance line (look for pattern like "339K961GC" or "1MGC")
+        gc_match = re.search(r'[\d,]+[KMB]?\d*GC', output)
+        if gc_match:
+            gc_str = gc_match.group(0)
+            output = unity_to_ansi(output)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            await message.channel.send(f"[{timestamp}] balance: **{gc_str}**\n```ansi\n{output}\n```")
+        else:
+            output = unity_to_ansi(output)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            await message.channel.send(f"[{timestamp}] badge:\n```ansi\n{output}\n```")
+        return "[balance]"
+
+    # Version command
+    if content.startswith('!version'):
+        version = get_game_version()
+        if version and not version.startswith("Error"):
+            await message.channel.send(f"Game version: **{version}**")
+            return f"[version: {version}]"
+        else:
+            await message.channel.send(f"Could not determine game version: {version}")
+            return "Could not determine game version"
+
+    return None  # Not a simple command, needs full processing
+
+
+@client.event
+async def on_message(message):
+    # Don't respond to ourselves
+    if message.author == client.user:
+        return
+
+    content = message.content.strip()
+
+    # Check for command chaining with ;
+    if ';' in content and content.startswith('!'):
+        commands = [cmd.strip() for cmd in content.split(';') if cmd.strip()]
+        for cmd in commands:
+            # Try simple command first
+            result = await process_single_command(message, cmd)
+            if result is None:
+                # Fall through to full processing below for this command
+                content = cmd
+                break
+        else:
+            # All commands processed
+            return
+
+    # Handle !hackmud command - Discord Activity launcher
+    if content.startswith('!hackmud'):
+        # Permission check - only trusted users
+        if message.author.id not in TRUSTED_USERS:
+            await message.channel.send("Permission denied: Only trusted users (zenchess, kaj, dunce) can launch the hackmud Activity.")
+            return
+
+        # The Activity URL (private ngrok tunnel)
+        activity_url = "https://zenchess.ngrok.app"
+
+        # Send Activity link with instructions
+        embed = discord.Embed(
+            title="hackmud Terminal Activity",
+            description="Click the button below or join a voice channel and click the rocket icon to start the Activity.",
+            color=0x00ff00
+        )
+        embed.add_field(name="Direct Link", value=f"[Open hackmud Terminal]({activity_url})", inline=False)
+        embed.add_field(name="Voice Channel", value="Join a voice channel and look for the rocket icon (Activities) to launch.", inline=False)
+        embed.set_footer(text="hackmud web dashboard - live terminal view")
+
+        await message.channel.send(embed=embed)
+        return
+
+    # Handle help command: !help or !help <command>
+    if content.startswith('!help'):
+        parts = content.split(maxsplit=1)
+        cmd = parts[1].strip().lower() if len(parts) == 2 else None
+
+        help_texts = {
+            'hackmud': '**!hackmud** - Launch the hackmud Terminal Discord Activity\nOpens a live view of the hackmud terminal.\n**Requires:** Trusted user permission (zenchess, kaj, dunce)',
+            'sc': '**!sc [area]** - Take a screenshot of hackmud\nAreas: shell, chat, badge, breach, scratch, right_side, full\nIf no area specified, defaults to full window.\nAlias: !screenshot',
+            'screenshot': '**!screenshot [area]** - Take a screenshot of hackmud\nAreas: shell, chat, badge, breach, scratch, right_side, full\nIf no area specified, defaults to full window.\nAlias: !sc',
+            'shell': '''**!shell** - Shell commands
+• `!shell get [options]` - Get shell content
+  Options: `-l:<lines>`, `--no_color`, `--last`
+• `!shell run <command>` - Run command in hackmud and show output
+• `!shell: <command>` - Shorthand for !shell run
+**Note:** `run` and `!shell:` require trusted user permission (zenchess, kaj, dunce)''',
+            'chat': '''**!chat** - Chat commands
+• `!chat get [options]` - Get chat content
+  Options: `-l:<lines>`, `--no_color`, `--last`
+• `!chat send -ch "<channel>" -msg "<text>"` - Send to channel
+• `!chat send -to "<user>" -msg "<text>"` - Send DM
+• `!chat join <channel>` - Join a channel
+• `!chat leave <channel>` - Leave a channel
+• `!chat list` - List active channels
+**Note:** `send`, `join`, `leave` require trusted user permission''',
+            'help': '**!help [command]** - Show help for commands\nUse !help to see all commands, or !help <command> for details.'
+        }
+
+        if cmd and cmd in help_texts:
+            await message.channel.send(help_texts[cmd])
+        else:
+            help_msg = """**Available Commands:**
+• **!hackmud** - Launch hackmud Terminal Discord Activity
+• **!sc [area]** / **!screenshot [area]** - Take hackmud screenshot
+  Areas: shell, chat, badge, breach, scratch, right_side, full
+• **!shell get/run** - Shell output and commands
+• **!shell: <cmd>** - Shorthand for !shell run
+• **!chat get/send/join/leave/list** - Chat operations
+• **!badge get [--no_color]** - Read badge window
+• **!breach get [--no_color]** - Read breach status
+• **!balance** - Get GC balance
+• **!version** - Get game version
+• **!help [command]** - Show this help or details for a command
+
+**Permissions:** `!hackmud`, `!shell run`, `!shell:` require trusted user status (zenchess, kaj, dunce)"""
+            await message.channel.send(help_msg)
+        return
+
+    # Handle !shell: shorthand (same as !shell run)
+    if content.startswith('!shell:'):
+        # Permission check - only trusted users
+        if message.author.id not in TRUSTED_USERS:
+            await message.channel.send("Permission denied: Only trusted users can execute commands.")
+            return
+        # Extract command after "!shell:"
+        hackmud_cmd = content[7:].strip()  # Skip "!shell:"
+        if not hackmud_cmd:
+            await message.channel.send("Usage: `!shell: <command>`")
+            return
+        no_color = '--no_color' in hackmud_cmd
+        hackmud_cmd = hackmud_cmd.replace('--no_color', '').strip()
+        # Blocklist dangerous commands
+        blocked_cmds = ['shutdown', 'quit', 'exit', 'logout', 'clear']
+        cmd_lower = hackmud_cmd.lower()
+        for blocked in blocked_cmds:
+            if blocked in cmd_lower:
+                await message.channel.send(f"Blocked: `{blocked}` is not allowed via Discord for safety.")
+                return
+        try:
+            subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', hackmud_cmd],
+                           capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+            await asyncio.sleep(2)
+            output = read_game_window('shell', lines=50, preserve_colors=True)
+            output = output.strip()
+            if output:
+                output = filter_corruption(output)
+                lines = output.split('\n')
+                extracted = []
+                found_cmd = False
+                ansi_pattern = re.compile(r'\x1b\[[0-9;]*m')
+                unity_color_pattern = re.compile(r'</?color[^>]*>')
+                for line in lines:
+                    clean_line = ansi_pattern.sub('', line)
+                    clean_line = unity_color_pattern.sub('', clean_line)
+                    if clean_line.startswith('>>'):
+                        found_cmd = True
+                        extracted = [line]
+                    elif found_cmd:
+                        if re.match(r'\d{4} \d{4} ', clean_line):
+                            break
+                        extracted.append(line)
+                output = '\n'.join(extracted) if extracted else output
+                if not no_color:
+                    output = unity_to_ansi(output)
+                code_type = 'ansi' if not no_color else ''
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                header = f"[{timestamp}] `{hackmud_cmd}`:"
+                await send_split_message(message.channel, header, output, code_type)
+            else:
+                await message.channel.send("No output captured")
+        except Exception as e:
+            await message.channel.send(f"Error: {e}")
+        return
+
+    # Handle !shell commands
+    if content.startswith('!shell'):
+        parts = content.split(maxsplit=2)
+        subcmd = parts[1].lower() if len(parts) > 1 else None
+
+        # !shell (blank) - show help
+        if subcmd is None:
+            await message.channel.send('''**!shell** - Shell commands
+• `!shell get [options]` - Get shell content
+  Options: `-l:<lines>`, `--no_color`, `--last`
+• `!shell run <command>` - Run command in hackmud and show output''')
+            return
+
+        # !shell get [options]
+        if subcmd == 'get':
+            lines = 30
+            no_color = False
+            get_last = False
+            if len(parts) > 2:
+                opts = parts[2]
+                # Parse -l:<lines>
+                l_match = re.search(r'-l:(\d+)', opts)
+                if l_match:
+                    lines = min(int(l_match.group(1)), 50)
+                if '--no_color' in opts:
+                    no_color = True
+                if '--last' in opts:
+                    get_last = True
+                    lines = 5  # Show fewer lines for "-last"
+
+            try:
+                output = read_game_window('shell', lines=lines, preserve_colors=True)
+                if output:
+                    output = filter_corruption(output.strip())
+                    if get_last:
+                        # Get last non-empty line
+                        lines_list = [l for l in output.split('\n') if l.strip()]
+                        output = lines_list[-1] if lines_list else output
+                    if not no_color:
+                        output = unity_to_ansi(output)
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    code_type = 'ansi' if not no_color else ''
+                    header = f"[{timestamp}] shell output:"
+                    await send_split_message(message.channel, header, output, code_type)
+                else:
+                    await message.channel.send("No output captured")
+            except Exception as e:
+                await message.channel.send(f"Error reading terminal: {e}")
+            return
+
+        # !shell run <command> [--no_color]
+        if subcmd == 'run':
+            # Permission check - only trusted users
+            if message.author.id not in TRUSTED_USERS:
+                await message.channel.send("Permission denied: Only trusted users can execute commands.")
+                return
+            if len(parts) < 3:
+                await message.channel.send("Usage: `!shell run <command> [--no_color]`")
+                return
+            run_args = parts[2]
+            no_color = '--no_color' in run_args
+            # Use everything after 'run', minus --no_color
+            hackmud_cmd = run_args.replace('--no_color', '').strip()
+            # Blocklist dangerous commands
+            blocked_cmds = ['shutdown', 'quit', 'exit', 'logout', 'clear']
+            cmd_lower = hackmud_cmd.lower()
+            for blocked in blocked_cmds:
+                if blocked in cmd_lower:
+                    await message.channel.send(f"Blocked: `{blocked}` is not allowed via Discord for safety.")
+                    return
+            try:
+                # Send command to hackmud
+                subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', hackmud_cmd],
+                               capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+                # Wait for response
+                await asyncio.sleep(2)
+                # Read output
+                output = read_game_window('shell', lines=50, preserve_colors=True)
+                output = output.strip()
+                if output:
+                    output = filter_corruption(output)
+                    # Extract only >>command and its output
+                    lines = output.split('\n')
+                    extracted = []
+                    found_cmd = False
+                    # Strip ANSI codes AND Unity color tags for pattern matching
+                    ansi_pattern = re.compile(r'\x1b\[[0-9;]*m')
+                    unity_color_pattern = re.compile(r'</?color[^>]*>')
+                    for line in lines:
+                        clean_line = ansi_pattern.sub('', line)
+                        clean_line = unity_color_pattern.sub('', clean_line)
+                        if clean_line.startswith('>>'):
+                            found_cmd = True
+                            extracted = [line]  # Start fresh with the command
+                        elif found_cmd:
+                            # Stop if we hit a chat message (timestamp pattern)
+                            if re.match(r'\d{4} \d{4} ', clean_line):
+                                break
+                            extracted.append(line)
+                    output = '\n'.join(extracted) if extracted else output
+                    if not no_color:
+                        output = unity_to_ansi(output)
+                    code_type = 'ansi' if not no_color else ''
+                    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    header = f"[{timestamp}] `{hackmud_cmd}`:"
+                    await send_split_message(message.channel, header, output, code_type)
+                else:
+                    await message.channel.send("No output captured")
+            except Exception as e:
+                await message.channel.send(f"Error: {e}")
+            return
+
+        # Unknown subcommand - show help
+        await message.channel.send(f"Unknown subcommand: {subcmd}. Use `!help shell` for usage.")
+        return
+
+    # Handle !chat commands
+    if content.startswith('!chat'):
+        parts = content.split(maxsplit=2)
+        subcmd = parts[1].lower() if len(parts) > 1 else None
+
+        # !chat (blank) - show help
+        if subcmd is None:
+            await message.channel.send('''**!chat** - Chat commands
+• `!chat get [options]` - Get chat content
+  Options: `-l:<lines>`, `--no_color`, `--last`
+• `!chat send -ch "<channel>" -msg "<text>"` - Send to channel
+• `!chat send -to "<user>" -msg "<text>"` - Send DM
+• `!chat join <channel>` - Join a channel
+• `!chat leave <channel>` - Leave a channel
+• `!chat list` - List active channels
+**Note:** `send`, `join`, `leave` require trusted user permission''')
+            return
+
+        # !chat get [options]
+        if subcmd == 'get':
+            lines = 30
+            no_color = False
+            get_last = False
+            if len(parts) > 2:
+                opts = parts[2]
+                l_match = re.search(r'-l:(\d+)', opts)
+                if l_match:
+                    lines = min(int(l_match.group(1)), 50)
+                if '--no_color' in opts:
+                    no_color = True
+                if '--last' in opts:
+                    get_last = True
+                    lines = 5
+
+            try:
+                output = read_game_window('chat', lines=lines, preserve_colors=True)
+                output = output.strip()
+                if output:
+                    output = filter_corruption(output)
+                    if get_last:
+                        lines_list = [l for l in output.split('\n') if l.strip()]
+                        output = lines_list[-1] if lines_list else output
+                    if not no_color:
+                        output = unity_to_ansi(output)
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    code_type = 'ansi' if not no_color else ''
+                    header = f"[{timestamp}] chat output:"
+                    await send_split_message(message.channel, header, output, code_type)
+                else:
+                    await message.channel.send("No output captured")
+            except Exception as e:
+                await message.channel.send(f"Error reading chat: {e}")
+            return
+
+        # !chat send -ch "<channel>" -msg "<text>" OR -to "<user>" -msg "<text>"
+        if subcmd == 'send':
+            # Permission check - only trusted users
+            if message.author.id not in TRUSTED_USERS:
+                await message.channel.send("Permission denied: Only trusted users can send chat messages.")
+                return
+            if len(parts) < 3:
+                await message.channel.send('Usage:\n• `!chat send -ch "<channel>" -msg "<text>"` - send to channel\n• `!chat send -to "<user>" -msg "<text>"` - send DM')
+                return
+            args = parts[2]
+            # Parse -ch "channel" OR -to "user", and -msg "text" (quotes optional for -ch/-to)
+            ch_match = re.search(r'-ch\s+(?:["\']([^"\']+)["\']|(\S+?)(?=\s+-|\s*$))', args)
+            to_match = re.search(r'-to\s+(?:["\']([^"\']+)["\']|(\S+?)(?=\s+-|\s*$))', args)
+            msg_match = re.search(r'-msg\s+["\']([^"\']+)["\']', args)
+            if not ch_match and not to_match:
+                await message.channel.send('Error: Need -ch or -to. Usage:\n• `!chat send -ch "<channel>" -msg "<text>"`\n• `!chat send -to "<user>" -msg "<text>"`')
+                return
+            if not msg_match:
+                await message.channel.send('Error: Message must use -msg option with quotes.')
+                return
+            text = msg_match.group(1)
+            try:
+                if to_match:
+                    # Direct message using chats.tell
+                    username = to_match.group(1) or to_match.group(2)
+                    hackmud_cmd = f'chats.tell{{to:"{username}", msg:"{text}"}}'
+                    subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', hackmud_cmd],
+                                   capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+                    await message.channel.send(f"DM sent to {username}: {text}")
+                else:
+                    # Channel message using chats.send
+                    channel_name = ch_match.group(1) or ch_match.group(2)
+                    hackmud_cmd = f'chats.send{{channel:"{channel_name}", msg:"{text}"}}'
+                    subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', hackmud_cmd],
+                                   capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+                    await message.channel.send(f"Sent to {channel_name}: {text}")
+            except Exception as e:
+                await message.channel.send(f"Error: {e}")
+            return
+
+        # !chat join <channel>
+        if subcmd == 'join':
+            # Permission check - only trusted users
+            if message.author.id not in TRUSTED_USERS:
+                await message.channel.send("Permission denied: Only trusted users can join channels.")
+                return
+            if len(parts) < 3:
+                await message.channel.send("Usage: `!chat join <channel>`")
+                return
+            # Check for quoted or unquoted channel
+            ch_match = re.search(r'["\'](.+?)["\']', parts[2])
+            if ch_match:
+                channel_name = ch_match.group(1)
+            else:
+                channel_name = parts[2].strip()
+            try:
+                hackmud_cmd = f'chats.join{{channel:"{channel_name}"}}'
+                subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', hackmud_cmd],
+                               capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+                await asyncio.sleep(1)
+                # Read response
+                output = read_game_window('shell', lines=5, preserve_colors=True)
+                output = filter_corruption(output.strip())
+                await message.channel.send(f"Join {channel_name}:\n```\n{output}\n```")
+            except Exception as e:
+                await message.channel.send(f"Error: {e}")
+            return
+
+        # !chat leave <channel>
+        if subcmd == 'leave':
+            # Permission check - only trusted users
+            if message.author.id not in TRUSTED_USERS:
+                await message.channel.send("Permission denied: Only trusted users can leave channels.")
+                return
+            if len(parts) < 3:
+                await message.channel.send("Usage: `!chat leave <channel>`")
+                return
+            # Check for quoted or unquoted channel
+            ch_match = re.search(r'["\'](.+?)["\']', parts[2])
+            if ch_match:
+                channel_name = ch_match.group(1)
+            else:
+                channel_name = parts[2].strip()
+            try:
+                hackmud_cmd = f'chats.leave{{channel:"{channel_name}"}}'
+                subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', hackmud_cmd],
+                               capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+                await asyncio.sleep(1)
+                # Read response
+                output = read_game_window('shell', lines=5, preserve_colors=True)
+                output = filter_corruption(output.strip())
+                await message.channel.send(f"Leave {channel_name}:\n```\n{output}\n```")
+            except Exception as e:
+                await message.channel.send(f"Error: {e}")
+            return
+
+        # !chat list [--refresh]
+        if subcmd == 'list' or (subcmd and subcmd.startswith('list')):
+            cache_file = '/home/jacob/hackmud/chat_channels_cache.txt'
+            refresh = '--refresh' in content
+            try:
+                # Check cache first unless refresh requested
+                if not refresh and os.path.exists(cache_file):
+                    with open(cache_file, 'r') as f:
+                        cached = f.read().strip()
+                    if cached:
+                        await message.channel.send(f"Active channels (cached):\n```\n{cached}\n```\nUse `!chat list --refresh` to update.")
+                        return
+                # Run chats.channels and update cache
+                hackmud_cmd = 'chats.channels'
+                subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', hackmud_cmd],
+                               capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+                await asyncio.sleep(1)
+                # Read response
+                output = read_game_window('shell', lines=10, preserve_colors=True)
+                output = filter_corruption(output.strip())
+                # Save to cache
+                with open(cache_file, 'w') as f:
+                    f.write(output)
+                await message.channel.send(f"Active channels:\n```\n{output}\n```")
+            except Exception as e:
+                await message.channel.send(f"Error: {e}")
+            return
+
+        # Unknown subcommand - show help
+        await message.channel.send(f"Unknown subcommand: {subcmd}. Use `!help chat` for usage.")
+        return
+
+    # Handle !badge get command - read badge window
+    if content.startswith('!badge'):
+        parts = content.split(maxsplit=1)
+        subcmd = parts[1].lower() if len(parts) > 1 else None
+
+        if subcmd is None:
+            await message.channel.send('**!badge** - Read badge window\n• `!badge get [--no_color]` - Get badge content')
+            return
+
+        if subcmd.startswith('get'):
+            no_color = '--no_color' in subcmd
+            try:
+                output = read_game_window('badge', lines=10, preserve_colors=(not no_color))
+                output = filter_corruption(output.rstrip('\n'))
+                # Unescape backslashes (hackmud stores them escaped in memory)
+                output = output.replace('\\\\', '\\')
+                if not no_color:
+                    output = unity_to_ansi(output)
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                code_type = 'ansi' if not no_color else ''
+                await message.channel.send(f"[{timestamp}] badge:\n```{code_type}\n{output}\n```")
+            except Exception as e:
+                await message.channel.send(f"Error: {e}")
+            return
+
+        await message.channel.send(f"Unknown subcommand: {subcmd}. Use `!badge get [--no_color]`")
+        return
+
+    # Handle !breach get command - read breach window
+    if content.startswith('!breach'):
+        parts = content.split(maxsplit=1)
+        subcmd = parts[1].lower() if len(parts) > 1 else None
+
+        if subcmd is None:
+            await message.channel.send('**!breach** - Read breach window\n• `!breach get [--no_color]` - Get breach status')
+            return
+
+        if subcmd.startswith('get'):
+            no_color = '--no_color' in subcmd
+            try:
+                output = read_game_window('breach', lines=10, preserve_colors=(not no_color))
+                output = filter_corruption(output.rstrip('\n'))
+                # Unescape backslashes (hackmud stores them escaped in memory)
+                output = output.replace('\\\\', '\\')
+                if not no_color:
+                    output = unity_to_ansi(output)
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                code_type = 'ansi' if not no_color else ''
+                await message.channel.send(f"[{timestamp}] breach:\n```{code_type}\n{output}\n```")
+            except Exception as e:
+                await message.channel.send(f"Error: {e}")
+            return
+
+        await message.channel.send(f"Unknown subcommand: {subcmd}. Use `!breach get [--no_color]`")
+        return
+
+    # Handle !balance command - read from badge memory or run accts.balance
+    if content.startswith('!balance'):
+        use_full = 'full' in content.lower()
+        try:
+            if use_full:
+                # Run accts.balance command in hackmud
+                subprocess.run(['python3', '/home/jacob/hackmud/send_command.py', 'accts.balance'],
+                               capture_output=True, text=True, env={**os.environ, 'DISPLAY': ':0'}, timeout=10)
+                await asyncio.sleep(1)
+                output = read_game_window('shell', lines=10, preserve_colors=True)
+                output = filter_corruption(output.strip('\n'))
+                # Extract only the balance line (contains GC and comes after >>accts.balance)
+                lines = output.split('\n')
+                balance_line = None
+                found_cmd = False
+                for line in lines:
+                    if 'accts' in line and 'balance' in line:
+                        found_cmd = True
+                        continue
+                    if found_cmd and 'GC' in line:
+                        balance_line = line.strip()
+                        break
+                if balance_line:
+                    output = unity_to_ansi(balance_line)
+                else:
+                    output = unity_to_ansi(output)
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                await message.channel.send(f"[{timestamp}] accts.balance:\n```ansi\n{output}\n```")
+            else:
+                # Read from badge memory (fast, no command needed)
+                output = read_game_window('badge', lines=10, preserve_colors=True)
+                output = filter_corruption(output.strip('\n'))
+                # Strip color tags for regex matching
+                plain_output = re.sub(r'</?color[^>]*>', '', output)
+                # Extract GC balance (pattern like "339K961GC" or "1MGC")
+                gc_match = re.search(r'[\d,]+[KMB]?\d*GC', plain_output)
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                if gc_match:
+                    gc_str = gc_match.group(0)
+                    # Match hackmud GC colors: K=cyan, M=green, B=yellow, T=purple, Q=red
+                    # Numbers=white (37), GC=white (37) - standard ANSI doesn't have dark gray
+                    colored = re.sub(r'(\d+)', '\x1b[37m\\1\x1b[0m', gc_str)  # numbers white
+                    colored = re.sub(r'K', '\x1b[36mK\x1b[0m', colored)  # K=cyan
+                    colored = re.sub(r'M', '\x1b[32mM\x1b[0m', colored)  # M=green
+                    colored = re.sub(r'B', '\x1b[33mB\x1b[0m', colored)  # B=yellow
+                    colored = re.sub(r'T', '\x1b[35mT\x1b[0m', colored)  # T=purple
+                    colored = re.sub(r'Q', '\x1b[31mQ\x1b[0m', colored)  # Q=red
+                    colored = re.sub(r'GC', '\x1b[37mGC\x1b[0m', colored)  # GC white
+                    await message.channel.send(f"[{timestamp}] balance: ```ansi\n{colored}\n```")
+                else:
+                    await message.channel.send(f"[{timestamp}] balance: Could not extract GC")
+        except Exception as e:
+            await message.channel.send(f"Error: {e}")
+        return
+
+    # Handle !version command - get game version
+    if content.startswith('!version'):
+        try:
+            version = get_game_version()
+            if version and not version.startswith("Error"):
+                await message.channel.send(f"Game version: **{version}**")
+            else:
+                await message.channel.send(f"Could not determine game version: {version}")
+        except Exception as e:
+            await message.channel.send(f"Error: {e}")
+        return
+
+    # Handle screenshot commands: !screenshot [area] or !sc [area]
+    if content.startswith('!screenshot') or content.startswith('!sc'):
+        parts = content.split(maxsplit=1)
+        area = parts[1].strip().lower() if len(parts) == 2 else 'full'
+        valid_areas = ['shell', 'chat', 'badge', 'breach', 'scratch', 'right_side', 'full']
+
+        if area in valid_areas:
+            if area == 'full':
+                # Full window screenshot using maim
+                window_result = subprocess.run(
+                    ['xdotool', 'search', '--name', 'hackmud'],
+                    capture_output=True, text=True,
+                    env={**os.environ, 'DISPLAY': ':0'}
+                )
+                window_id = window_result.stdout.strip().split('\n')[0]
+                screenshot_path = '/tmp/hackmud_full.png'
+                subprocess.run(
+                    ['maim', '-i', window_id, screenshot_path],
+                    env={**os.environ, 'DISPLAY': ':0'},
+                    capture_output=True
+                )
+            else:
+                result = subprocess.run(
+                    ['python3', '/home/jacob/hackmud/screenshot.py', area],
+                    capture_output=True, text=True,
+                    env={**os.environ, 'DISPLAY': ':0'}
+                )
+                screenshot_path = f'/tmp/hackmud_{area}.png'
+
+            if os.path.exists(screenshot_path):
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                await message.channel.send(f"[{timestamp}] {area} screenshot:", file=discord.File(screenshot_path))
+                print(f"Screenshot sent: {area}")
+            else:
+                await message.channel.send(f"Failed to take {area} screenshot")
+        else:
+            await message.channel.send(f"Unknown area: {area}. Valid: {', '.join(valid_areas)}")
+        return
+
+    # Download any attachments (images, files)
+    downloaded_images = []
+    for attachment in message.attachments:
+        if any(attachment.filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp']):
+            path = await download_attachment(attachment, message.id)
+            if path:
+                downloaded_images.append(path)
+                print(f"  Downloaded image: {path}")
+
+    # Save message to inbox
+    inbox = load_inbox()
+    msg_data = {
+        "timestamp": datetime.now().isoformat(),
+        "server": message.guild.name if message.guild else "DM",
+        "channel": message.channel.name if hasattr(message.channel, 'name') else "DM",
+        "channel_id": message.channel.id,
+        "author": message.author.display_name,  # Show display name/nickname instead of username
+        "author_id": message.author.id,
+        "content": message.content,
+        "message_id": message.id
+    }
+    if downloaded_images:
+        msg_data["images"] = downloaded_images
+    inbox.append(msg_data)
+    # Keep only last 100 messages
+    inbox = inbox[-100:]
+    save_inbox(inbox)
+
+    img_note = f" [+{len(downloaded_images)} images]" if downloaded_images else ""
+    print(f"[{message.guild.name if message.guild else 'DM'}#{message.channel.name if hasattr(message.channel, 'name') else 'DM'}] {message.author.display_name}: {message.content}{img_note}")
+
+async def check_outbox():
+    """Check outbox file for messages to send or profile requests"""
+    await client.wait_until_ready()
+    while not client.is_closed():
+        try:
+            outbox = load_outbox()
+            if outbox:
+                for msg in outbox:
+                    msg_type = msg.get('type', 'message')
+
+                    if msg_type == 'profile':
+                        # Handle profile lookup request
+                        user_id = msg.get('user_id')
+                        username = msg.get('username')
+                        guild_id = msg.get('guild_id')
+
+                        try:
+                            user = None
+                            member = None
+
+                            if user_id:
+                                user = await client.fetch_user(int(user_id))
+                            elif username and guild_id:
+                                guild = client.get_guild(int(guild_id))
+                                if guild:
+                                    # Search by display name
+                                    for m in guild.members:
+                                        if username.lower() in m.display_name.lower() or username.lower() in m.name.lower():
+                                            member = m
+                                            user = m
+                                            break
+
+                            if user:
+                                profile_data = {
+                                    "timestamp": datetime.now().isoformat(),
+                                    "type": "profile_response",
+                                    "user_id": user.id,
+                                    "username": user.name,
+                                    "display_name": user.display_name,
+                                    "created_at": user.created_at.isoformat() if user.created_at else None,
+                                    "avatar_url": str(user.display_avatar.url) if user.display_avatar else None,
+                                    "bot": user.bot
+                                }
+                                # Add member-specific info if available
+                                if member:
+                                    profile_data["nickname"] = member.nick
+                                    profile_data["roles"] = [role.name for role in member.roles if role.name != "@everyone"]
+                                    profile_data["joined_at"] = member.joined_at.isoformat() if member.joined_at else None
+
+                                inbox = load_inbox()
+                                inbox.append(profile_data)
+                                inbox = inbox[-100:]
+                                save_inbox(inbox)
+                                print(f"Profile lookup: {user.display_name}")
+                            else:
+                                print(f"User not found: {user_id or username}")
+                        except Exception as e:
+                            print(f"Profile lookup error: {e}")
+                    else:
+                        # Regular message sending
+                        channel_id = msg.get('channel_id')
+                        content = msg.get('content', '')
+                        attachment = msg.get('attachment')
+
+                        if channel_id and content:
+                            try:
+                                # Use fetch_channel instead of get_channel for reliability
+                                channel = client.get_channel(int(channel_id))
+                                if not channel:
+                                    channel = await client.fetch_channel(int(channel_id))
+                                if channel:
+                                    if attachment and os.path.exists(attachment):
+                                        await channel.send(content, file=discord.File(attachment))
+                                        print(f"Sent to #{channel.name}: {content} [+{attachment}]")
+                                    else:
+                                        await channel.send(content)
+                                        print(f"Sent to #{channel.name}: {content}")
+                                else:
+                                    print(f"Channel {channel_id} not found")
+                            except Exception as e:
+                                print(f"Error sending to channel {channel_id}: {e}")
+
+                clear_outbox()
+        except Exception as e:
+            print(f"Outbox error: {e}")
+
+        await asyncio.sleep(2)  # Check every 2 seconds
+
+def main():
+    parser = argparse.ArgumentParser(description='Discord bot for Claude')
+    parser.add_argument('--token', help='Discord bot token')
+    args = parser.parse_args()
+
+    token = args.token or os.environ.get('DISCORD_BOT_TOKEN')
+
+    if not token:
+        print("Error: No token provided!")
+        print("Use --token YOUR_TOKEN or set DISCORD_BOT_TOKEN environment variable")
+        return
+
+    # Initialize empty files
+    if not os.path.exists(INBOX_FILE):
+        save_inbox([])
+    if not os.path.exists(OUTBOX_FILE):
+        clear_outbox()
+
+    print("Starting Discord bot...")
+    client.run(token)
+
+if __name__ == '__main__':
+    main()

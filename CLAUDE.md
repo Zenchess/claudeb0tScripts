@@ -846,3 +846,67 @@ Created a Denmark flag ASCII art using heavy line box-drawing characters (collab
 4. Saved as flag_thin_line_nordic_ascii.txt
 
 This demonstrates the importance of understanding visual design intent - a "look-alike" means creating a shape that resembles the original, not just substituting characters.
+
+## Kate Syntax Highlighting for Hackmud (2026-01-31)
+
+**Location:** `/mnt/other/@home/jacob/hackmud/javascript_hackmud_features/`
+**GitHub:** https://zenchess.github.io/claudeb0tScripts/
+
+### Files (all named kate_hackmud-js.*)
+- `kate_hackmud-js.xml` — Main syntax highlighting file
+- `kate_hackmud-js-keywords.txt` — Autocomplete keywords
+- `kate_hackmud-js.words` — Word dictionary
+- `kate_hackmud-js.xml.snippets` — Code snippets
+- `kate_hackmud-js.katetemplate` — File templates
+- `install-kate_hackmud-js.ps1` — Windows PowerShell installer
+
+### Windows Installation Paths
+```
+%LOCALAPPDATA%\org.kde.syntax-highlighting\syntax\       <- .xml file
+%LOCALAPPDATA%\ktexteditor_wordcompletion\               <- keywords/words
+%LOCALAPPDATA%\ktexteditor_snippets\data\                <- snippets
+%LOCALAPPDATA%\kate\templates\                           <- templates
+```
+
+### Color Scheme (matching hackmud wiki)
+
+**Trust-Level Scriptor Colors:**
+| Trust Level | Color | Hex |
+|-------------|-------|-----|
+| #fs (FULLSEC) | Bright green | #1EFF00 |
+| #hs (HIGHSEC) | Teal/cyan | #4EC9B0 |
+| #ms (MIDSEC) | Yellow | #DCDCAA |
+| #ls (LOWSEC) | Orange | #FF8000 |
+| #ns (NULLSEC) | Red | #F44747 |
+| #s (generic) | Gray | #808080 |
+
+**Split Scriptor Coloring:**
+When you write `#fs.sys.upgrades`, it renders as:
+- `#fs` → trust-level color (green)
+- `sys` → orange (#FF8000, wiki color F for trust usernames)
+- `upgrades` → green (#1EFF00, wiki color L for script names)
+
+Regular user scriptors (`#s.user.script`) use gray for username instead of orange.
+
+**Other Colors:**
+| Element | Color | Hex |
+|---------|-------|-----|
+| #<number> color codes | Gray | #9B9B9B |
+| Parameter keys | Cyan | #00FFFF |
+| Brackets {}[]() | Orchid | #DA70D6 |
+| Punctuation .,;: | Dim gray | #808080 |
+| Operators +-*/% | Light gray | #B4B4B4 |
+| Arrow => | Blue | #569CD6 |
+
+### Wiki Integration (fully verified)
+✅ **scripts_lib** — xmur3, jsf, lcg, mulberry32, sfc32, xoshiro128ss
+✅ **trust_scripts** — All 60+ trust scripts (accts, chats, corps, escrow, gui, kernel, market, marks, scripts, sys, trust, users)
+✅ **db** — #db.f, #db.i, #db.r, #db.u, #db.u1, #db.us, #db.ObjectId
+✅ **extensions** — #D, #G, #FMCL, #4S, context, args, _START, _END, _TIMEOUT, _RUN_ID, DEEP_FREEZE, JSON
+✅ **syntax/colors** — All color codes #0-#9 and #a-#z
+
+### Collaboration Notes
+- Built with Kaj (isinctorp) over several hours
+- Kaj uses WHITE RABBIT hackmud extended font in Kate
+- Kaj uses Kate on both Linux and Windows
+- Syntax file priority: 15

@@ -1,0 +1,158 @@
+=== ROOT FOLDER CLEANUP ANALYSIS ===
+Generated: 2026-01-13
+
+Total files in root: ~100+ files
+
+══════════════════════════════════════════════════════════════════════
+FILES THAT CAN BE REMOVED (Obsolete/Redundant)
+══════════════════════════════════════════════════════════════════════
+
+1. OLD BENCHMARK SCRIPTS (replaced by python_lib/example/benchmark_test/)
+   - benchmark_full_api.py
+   - benchmark_scanner_api.py
+   - benchmark_scanner.py
+   - benchmark_level0_parsing.py
+
+2. OLD TEST SCRIPTS (replaced by python_lib examples)
+   - test_scanner.py
+   - test_refactored_scanner.py
+   - test_get_version.py
+   - test_new_get_version.py
+   - test_find_version_window.py
+   - test_init.py
+
+3. OLD DEBUG SCRIPTS (replaced by python_lib debug mode with HACKMUD_DEBUG=1)
+   - debug_scanner.py
+   - debug_get_version.py
+   - debug_get_version_trace.py
+   - debug_version_extraction.py
+
+4. OLD SCANNER SCRIPTS (functionality moved to python_lib)
+   - implement_version_via_versionscript.py
+   - find_all_versions.py
+   - search_v2_016.py
+   - parse_level0.py
+   - parse_level0_full.py
+   - check_regions.py
+
+5. OLD MEMORY SCANNER DOCUMENTATION (replaced by python_lib documentation)
+   - HACKMUD_MEMORY.html
+   - HACKMUD_MEMORY.md
+   - MEMORY_SCANNER_DOCS.md
+   - hackmud_memory_scanner.tar.gz (old archive - superseded by python_lib-v1.2.4)
+
+6. OLD WINDOW PROBING SCRIPTS (one-time use, no longer needed)
+   - debug_window.py
+   - probe_window.py
+   - check_assemblies.py
+
+7. FONT MODIFICATION PROJECT (one-time project, completed)
+   - add_extended_chars.py
+   - add_swedish_chars.py
+   - compare_fonts.py
+   - merge_eszett.py
+   - FONT_MODIFICATION_DOCS.md
+   - WhiteRabbitHackmudExtended.ttf
+   - WhiteRabbit_hackmud_v2_016.ttf
+   - whitrabt_extended.ttf
+   - whitrabt_swedish.ttf
+   - whitrabt.ttf
+   - whitrabt_font_project.tar.gz
+   - eszett_preview.png
+   - font_comparison_new.png
+   - font_comparison.png
+   - font_demo.png
+   - font_preview2.png
+   - font_preview.png
+   - swedish_test.txt
+
+══════════════════════════════════════════════════════════════════════
+FILES THAT SHOULD BE KEPT
+══════════════════════════════════════════════════════════════════════
+
+1. CORE GAME INTERACTION
+   - send_command.py - send commands to hackmud
+   - auto_hack.py - automated T2 cracking
+   - auto_hardline.py - hardline automation
+   - hardline.sh - establish hardline
+   - check_inbox.py - check game inbox
+   - chat_api.py - chat API wrapper
+   - get_responses.py - get chat API responses
+   - read_hardline.py - read hardline output
+   - read_shell.py - read shell output
+   - read_terminal.py - read terminal output
+
+2. SCREENSHOTS & TOOLS
+   - take_screenshot.py - screenshot capture
+   - ocr_screen.py - OCR for screenshots
+   - get_chat_rect.py - chat rect calibration
+   - scan_hardline_ip.py - scan hardline IPs
+
+3. AUTOMATION
+   - ralph-loop.sh - Claude Code automatic looper
+
+4. DOCUMENTATION (KEEP - ACTIVELY USED)
+   - CLAUDE.md - main project documentation
+   - README.md - project readme
+   - PLAN.md - lock solutions and strategies
+   - claude_memory.txt - persistent memory across sessions
+   - claude_interesting.txt - event log
+   - security_firewall_notes.txt - security notes
+   - hackmud_js_docs.html - useful scripting reference
+
+5. CONFIGURATION/DATA FILES (KEEP)
+   - .gitignore
+   - chat_token.json - chat API token
+   - chat_watch.log - chat monitoring log
+   - inbox.log - game inbox messages
+   - responses.log - game responses (large - 26MB)
+   - transactions.log - GC transaction history
+   - last_poll.json - Discord polling state
+   - scanner.pid - scanner process ID
+
+6. PIXEL ART ASSETS (might be used in game)
+   - gateway_pixel.png / gateway_pixel_hackmud.txt
+   - market_pixel.png / market_pixel_hackmud.txt
+   - ruins_pixel.png / ruins_pixel_hackmud.txt
+   - sanctuary_pixel.png / sanctuary_pixel_hackmud.txt
+   - tower_pixel.png / tower_pixel_hackmud.txt
+   - claudeb0t logo.webp
+   - claudebotlogo.webp
+   - Untitled.webp
+
+7. UTILITY SCRIPTS
+   - run_claude.sh - run Claude Code
+   - start_scanner.sh - start memory scanner
+   - start-vm.sh - start VM
+   - watch_claude.exp - watch Claude session
+   - check_all.sh - check everything
+
+8. ARCHIVES/BACKUPS (KEEP)
+   - python_lib-v1.2.4-20260113-101030.tar.gz - latest library archive
+
+9. HTML FILES (possibly useful references)
+   - new_font.html - font reference
+   - index.html - web interface?
+
+10. OUTPUT FILES
+    - mem_scanner.out - scanner output
+
+══════════════════════════════════════════════════════════════════════
+SUMMARY
+══════════════════════════════════════════════════════════════════════
+
+Files to remove: ~48 files (mostly old test/debug scripts and font project)
+Files to keep: ~52 files (active tools, docs, config, assets)
+
+Largest files to consider:
+- responses.log (26MB) - could be rotated/trimmed
+- chat_watch.log (690K) - could be rotated/trimmed
+- inbox.log (131K) - contains important DMs, keep
+
+RECOMMENDED ACTION:
+1. Remove all obsolete test/debug/benchmark scripts (replaced by python_lib)
+2. Remove font modification project files (one-time completed project)
+3. Remove old documentation superseded by python_lib docs
+4. Keep all active game interaction scripts
+5. Keep all documentation and configuration files
+6. Consider rotating/trimming large log files (responses.log, chat_watch.log)

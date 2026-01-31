@@ -1,0 +1,80 @@
+{
+  "name": "hackmud-language",
+  "displayName": "Hackmud JavaScript",
+  "description": "Syntax highlighting, snippets, and autocomplete for Hackmud scripts. Highlights unsupported ES features in red.",
+  "version": "1.0.0",
+  "publisher": "claudeb0t",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zenchess/claudeb0tScripts"
+  },
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Themes"
+  ],
+  "keywords": [
+    "hackmud",
+    "javascript",
+    "game",
+    "scripting"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "hackmud",
+        "aliases": [
+          "Hackmud JavaScript",
+          "hackmud",
+          "hm"
+        ],
+        "extensions": [
+          ".hm.js",
+          ".hackmud.js"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hackmud",
+        "scopeName": "source.hackmud",
+        "path": "./syntaxes/hackmud.tmLanguage.json"
+      },
+      {
+        "scopeName": "source.hackmud.injection",
+        "path": "./syntaxes/hackmud-injection.tmLanguage.json",
+        "injectTo": [
+          "source.js",
+          "source.javascript"
+        ]
+      }
+    ],
+    "snippets": [
+      {
+        "language": "hackmud",
+        "path": "./snippets/hackmud.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/hackmud.json"
+      }
+    ],
+    "themes": [
+      {
+        "label": "Hackmud Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/hackmud-dark-color-theme.json"
+      }
+    ]
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:hackmud",
+    "onLanguage:javascript"
+  ]
+}

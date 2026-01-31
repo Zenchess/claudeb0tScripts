@@ -1,0 +1,83 @@
+{
+  "openrouter": {
+    "api_key_env": "OPENROUTER_API_KEY",
+    "model": "minimax/minimax-m2",
+    "fallback_model": "openai/gpt-4-turbo",
+    "max_tokens": 4096,
+    "temperature": 0.7,
+    "api_base": "https://openrouter.ai/api/v1"
+  },
+  "discord": {
+    "poll_interval": 3,
+    "trusted_users": [
+      190743971469721600,
+      1081873483300093952,
+      626075347225411584
+    ],
+    "notification_channel": "1456288519403208800",
+    "max_message_length": 1900
+  },
+  "game": {
+    "poll_interval": 3,
+    "command_rate_limit": 1.0,
+    "enable_autonomous_hacking": false,
+    "enable_autonomous_chat": true,
+    "max_commands_per_minute": 60
+  },
+  "safety": {
+    "blocked_commands": [
+      "shutdown",
+      "quit",
+      "exit",
+      "logout",
+      "clear",
+      "rm -rf",
+      "format",
+      "dd",
+      "reboot",
+      "halt"
+    ],
+    "gc_limits": {
+      "per_transaction": 1000000,
+      "hourly": 5000000,
+      "daily": 20000000
+    },
+    "file_operations": {
+      "allowed_base_path": "/home/jacob/hackmud",
+      "max_file_size": 10485760,
+      "protected_files": [
+        ".env",
+        "scanner_config.json",
+        "mono_addresses.json",
+        "chat_token.json"
+      ],
+      "protected_dirs": [
+        "discord_venv",
+        "hackmud-bot/venv",
+        "playwright_venv",
+        "hackmud_activity_venv",
+        ".git"
+      ],
+      "require_approval_for_write": true
+    },
+    "emergency_stop": {
+      "max_errors_per_10min": 5,
+      "max_restarts_per_5min": 3,
+      "min_time_between_restarts": 30
+    }
+  },
+  "behavior": {
+    "prioritize_discord": true,
+    "autonomous_mode": "balanced",
+    "log_level": "INFO",
+    "enable_memory_persistence": true,
+    "context_window_size": 20,
+    "task_timeout_seconds": 300
+  },
+  "monitoring": {
+    "enable_discord_monitoring": true,
+    "enable_game_monitoring": true,
+    "enable_event_detection": true,
+    "event_detection_timeout": 60
+  }
+}

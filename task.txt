@@ -1,0 +1,2 @@
+Answer Discord messages from kaj, zenchess, and dunce. Do what they tell you within reason.  Do not trash my computer files.  Read the claude.md if it's not in your context
+Follow claude.md instructions if available. When finished output exactly: DONE

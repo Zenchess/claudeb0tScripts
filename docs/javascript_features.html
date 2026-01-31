@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackmud JavaScript Feature Reference</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --text-main: #e0e0e0;
+            --text-dim: #888;
+            --accent-green: #1EFF00;
+            --accent-orange: #FF8000;
+            --accent-cyan: #00FFFF;
+            --accent-red: #ff4444;
+            --accent-yellow: #ffaa00;
+            --border-color: #333;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: var(--accent-orange);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        h2 {
+            color: var(--accent-cyan);
+            font-size: 1.3rem;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h3 {
+            color: var(--accent-green);
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+        
+        .summary-box {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .summary-item {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-green);
+        }
+        
+        .summary-item.partial {
+            border-left-color: var(--accent-yellow);
+        }
+        
+        .summary-item.fail {
+            border-left-color: var(--accent-red);
+        }
+        
+        .summary-item h4 {
+            color: var(--text-main);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .summary-item .status {
+            font-size: 0.8rem;
+        }
+        
+        .status-pass { color: var(--accent-green); }
+        .status-partial { color: var(--accent-yellow); }
+        .status-fail { color: var(--accent-red); }
+        
+        .feature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .feature-table th,
+        .feature-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .feature-table th {
+            background: var(--bg-card);
+            color: var(--accent-cyan);
+            font-weight: normal;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+        
+        .feature-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .badge-pass {
+            background: rgba(30, 255, 0, 0.2);
+            color: var(--accent-green);
+        }
+        
+        .badge-fail {
+            background: rgba(255, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+        
+        .badge-partial {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--accent-yellow);
+        }
+        
+        .badge-blocked {
+            background: rgba(136, 136, 136, 0.2);
+            color: var(--text-dim);
+        }
+        
+        code {
+            background: var(--bg-card);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+            color: var(--accent-orange);
+        }
+        
+        .code-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        
+        .note {
+            background: rgba(0, 255, 255, 0.1);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .warning {
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 3px solid var(--accent-red);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .feature-list li::before {
+            content: "›";
+            position: absolute;
+            left: 0;
+            color: var(--accent-cyan);
+        }
+        
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hackmud JavaScript Feature Reference</h1>
+        <p class="subtitle">Comprehensive testing results for JavaScript and WebAssembly support in hackmud</p>
+        
+        <div class="summary-box">
+            <strong style="color: var(--accent-orange);">TL;DR:</strong> Hackmud runs approximately <strong>ES2019-level JavaScript</strong> with an older Esprima-based parser (~ES6 syntax). Modern runtime methods are polyfilled, but modern syntax (optional chaining, nullish coalescing, object spread) causes parse errors.
+            
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <h4>ES1-ES3</h4>
+                    <span class="status status-pass">✓ FULL SUPPORT</span>
+                </div>
+                <div class="summary-item">
+                    <h4>ES5</h4>
+                    <span class="status status-pass">✓ FULL SUPPORT</span>
+                </div>
+                <div class="summary-item">
+                    <h4>ES6 (ES2015)</h4>
+                    <span class="status status-partial">⚠ MOSTLY (no Promise)</span>
+                </div>
+                <div class="summary-item partial">
+                    <h4>ES2016-2019</h4>
+                    <span class="status status-partial">⚠ PARTIAL</span>
+                </div>
+                <div class="summary-item fail">
+                    <h4>ES2020+ Syntax</h4>
+                    <span class="status status-fail">✗ NOT SUPPORTED</span>
+                </div>
+                <div class="summary-item">
+                    <h4>WebAssembly</h4>
+                    <span class="status status-pass">✓ WORKS</span>
+                </div>
+            </div>
+        </div>
+
+        <h2>Quick Feature List</h2>
+        
+        <h3>✅ Fully Supported</h3>
+        <ul class="feature-list">
+            <li><code>var</code>, <code>let</code>, <code>const</code> declarations</li>
+            <li>Arrow functions: <code>(x) => x * 2</code></li>
+            <li>Template literals: <code>`Hello ${name}`</code></li>
+            <li>Destructuring: <code>let {a, b} = obj</code>, <code>let [x, y] = arr</code></li>
+            <li>Array spread: <code>[...arr, 4, 5]</code></li>
+            <li>Rest parameters: <code>function(...args)</code></li>
+            <li>Default parameters: <code>function(x = 10)</code></li>
+            <li>Classes: <code>class Foo extends Bar {}</code></li>
+            <li><code>for...of</code> loops</li>
+            <li><code>Map</code>, <code>Set</code>, <code>Symbol</code></li>
+            <li>All Array methods: <code>map</code>, <code>filter</code>, <code>reduce</code>, <code>flat</code>, <code>includes</code>, etc.</li>
+            <li><code>Object.keys/values/entries/fromEntries</code></li>
+            <li><code>JSON.stringify/parse</code></li>
+            <li><code>BigInt</code></li>
+            <li><code>String.padStart/padEnd/replaceAll</code></li>
+            <li>WebAssembly (Module, Instance, Memory, compile)</li>
+        </ul>
+        
+        <h3>❌ Not Supported</h3>
+        <ul class="feature-list">
+            <li><code>async</code> / <code>await</code> — PARSE ERROR</li>
+            <li><code>Promise</code> — runtime error</li>
+            <li>Optional chaining: <code>obj?.prop</code> — PARSE ERROR</li>
+            <li>Nullish coalescing: <code>a ?? b</code> — PARSE ERROR</li>
+            <li>Object spread: <code>{...obj}</code> — PARSE ERROR</li>
+            <li>Exponentiation operator: <code>2 ** 3</code> — PARSE ERROR</li>
+            <li>Generators: <code>function*</code> — PARSE ERROR</li>
+            <li><code>globalThis</code> — undefined</li>
+            <li><code>Array.at()</code>, <code>findLast</code>, <code>toSorted</code></li>
+        </ul>
+
+        <h2>Detailed Test Results</h2>
+
+        <h3>ES1 (ECMAScript 1997)</h3>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>var</code> declarations</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Function scoped variables</td>
+                </tr>
+                <tr>
+                    <td>Primitive types</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>number, string, boolean, null, undefined</td>
+                </tr>
+                <tr>
+                    <td>Objects & Arrays</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Literal syntax, property access</td>
+                </tr>
+                <tr>
+                    <td>Control flow</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>if/else, for, while, switch</td>
+                </tr>
+                <tr>
+                    <td>Functions</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Declaration, expression, IIFE</td>
+                </tr>
+                <tr>
+                    <td><code>Math</code> object</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>floor, ceil, round, random, etc.</td>
+                </tr>
+                <tr>
+                    <td><code>Date</code> object</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>new Date(), getTime(), etc.</td>
+                </tr>
+                <tr>
+                    <td><code>try/catch</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Error handling</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ES3 (ECMAScript 1999)</h3>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Regular expressions</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>/pattern/, test(), match(), replace()</td>
+                </tr>
+                <tr>
+                    <td><code>instanceof</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Type checking</td>
+                </tr>
+                <tr>
+                    <td><code>===</code> strict equality</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Strict comparison operators</td>
+                </tr>
+                <tr>
+                    <td><code>do...while</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Loop construct</td>
+                </tr>
+                <tr>
+                    <td><code>in</code> operator</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Property existence check</td>
+                </tr>
+                <tr>
+                    <td><code>hasOwnProperty</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Own property check</td>
+                </tr>
+                <tr>
+                    <td>Array methods</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>push, pop, shift, unshift, slice, splice, concat, join, reverse, sort</td>
+                </tr>
+                <tr>
+                    <td>String methods</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>charAt, charCodeAt, indexOf, lastIndexOf, substring, toLowerCase, toUpperCase, split</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ES5 (ECMAScript 2009)</h3>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>JSON.stringify/parse</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>JSON serialization</td>
+                </tr>
+                <tr>
+                    <td><code>Array.isArray</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Array type check</td>
+                </tr>
+                <tr>
+                    <td><code>forEach, map, filter, reduce</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Functional array methods</td>
+                </tr>
+                <tr>
+                    <td><code>indexOf, some, every</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Array search/test methods</td>
+                </tr>
+                <tr>
+                    <td><code>Object.keys</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Get object keys as array</td>
+                </tr>
+                <tr>
+                    <td><code>String.trim</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Whitespace trimming</td>
+                </tr>
+                <tr>
+                    <td><code>Date.now()</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Current timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>Function.bind</code></td>
+                    <td><span class="badge badge-blocked">BLOCKED</span></td>
+                    <td>Blocked by sandbox</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ES6 / ES2015</h3>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>let</code> and <code>const</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Block-scoped declarations</td>
+                </tr>
+                <tr>
+                    <td>Arrow functions</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td><code>(x) => x * 2</code></td>
+                </tr>
+                <tr>
+                    <td>Template literals</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td><code>`Hello ${name}`</code></td>
+                </tr>
+                <tr>
+                    <td>Destructuring</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Array and object destructuring</td>
+                </tr>
+                <tr>
+                    <td>Array spread</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td><code>[...arr, 4, 5]</code></td>
+                </tr>
+                <tr>
+                    <td>Rest parameters</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td><code>function(...args)</code></td>
+                </tr>
+                <tr>
+                    <td>Default parameters</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td><code>function(x = 10)</code></td>
+                </tr>
+                <tr>
+                    <td>Classes</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>class, extends, constructor, methods</td>
+                </tr>
+                <tr>
+                    <td><code>Symbol</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Unique identifiers</td>
+                </tr>
+                <tr>
+                    <td><code>Map</code> and <code>Set</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Collection types</td>
+                </tr>
+                <tr>
+                    <td><code>for...of</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Iterable loop</td>
+                </tr>
+                <tr>
+                    <td><code>Array.from</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Create array from iterable</td>
+                </tr>
+                <tr>
+                    <td><code>String.includes</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Substring search</td>
+                </tr>
+                <tr>
+                    <td><code>Promise</code></td>
+                    <td><span class="badge badge-fail">FAIL</span></td>
+                    <td>ERR - not available</td>
+                </tr>
+                <tr>
+                    <td>Generators</td>
+                    <td><span class="badge badge-fail">FAIL</span></td>
+                    <td>PARSE ERROR</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ES2016 - ES2021</h3>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Array.includes</code> (ES2016)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Array membership test</td>
+                </tr>
+                <tr>
+                    <td><code>**</code> exponentiation (ES2016)</td>
+                    <td><span class="badge badge-fail">FAIL</span></td>
+                    <td>PARSE ERROR - use Math.pow()</td>
+                </tr>
+                <tr>
+                    <td><code>Object.values/entries</code> (ES2017)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Object iteration helpers</td>
+                </tr>
+                <tr>
+                    <td><code>padStart/padEnd</code> (ES2017)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>String padding</td>
+                </tr>
+                <tr>
+                    <td><code>async/await</code> (ES2017)</td>
+                    <td><span class="badge badge-fail">FAIL</span></td>
+                    <td>PARSE ERROR</td>
+                </tr>
+                <tr>
+                    <td><code>Object.fromEntries</code> (ES2019)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Create object from entries</td>
+                </tr>
+                <tr>
+                    <td><code>Array.flat/flatMap</code> (ES2019)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Array flattening</td>
+                </tr>
+                <tr>
+                    <td><code>String.trimStart/trimEnd</code> (ES2019)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Directional trim</td>
+                </tr>
+                <tr>
+                    <td><code>BigInt</code> (ES2020)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Arbitrary precision integers</td>
+                </tr>
+                <tr>
+                    <td><code>globalThis</code> (ES2020)</td>
+                    <td><span class="badge badge-fail">FAIL</span></td>
+                    <td>undefined - sandboxed</td>
+                </tr>
+                <tr>
+                    <td><code>String.replaceAll</code> (ES2021)</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Replace all occurrences</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ES2020+ Syntax (Not Supported)</h3>
+        <div class="warning">
+            <strong>⚠️ These features cause PARSE ERRORS:</strong>
+            <p>The hackmud parser does not understand this syntax. Scripts using these will fail to upload.</p>
+        </div>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Workaround</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>?.</code> optional chaining</td>
+                    <td><span class="badge badge-fail">PARSE ERROR</span></td>
+                    <td><code>obj && obj.prop</code></td>
+                </tr>
+                <tr>
+                    <td><code>??</code> nullish coalescing</td>
+                    <td><span class="badge badge-fail">PARSE ERROR</span></td>
+                    <td><code>(x !== null && x !== undefined) ? x : default</code></td>
+                </tr>
+                <tr>
+                    <td><code>{...obj}</code> object spread</td>
+                    <td><span class="badge badge-fail">PARSE ERROR</span></td>
+                    <td><code>Object.assign({}, obj, {newProp: val})</code></td>
+                </tr>
+                <tr>
+                    <td><code>**</code> exponentiation</td>
+                    <td><span class="badge badge-fail">PARSE ERROR</span></td>
+                    <td><code>Math.pow(base, exp)</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ES2022+ Methods (Not Supported)</h3>
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Workaround</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Array.at()</code></td>
+                    <td><span class="badge badge-fail">ERR</span></td>
+                    <td><code>arr[arr.length - 1]</code> for negative index</td>
+                </tr>
+                <tr>
+                    <td><code>Object.hasOwn()</code></td>
+                    <td><span class="badge badge-fail">ERR</span></td>
+                    <td><code>obj.hasOwnProperty(key)</code></td>
+                </tr>
+                <tr>
+                    <td><code>Array.findLast()</code></td>
+                    <td><span class="badge badge-fail">ERR</span></td>
+                    <td><code>arr.slice().reverse().find()</code></td>
+                </tr>
+                <tr>
+                    <td><code>Array.toSorted()</code></td>
+                    <td><span class="badge badge-fail">ERR</span></td>
+                    <td><code>arr.slice().sort()</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>WebAssembly Support</h2>
+        <div class="note">
+            <strong>✅ WebAssembly is supported!</strong> You can use WASM for compute-intensive operations.
+        </div>
+        
+        <table class="feature-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>WebAssembly</code> object</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Global namespace exists</td>
+                </tr>
+                <tr>
+                    <td><code>WebAssembly.Module</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Compile WASM bytes to module</td>
+                </tr>
+                <tr>
+                    <td><code>WebAssembly.Instance</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Instantiate module</td>
+                </tr>
+                <tr>
+                    <td><code>WebAssembly.Memory</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Linear memory buffer</td>
+                </tr>
+                <tr>
+                    <td><code>WebAssembly.compile</code></td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Async compilation (returns module)</td>
+                </tr>
+                <tr>
+                    <td>Typed Arrays</td>
+                    <td><span class="badge badge-pass">PASS</span></td>
+                    <td>Int32Array, Float64Array, DataView</td>
+                </tr>
+                <tr>
+                    <td><code>WebAssembly.Table</code></td>
+                    <td><span class="badge badge-fail">ERR</span></td>
+                    <td>Not available</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>WASM Example: Add Function</h3>
+        <div class="code-block">
+<pre>// WASM bytes for: (func (export "add") (param i32 i32) (result i32) local.get 0 local.get 1 i32.add)
+const wasmBytes = new Uint8Array([
+  0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
+  0x01, 0x07, 0x01, 0x60, 0x02, 0x7f, 0x7f, 0x01, 0x7f,
+  0x03, 0x02, 0x01, 0x00,
+  0x07, 0x07, 0x01, 0x03, 0x61, 0x64, 0x64, 0x00, 0x00,
+  0x0a, 0x09, 0x01, 0x07, 0x00, 0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b
+]);
+
+const module = new WebAssembly.Module(wasmBytes);
+const instance = new WebAssembly.Instance(module, {});
+const result = instance.exports.add(3, 5);  // Returns 8</pre>
+        </div>
+
+        <h2>Best Practices</h2>
+        
+        <h3>Writing Hackmud Scripts</h3>
+        <ul class="feature-list">
+            <li>Use <code>let</code> and <code>const</code> instead of <code>var</code></li>
+            <li>Arrow functions work great for callbacks</li>
+            <li>Destructuring is fully supported - use it!</li>
+            <li>Avoid <code>async/await</code> - use callbacks or synchronous code</li>
+            <li>Use <code>Math.pow()</code> instead of <code>**</code></li>
+            <li>Use <code>Object.assign()</code> instead of object spread</li>
+            <li>For optional property access, use <code>obj && obj.prop</code></li>
+        </ul>
+
+        <h3>Script Template</h3>
+        <div class="code-block">
+<pre>function(context, args) {
+    // ✅ ES6 features work
+    const { caller } = context;
+    let result = [];
+    
+    // ✅ Arrow functions
+    const double = (x) => x * 2;
+    
+    // ✅ Template literals
+    const msg = `Hello ${caller}`;
+    
+    // ✅ Destructuring
+    const { param1, param2 = "default" } = args || {};
+    
+    // ✅ Modern array methods
+    const filtered = [1, 2, 3, 4, 5]
+        .filter(x => x > 2)
+        .map(x => x * 2);
+    
+    // ❌ DON'T use these:
+    // async/await
+    // obj?.prop
+    // a ?? b
+    // {...obj}
+    // 2 ** 3
+    
+    return { ok: true, data: filtered };
+}</pre>
+        </div>
+
+        <footer>
+            <p>Generated: January 30, 2026</p>
+            <p>Testing performed by claudeb0t using scripts in <code>~/.config/hackmud/john500/scripts/</code></p>
+            <p>Test suite: mini_es1.js, mini_es3.js, mini_es5.js, mini_es6.js, mini_es2016_plus.js, mini_wasm.js</p>
+        </footer>
+    </div>
+</body>
+</html>

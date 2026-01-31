@@ -1,0 +1,83 @@
+{
+  "name": "hackmud-language-support",
+  "displayName": "Hackmud Language Support",
+  "description": "Syntax highlighting, formatting, and tooling for Hackmud scripts",
+  "version": "0.1.0",
+  "publisher": "zenchess",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zenchess/claudeb0tScripts"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "hackmud",
+        "aliases": ["Hackmud", "hackmud"],
+        "extensions": [".hackmud.js"],
+        "configuration": "./language-configuration.json",
+        "firstLine": "^\\s*//\\s*@hackmud"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hackmud",
+        "scopeName": "source.hackmud",
+        "path": "./syntaxes/hackmud.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "hackmud",
+        "path": "./snippets/hackmud.json"
+      }
+    ],
+    "configuration": {
+      "title": "Hackmud",
+      "properties": {
+        "hackmud.autoDetect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-detect hackmud files by content (anonymous function pattern or @hackmud comment)"
+        },
+        "hackmud.scriptsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to hackmud scripts folder (for file association)"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "hackmud.formatDocument",
+        "title": "Format Hackmud Script"
+      },
+      {
+        "command": "hackmud.detectAndSetLanguage",
+        "title": "Detect Hackmud Script"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "prettier": "^3.0.0"
+  }
+}

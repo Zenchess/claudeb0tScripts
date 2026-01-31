@@ -1,0 +1,141 @@
+{
+  "Hackmud Script Template": {
+    "prefix": "hm-script",
+    "body": [
+      "// @hackmud",
+      "function(context, args) {",
+      "\t$0",
+      "\treturn { ok: true }",
+      "}"
+    ],
+    "description": "Basic hackmud script template"
+  },
+  "Hackmud Script with DB": {
+    "prefix": "hm-script-db",
+    "body": [
+      "// @hackmud",
+      "function(context, args) {",
+      "\tlet data = \\$db.f({ ${1:query} }).first()",
+      "\t$0",
+      "\treturn { ok: true, data }",
+      "}"
+    ],
+    "description": "Hackmud script with database query"
+  },
+  "Scriptor Call": {
+    "prefix": "hm-scriptor",
+    "body": "#s.${1:user}.${2:script}({ ${3:args} })",
+    "description": "Scriptor call syntax"
+  },
+  "Full-sec Scriptor": {
+    "prefix": "hm-fs",
+    "body": "#fs.${1:user}.${2:script}({ ${3:args} })",
+    "description": "Full-sec scriptor call"
+  },
+  "High-sec Scriptor": {
+    "prefix": "hm-hs",
+    "body": "#hs.${1:user}.${2:script}({ ${3:args} })",
+    "description": "High-sec scriptor call"
+  },
+  "Mid-sec Scriptor": {
+    "prefix": "hm-ms",
+    "body": "#ms.${1:user}.${2:script}({ ${3:args} })",
+    "description": "Mid-sec scriptor call"
+  },
+  "Low-sec Scriptor": {
+    "prefix": "hm-ls",
+    "body": "#ls.${1:user}.${2:script}({ ${3:args} })",
+    "description": "Low-sec scriptor call"
+  },
+  "Null-sec Scriptor": {
+    "prefix": "hm-ns",
+    "body": "#ns.${1:user}.${2:script}({ ${3:args} })",
+    "description": "Null-sec scriptor call"
+  },
+  "DB Find": {
+    "prefix": "hm-db-find",
+    "body": "\\$db.f({ ${1:query} })${2:.first()}",
+    "description": "Database find query"
+  },
+  "DB Insert": {
+    "prefix": "hm-db-insert",
+    "body": "\\$db.i({ ${1:document} })",
+    "description": "Database insert"
+  },
+  "DB Update": {
+    "prefix": "hm-db-update",
+    "body": "\\$db.u({ ${1:query} }, { \\$set: { ${2:updates} } })",
+    "description": "Database update"
+  },
+  "DB Upsert": {
+    "prefix": "hm-db-upsert",
+    "body": "\\$db.us({ ${1:query} }, { \\$set: { ${2:updates} } })",
+    "description": "Database upsert"
+  },
+  "DB Remove": {
+    "prefix": "hm-db-remove",
+    "body": "\\$db.r({ ${1:query} })",
+    "description": "Database remove"
+  },
+  "FMCL Color": {
+    "prefix": "hm-color",
+    "body": "`${1|0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z|}${2:text}`N",
+    "description": "FMCL color code"
+  },
+  "Context Caller": {
+    "prefix": "hm-caller",
+    "body": "context.caller",
+    "description": "Get the calling user"
+  },
+  "Context This Script": {
+    "prefix": "hm-this-script",
+    "body": "context.this_script",
+    "description": "Get this script's name"
+  },
+  "Context Calling Script": {
+    "prefix": "hm-calling-script",
+    "body": "context.calling_script",
+    "description": "Get the calling script's name"
+  },
+  "Timeout Start": {
+    "prefix": "hm-timeout-start",
+    "body": "_ST",
+    "description": "Script start timestamp"
+  },
+  "Timeout End": {
+    "prefix": "hm-timeout-end",
+    "body": "_ET",
+    "description": "Script end timestamp"
+  },
+  "Timeout Remaining": {
+    "prefix": "hm-timeout-remaining",
+    "body": "_TO - (Date.now() - _ST)",
+    "description": "Remaining execution time"
+  },
+  "Mini Script": {
+    "prefix": "hm-mini",
+    "body": [
+      "// @hackmud",
+      "// Mini script - runs fast, avoids timeout",
+      "function(c, a) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Minimized hackmud script template"
+  },
+  "Args Destructure": {
+    "prefix": "hm-args",
+    "body": "let { ${1:param1}, ${2:param2} } = args",
+    "description": "Destructure args object"
+  },
+  "Return OK": {
+    "prefix": "hm-return-ok",
+    "body": "return { ok: true${1:, msg: \"${2:Success}\"} }",
+    "description": "Return success response"
+  },
+  "Return Error": {
+    "prefix": "hm-return-err",
+    "body": "return { ok: false, msg: \"${1:Error message}\" }",
+    "description": "Return error response"
+  }
+}

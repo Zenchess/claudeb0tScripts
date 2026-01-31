@@ -1,0 +1,8 @@
+[package]
+name = "rust_hash_test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sha2 = "0.10"
+md-5 = "0.10"

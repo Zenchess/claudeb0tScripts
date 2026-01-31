@@ -1,0 +1,91 @@
+#!/bin/bash
+# headlessHM - Launch hackmud in a headless virtual display (Xvfb)
+# Memory scanning and xdotool still work on the virtual display
+
+STEAM_APPID=469820
+GAME_PATH="$HOME/.local/share/Steam/steamapps/common/hackmud"
+GAME_BIN="$GAME_PATH/hackmud_lin.x86_64"
+
+# Check for Xvfb
+if ! command -v Xvfb &> /dev/null; then
+    echo "ERROR: Xvfb not found!"
+    echo "Install with: sudo pacman -S xorg-server-xvfb"
+    exit 1
+fi
+
+# Check game exists
+if [ ! -f "$GAME_BIN" ]; then
+    echo "ERROR: Game not found at $GAME_BIN"
+    exit 1
+fi
+
+# Check Steam is running (needed for license)
+if ! pgrep -x "steam" > /dev/null; then
+    echo "ERROR: Steam must be running for license validation"
+    echo "Start Steam first, then run this script"
+    exit 1
+fi
+
+# Kill any existing hackmud
+pkill -f "hackmud_lin" 2>/dev/null
+sleep 1
+
+# Find an available display number
+DISPLAY_NUM=99
+while [ -e "/tmp/.X${DISPLAY_NUM}-lock" ]; do
+    DISPLAY_NUM=$((DISPLAY_NUM + 1))
+done
+
+echo "Starting Xvfb on display :${DISPLAY_NUM}..."
+Xvfb :${DISPLAY_NUM} -screen 0 1920x1080x24 &
+XVFB_PID=$!
+sleep 1
+
+# Verify Xvfb started
+if ! kill -0 $XVFB_PID 2>/dev/null; then
+    echo "ERROR: Xvfb failed to start"
+    exit 1
+fi
+
+echo "Launching hackmud in virtual display..."
+
+# Launch game with Steam environment
+# Unset Wayland to force X11 (Xvfb)
+cd "$GAME_PATH"
+SteamAppId=$STEAM_APPID \
+DISPLAY=:${DISPLAY_NUM} \
+WAYLAND_DISPLAY= \
+SDL_VIDEODRIVER=x11 \
+"$GAME_BIN" > /tmp/headlessHM.log 2>&1 &
+
+GAME_PID=$!
+sleep 2
+
+# Check if game started
+if kill -0 $GAME_PID 2>/dev/null; then
+    echo ""
+    echo "=== Hackmud running headless ==="
+    echo "Display:  :${DISPLAY_NUM}"
+    echo "Xvfb PID: $XVFB_PID"
+    echo "Game PID: $GAME_PID"
+    echo ""
+    echo "To interact:"
+    echo "  DISPLAY=:${DISPLAY_NUM} xdotool type 'command'"
+    echo ""
+    echo "To view (optional):"
+    echo "  x11vnc -display :${DISPLAY_NUM} -nopw"
+    echo ""
+    echo "To stop:"
+    echo "  kill $GAME_PID $XVFB_PID"
+    echo ""
+    echo "Log: /tmp/headlessHM.log"
+
+    # Save PIDs for easy cleanup
+    echo "$XVFB_PID" > /tmp/headlessHM_xvfb.pid
+    echo "$GAME_PID" > /tmp/headlessHM_game.pid
+    echo "$DISPLAY_NUM" > /tmp/headlessHM_display
+else
+    echo "ERROR: Game failed to start. Check /tmp/headlessHM.log"
+    kill $XVFB_PID 2>/dev/null
+    exit 1
+fi

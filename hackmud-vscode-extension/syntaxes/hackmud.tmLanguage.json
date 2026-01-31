@@ -1,0 +1,243 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Hackmud",
+  "scopeName": "source.hackmud",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#scriptor-syntax" },
+    { "include": "#hackmud-globals" },
+    { "include": "#unsupported-features" },
+    { "include": "#keywords" },
+    { "include": "#operators" },
+    { "include": "#functions" },
+    { "include": "#variables" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.hackmud",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.hackmud",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.hackmud",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.hackmud", "match": "\\\\." }
+          ]
+        },
+        {
+          "name": "string.quoted.single.hackmud",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            { "name": "constant.character.escape.hackmud", "match": "\\\\." }
+          ]
+        },
+        {
+          "name": "string.template.hackmud",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            { "name": "constant.character.escape.hackmud", "match": "\\\\." },
+            {
+              "name": "meta.template.expression.hackmud",
+              "begin": "\\$\\{",
+              "end": "\\}",
+              "beginCaptures": { "0": { "name": "punctuation.definition.template-expression.begin.hackmud" } },
+              "endCaptures": { "0": { "name": "punctuation.definition.template-expression.end.hackmud" } },
+              "patterns": [{ "include": "source.hackmud" }]
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.hackmud",
+          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        },
+        {
+          "name": "constant.numeric.binary.hackmud",
+          "match": "\\b0[bB][01]+\\b"
+        },
+        {
+          "name": "constant.numeric.octal.hackmud",
+          "match": "\\b0[oO][0-7]+\\b"
+        },
+        {
+          "name": "constant.numeric.decimal.hackmud",
+          "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+        }
+      ]
+    },
+    "scriptor-syntax": {
+      "patterns": [
+        {
+          "comment": "Hackmud scriptor call: #s.user.script or #fs.user.script etc",
+          "name": "meta.scriptor.hackmud",
+          "match": "(#[a-z]*s)(\\.)([a-z_][a-z0-9_]*)(\\.)([a-z_][a-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.operator.scriptor.hackmud" },
+            "2": { "name": "punctuation.accessor.hackmud" },
+            "3": { "name": "entity.name.namespace.hackmud" },
+            "4": { "name": "punctuation.accessor.hackmud" },
+            "5": { "name": "entity.name.function.hackmud" }
+          }
+        },
+        {
+          "comment": "Scriptor shorthand: #s, #fs, #ns, #ms, #ls, #hs, #4s, #3s etc",
+          "name": "keyword.operator.scriptor.hackmud",
+          "match": "#[a-z0-9]*s\\b"
+        },
+        {
+          "comment": "DB operations: $db.f, $db.i, etc",
+          "name": "keyword.operator.db.hackmud",
+          "match": "\\$db\\b"
+        },
+        {
+          "comment": "FMCL colors: `N`, `0`-`9`, `a`-`z`, etc",
+          "name": "constant.character.fmcl.hackmud",
+          "match": "`[0-9a-zA-Z]"
+        }
+      ]
+    },
+    "hackmud-globals": {
+      "patterns": [
+        {
+          "comment": "Hackmud global objects",
+          "name": "support.variable.hackmud",
+          "match": "\\b(context|args|_START|_END|_TIMEOUT|_ST|_ET|_TO)\\b"
+        },
+        {
+          "comment": "Hackmud DB methods",
+          "name": "support.function.db.hackmud",
+          "match": "\\$db\\.(f|i|r|u|u1|us|ObjectId)\\b"
+        },
+        {
+          "comment": "Hackmud script library namespaces",
+          "name": "support.class.hackmud",
+          "match": "\\b(scripts|accts|chats|corps|escrow|market|sys|users)\\b"
+        }
+      ]
+    },
+    "unsupported-features": {
+      "patterns": [
+        {
+          "comment": "UNSUPPORTED: async/await",
+          "name": "invalid.deprecated.async.hackmud",
+          "match": "\\b(async|await)\\b"
+        },
+        {
+          "comment": "UNSUPPORTED: Optional chaining",
+          "name": "invalid.deprecated.optional-chain.hackmud",
+          "match": "\\?\\."
+        },
+        {
+          "comment": "UNSUPPORTED: Nullish coalescing",
+          "name": "invalid.deprecated.nullish.hackmud",
+          "match": "\\?\\?"
+        },
+        {
+          "comment": "UNSUPPORTED: Exponentiation operator",
+          "name": "invalid.deprecated.exponent.hackmud",
+          "match": "\\*\\*"
+        },
+        {
+          "comment": "UNSUPPORTED: BigInt literal",
+          "name": "invalid.deprecated.bigint.hackmud",
+          "match": "\\b\\d+n\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.hackmud",
+          "match": "\\b(if|else|switch|case|default|for|while|do|break|continue|return|throw|try|catch|finally|with|yield)\\b"
+        },
+        {
+          "name": "keyword.declaration.hackmud",
+          "match": "\\b(var|let|const|function|class|extends|import|export|from|as)\\b"
+        },
+        {
+          "name": "keyword.operator.hackmud",
+          "match": "\\b(new|delete|typeof|instanceof|in|of|void)\\b"
+        },
+        {
+          "name": "constant.language.hackmud",
+          "match": "\\b(true|false|null|undefined|NaN|Infinity)\\b"
+        },
+        {
+          "name": "variable.language.this.hackmud",
+          "match": "\\bthis\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.hackmud",
+          "match": "=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|<<=|>>=|>>>="
+        },
+        {
+          "name": "keyword.operator.comparison.hackmud",
+          "match": "===|!==|==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.logical.hackmud",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.arithmetic.hackmud",
+          "match": "\\+|-|\\*|/|%|\\+\\+|--"
+        },
+        {
+          "name": "keyword.operator.bitwise.hackmud",
+          "match": "&|\\||\\^|~|<<|>>|>>>"
+        },
+        {
+          "name": "keyword.operator.ternary.hackmud",
+          "match": "\\?|:"
+        },
+        {
+          "name": "keyword.operator.spread.hackmud",
+          "match": "\\.\\.\\."
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "comment": "Function definition",
+          "name": "meta.function.hackmud",
+          "match": "\\b([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "entity.name.function.hackmud" }
+          }
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.hackmud",
+          "match": "\\b[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
+        }
+      ]
+    }
+  }
+}

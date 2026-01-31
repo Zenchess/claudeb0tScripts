@@ -89,23 +89,24 @@ def run_benchmark():
     print("[3] Terminal Reading (Shell):")
     for lines in [10, 20, 40]:
         elapsed, success = benchmark_method(
-            f"read_terminal(lines={lines})",
-            scanner.read_terminal,
+            f"read_window('shell', lines={lines})",
+            scanner.read_window,
+            'shell',
             lines=lines
         )
-        results[f'read_terminal_shell_{lines}'] = (elapsed, success)
+        results[f'read_window_shell_{lines}'] = (elapsed, success)
     print()
 
     # Benchmark 4: Terminal Reading (Chat)
     print("[4] Terminal Reading (Chat):")
     for lines in [10, 20, 40]:
         elapsed, success = benchmark_method(
-            f"read_terminal(lines={lines}, chat)",
-            scanner.read_terminal,
-            lines=lines,
-            window_name='chat'
+            f"read_window('chat', lines={lines})",
+            scanner.read_window,
+            'chat',
+            lines=lines
         )
-        results[f'read_terminal_chat_{lines}'] = (elapsed, success)
+        results[f'read_window_chat_{lines}'] = (elapsed, success)
     print()
 
     # Benchmark 5: Multiple Rapid Reads
@@ -114,7 +115,7 @@ def run_benchmark():
     success_count = 0
     for i in range(10):
         try:
-            scanner.read_terminal(lines=20)
+            scanner.read_window('shell', lines=20)
             success_count += 1
         except:
             pass
@@ -151,9 +152,9 @@ def run_benchmark():
     connect_time = results['connect'][0]
     version_times = [results[f'get_version_{i}'][0] for i in range(1, 4)]
     avg_version_time = sum(version_times) / len(version_times)
-    shell_times = [results[f'read_terminal_shell_{lines}'][0] for lines in [10, 20, 40]]
+    shell_times = [results[f'read_window_shell_{lines}'][0] for lines in [10, 20, 40]]
     avg_shell_time = sum(shell_times) / len(shell_times)
-    chat_times = [results[f'read_terminal_chat_{lines}'][0] for lines in [10, 20, 40]]
+    chat_times = [results[f'read_window_chat_{lines}'][0] for lines in [10, 20, 40]]
     avg_chat_time = sum(chat_times) / len(chat_times)
 
     print(f"Success Rate:  {successful}/{total} ({successful*100//total}%)")

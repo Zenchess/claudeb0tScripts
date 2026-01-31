@@ -1128,7 +1128,7 @@ log('Got ' + terminal.length + ' chars from terminal');
             const sfxEnabled = !mainDisplay.classList.contains('no-sfx');
             localStorage.setItem('hackmud_sfx', sfxEnabled ? 'on' : 'off');
 
-            sfxBtn.textContent = sfxEnabled ? 'SFX' : 'SFX OFF';
+            sfxBtn.textContent = sfxEnabled ? 'VFX' : 'VFX OFF';
         }
 
         // Restore SFX preference on load
@@ -1139,7 +1139,7 @@ log('Got ' + terminal.length + ' chars from terminal');
                 const sfxBtn = document.getElementById('sfxToggle');
                 if (sfxBtn) {
                     sfxBtn.classList.add('off');
-                    sfxBtn.textContent = 'SFX OFF';
+                    sfxBtn.textContent = 'VFX OFF';
                 }
             }
         })();
@@ -1966,11 +1966,12 @@ log('Got ' + terminal.length + ' chars from terminal');
                 type="text"
                 id="commandInput"
                 placeholder="> Login to send commands..."
+                autocomplete="off"
                 disabled
             />
         </div>
         <button id="sendCommand" onclick="sendCommand()" disabled>Send</button>
-        <button id="sfxToggle" onclick="toggleSFX()" title="Toggle CRT effects">SFX</button>
+        <button id="sfxToggle" onclick="toggleSFX()" title="Toggle VFX effects (CRT scanlines, noise)">VFX</button>
     </div>
 </body>
 </html>

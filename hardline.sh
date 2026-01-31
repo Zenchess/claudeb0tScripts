@@ -1,7 +1,14 @@
 #!/bin/bash
 # Run kernel.hardline and complete the connection sequence (no focus needed)
+# Supports headless mode (Xvfb) by reading display from /tmp/headlessHM_display
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Get display - use headless if available
+if [ -f /tmp/headlessHM_display ]; then
+    export DISPLAY=":$(cat /tmp/headlessHM_display)"
+    echo "Using headless display: $DISPLAY"
+fi
 
 # Get hackmud window ID
 WINDOW_ID=$(xdotool search --name hackmud | head -1)

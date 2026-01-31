@@ -395,6 +395,53 @@ python3 send_command.py "chats.tell{to:\"someone\", msg:\"hello\"}"
 python3 send_command.py "partial text" --no-enter
 ```
 
+### Background Automation (Unfocused Input) 🎮
+
+**KEY DISCOVERY:** Hackmud runs under XWayland, so xdotool works even on a Wayland desktop!
+
+**Unfocused input using xdotool --window flag:**
+```bash
+# Find hackmud window ID
+xdotool search --name hackmud
+# Returns something like: 50331658 (may change on restart)
+
+# Type command WITHOUT focusing the window
+xdotool type --window 50331658 "accts.balance"
+
+# Press Enter WITHOUT focusing
+xdotool key --window 50331658 Return
+```
+
+**Verify commands using Scanner API:**
+```python
+import sys
+sys.path.insert(0, 'python_lib')
+from hackmud.memory import Scanner
+
+with Scanner() as scanner:
+    text = scanner.read_window('shell', lines=30)
+    print(text)
+```
+
+**Full unfocused automation workflow:**
+1. Send command: `xdotool type --window <id> "your_command"`
+2. Execute: `xdotool key --window <id> Return`
+3. Wait briefly: `sleep 1`
+4. Read result via Scanner API
+
+**Clear shell input:** Press ESC to clear the input field (useful if you need to cancel or restart a command):
+```bash
+xdotool key --window <id> Escape
+```
+
+**Why this matters:**
+- Can automate hackmud completely in the background
+- Don't need to steal window focus
+- Works alongside other desktop activities
+- Enables fully autonomous gameplay
+
+**Window ID note:** The window ID changes on game restart. Always verify with `xdotool search --name hackmud` if commands stop working.
+
 **If send_command.py stops working**, use xdotool directly:
 ```bash
 # Find hackmud window ID

@@ -1,41 +1,47 @@
 #!/usr/bin/env python3
 """
-Send commands to hackmud window using xdotool with window targeting (no focus needed)
+Send commands to hackmud using xdotool (works with XWayland)
 """
 
 import subprocess
 import sys
 import time
 
-def find_hackmud_window():
-    """Find the hackmud window ID"""
+def get_hackmud_window():
+    """Get hackmud window ID using xdotool"""
     try:
         result = subprocess.run(
             ['xdotool', 'search', '--name', 'hackmud'],
-            capture_output=True, text=True
+            capture_output=True, text=True, check=True
         )
         windows = result.stdout.strip().split('\n')
         if windows and windows[0]:
             return windows[0]
-    except Exception as e:
-        print(f"Error finding window: {e}")
-    return None
+        return None
+    except subprocess.CalledProcessError:
+        return None
+    except FileNotFoundError:
+        print("xdotool not found!")
+        return None
 
 def send_command(command, press_enter=True):
-    """Send a command to the hackmud window without needing focus"""
-    window_id = find_hackmud_window()
+    """Send a command to hackmud using xdotool (no focus stealing)"""
+    window_id = get_hackmud_window()
     if not window_id:
-        print("Hackmud window not found!")
+        print("Could not find hackmud window!")
         return False
-
+    
     try:
-        # Type the command directly to the window using xdotool (no focus needed)
-        # Use --delay to prevent dropped characters
-        subprocess.run(['xdotool', 'type', '--window', window_id, '--delay', '20', command], check=True)
+        # Send Escape first to clear any existing input
+        subprocess.run(['xdotool', 'key', '--window', window_id, 'Escape'], check=True)
+        time.sleep(0.02)
+
+        # Type the command
+        subprocess.run(['xdotool', 'type', '--window', window_id, '--delay', '10', command], check=True)
 
         # Press enter if requested
         if press_enter:
-            time.sleep(0.1)
+            time.sleep(0.05)
             subprocess.run(['xdotool', 'key', '--window', window_id, 'Return'], check=True)
 
         return True

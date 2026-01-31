@@ -1,6 +1,8 @@
 # Hackmud JavaScript Keywords for Kate Autocomplete
 # Place in ~/.local/share/ktexteditor_wordcompletion/
 # Or configure in Kate: Settings > Configure Kate > Plugins > Word Completion
+# Updated: 2026-01-31 by claudeb0t 🪆⬢
+# Source: https://wiki.hackmud.com/scripting/
 
 # ============================================
 # KEYWORDS (ES6)
@@ -84,36 +86,152 @@ Float64Array
 WebAssembly
 
 # ============================================
-# HACKMUD GLOBALS
+# HACKMUD GLOBALS (wiki: extensions)
 # ============================================
 context
 args
 _START
 _END
 _TIMEOUT
-_G
-_ST
-_DB
+_RUN_ID
+DEEP_FREEZE
 
 # ============================================
-# HACKMUD SCRIPTOR SYNTAX
+# HACKMUD PREPROCESSOR DIRECTIVES
 # ============================================
-#fs.
-#hs.
-#ls.
-#ms.
-#ns.
-#s.
+#D
+#G
+#FMCL
+#4S
+
+# ============================================
+# HACKMUD DATABASE (wiki: db)
+# ============================================
 #db.f
 #db.i
 #db.r
 #db.u
 #db.u1
 #db.us
-#D
-#G
-#FMCL
-#4S
+#db.ObjectId
+
+# ============================================
+# HACKMUD SCRIPTOR SYNTAX
+# ============================================
+#fs.
+#hs.
+#ms.
+#ls.
+#ns.
+#s.
+
+# ============================================
+# TRUST SCRIPTS (wiki: trust_scripts)
+# Complete list from https://wiki.hackmud.com/scripting/trust_scripts/
+# ============================================
+
+# accts.* (Account Management)
+accts.balance
+accts.balance_of_owner
+accts.transactions
+accts.xfer_gc_to
+accts.xfer_gc_to_caller
+
+# autos.* (Autocomplete)
+autos.reset
+
+# chats.* (Chat System)
+chats.active
+chats.channels
+chats.create
+chats.join
+chats.leave
+chats.send
+chats.tell
+chats.users
+
+# corps.* (Corporations)
+corps.create
+corps.hire
+corps.manage
+corps.offers
+corps.quit
+corps.top
+
+# escrow.* (Payment Escrow)
+escrow.charge
+escrow.confirm
+escrow.stats
+
+# gui.* (GUI Settings)
+gui.chats
+gui.quiet
+gui.size
+gui.vfx
+gui.vol
+
+# kernel.* (System)
+kernel.hardline
+
+# market.* (Marketplace)
+market.browse
+market.buy
+market.sell
+market.stats
+
+# marks.* (Progression)
+marks.available
+marks.clone
+marks.protocol
+marks.sync
+
+# scripts.* (Script Management)
+scripts.fullsec
+scripts.get_access_level
+scripts.get_level
+scripts.highsec
+scripts.lowsec
+scripts.midsec
+scripts.nullsec
+scripts.quine
+scripts.sys
+scripts.trust
+scripts.user
+
+# sys.* (System Management)
+sys.access_log
+sys.breach
+sys.cull
+sys.init
+sys.loc
+sys.manage
+sys.specs
+sys.status
+sys.upgrade_log
+sys.upgrades
+sys.upgrades_of_owner
+sys.xfer_upgrade_to
+sys.xfer_upgrade_to_caller
+
+# trust.* 
+trust.me
+
+# users.* (User Management)
+users.active
+users.config
+users.inspect
+users.last_action
+users.top
+
+# ============================================
+# SCRIPTS.LIB FUNCTIONS (wiki: scripts_lib)
+# ============================================
+scripts.lib.xmur3
+scripts.lib.jsf
+scripts.lib.lcg
+scripts.lib.mulberry32
+scripts.lib.sfc32
+scripts.lib.xoshiro128ss
 
 # ============================================
 # ARRAY METHODS (All Supported)
@@ -198,11 +316,8 @@ match
 replace
 replaceAll
 search
-indexOf
-lastIndexOf
 startsWith
 endsWith
-includes
 padStart
 padEnd
 repeat
@@ -327,7 +442,7 @@ toLocaleString
 toUTCString
 
 # ============================================
-# JSON METHODS
+# JSON METHODS (wiki: extensions - JSON)
 # ============================================
 JSON.parse
 JSON.stringify
@@ -342,10 +457,6 @@ has
 set
 size
 add
-forEach
-entries
-keys
-values
 
 # ============================================
 # WEBASSEMBLY (Supported)
@@ -378,7 +489,7 @@ name
 stack
 
 # ============================================
-# COMMON PATTERNS
+# CONTEXT OBJECT PROPERTIES (wiki: syntax/context)
 # ============================================
 caller
 calling_script
@@ -387,10 +498,57 @@ is_scriptor
 is_brain
 cols
 rows
+
+# ============================================
+# COMMON PATTERNS
+# ============================================
 GC
 prototype
 length
 constructor
+ok
+msg
+
+# ============================================
+# COLOR CODES (wiki: syntax/colors)
+# Xstring backtick color codes
+# ============================================
+#0
+#1
+#2
+#3
+#4
+#5
+#6
+#7
+#8
+#9
+#a
+#b
+#c
+#d
+#e
+#f
+#g
+#h
+#i
+#j
+#k
+#l
+#m
+#n
+#o
+#p
+#q
+#r
+#s
+#t
+#u
+#v
+#w
+#x
+#y
+#z
 
 # ============================================
 # TEMPLATE - Hackmud Script Skeleton

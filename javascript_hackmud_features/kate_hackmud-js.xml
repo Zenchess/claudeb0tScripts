@@ -8,12 +8,20 @@
   This definition highlights:
   - Supported features (green/blue)
   - Blocked/unsupported features (red/warning)
+  - Trust-level scriptor coloring (matching in-game)
+  - Split scriptor parts: trust prefix, username, script name
   
-  Author: claudeb0t
-  Date: 2026-01-30
+  Author: claudeb0t 🪆⬢
+  Date: 2026-01-31
   License: MIT
+  
+  Wiki References:
+  - https://wiki.hackmud.com/scripting/trust_scripts
+  - https://wiki.hackmud.com/scripting/db
+  - https://wiki.hackmud.com/scripting/extensions
+  - https://wiki.hackmud.com/scripting/syntax/colors
 -->
-<language name="JavaScript (Hackmud)" version="1.0" kateversion="5.0"
+<language name="JavaScript (Hackmud)" version="2.0" kateversion="5.0"
           section="Scripts" extensions="*.js" mimetype="text/javascript"
           author="claudeb0t" license="MIT" priority="15">
   
@@ -122,30 +130,127 @@
     </list>
     
     <list name="hackmud_globals">
-      <!-- Hackmud-specific globals -->
+      <!-- Hackmud-specific globals from wiki/extensions -->
       <item>context</item>
       <item>args</item>
       <item>_START</item>
       <item>_END</item>
       <item>_TIMEOUT</item>
-      <item>_G</item>
-      <item>_ST</item>
-      <item>_DB</item>
+      <item>_RUN_ID</item>
+      <item>DEEP_FREEZE</item>
     </list>
     
-    <list name="hackmud_scriptor">
-      <!-- Hackmud scriptor calls -->
-      <item>#fs</item>
-      <item>#hs</item>
-      <item>#ls</item>
-      <item>#ms</item>
-      <item>#ns</item>
-      <item>#s</item>
-      <item>#db</item>
-      <item>#D</item>
-      <item>#G</item>
-      <item>#FMCL</item>
-      <item>#4S</item>
+    <list name="trust_script_prefixes">
+      <!-- Trust script username prefixes (wiki: trust_scripts) -->
+      <item>accts</item>
+      <item>autos</item>
+      <item>chats</item>
+      <item>corps</item>
+      <item>escrow</item>
+      <item>gui</item>
+      <item>kernel</item>
+      <item>market</item>
+      <item>marks</item>
+      <item>scripts</item>
+      <item>sys</item>
+      <item>trust</item>
+      <item>users</item>
+    </list>
+    
+    <list name="trust_script_names">
+      <!-- All trust script names from wiki/trust_scripts -->
+      <!-- accts.* -->
+      <item>balance</item>
+      <item>balance_of_owner</item>
+      <item>transactions</item>
+      <item>xfer_gc_to</item>
+      <item>xfer_gc_to_caller</item>
+      <!-- autos.* -->
+      <item>reset</item>
+      <!-- chats.* -->
+      <item>active</item>
+      <item>channels</item>
+      <item>create</item>
+      <item>join</item>
+      <item>leave</item>
+      <item>send</item>
+      <item>tell</item>
+      <!-- corps.* -->
+      <item>hire</item>
+      <item>manage</item>
+      <item>offers</item>
+      <item>quit</item>
+      <item>top</item>
+      <!-- escrow.* -->
+      <item>charge</item>
+      <item>confirm</item>
+      <item>stats</item>
+      <!-- gui.* -->
+      <item>quiet</item>
+      <item>size</item>
+      <item>vfx</item>
+      <item>vol</item>
+      <!-- kernel.* -->
+      <item>hardline</item>
+      <!-- market.* -->
+      <item>browse</item>
+      <item>buy</item>
+      <item>sell</item>
+      <!-- marks.* -->
+      <item>available</item>
+      <item>clone</item>
+      <item>protocol</item>
+      <item>sync</item>
+      <!-- scripts.* -->
+      <item>fullsec</item>
+      <item>get_access_level</item>
+      <item>get_level</item>
+      <item>highsec</item>
+      <item>lowsec</item>
+      <item>midsec</item>
+      <item>nullsec</item>
+      <item>quine</item>
+      <item>user</item>
+      <!-- sys.* -->
+      <item>access_log</item>
+      <item>breach</item>
+      <item>cull</item>
+      <item>init</item>
+      <item>loc</item>
+      <item>specs</item>
+      <item>status</item>
+      <item>upgrade_log</item>
+      <item>upgrades</item>
+      <item>upgrades_of_owner</item>
+      <item>xfer_upgrade_to</item>
+      <item>xfer_upgrade_to_caller</item>
+      <!-- trust.* -->
+      <item>me</item>
+      <!-- users.* -->
+      <item>config</item>
+      <item>inspect</item>
+      <item>last_action</item>
+    </list>
+    
+    <list name="db_methods">
+      <!-- Database methods from wiki/db -->
+      <item>f</item>
+      <item>i</item>
+      <item>r</item>
+      <item>u</item>
+      <item>u1</item>
+      <item>us</item>
+      <item>ObjectId</item>
+    </list>
+    
+    <list name="scripts_lib_functions">
+      <!-- scripts.lib functions from wiki -->
+      <item>xmur3</item>
+      <item>jsf</item>
+      <item>lcg</item>
+      <item>mulberry32</item>
+      <item>sfc32</item>
+      <item>xoshiro128ss</item>
     </list>
     
     <list name="array_methods">
@@ -157,7 +262,6 @@
       <item>slice</item>
       <item>splice</item>
       <item>concat</item>
-      <item>join</item>
       <item>reverse</item>
       <item>sort</item>
       <item>indexOf</item>
@@ -180,7 +284,6 @@
       <item>keys</item>
       <item>values</item>
       <item>isArray</item>
-      <item>from</item>
     </list>
     
     <list name="unsupported_methods">
@@ -203,7 +306,6 @@
       <item>toString</item>
       <item>valueOf</item>
       <item>assign</item>
-      <item>create</item>
       <item>defineProperty</item>
       <item>defineProperties</item>
       <item>freeze</item>
@@ -304,11 +406,39 @@
         <!-- Hackmud Globals -->
         <keyword String="hackmud_globals" attribute="Hackmud Global" context="#stay"/>
         
-        <!-- Hackmud Scriptor (special syntax) -->
-        <RegExpr String="#[fhlmns]s\.[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*" attribute="Hackmud Scriptor" context="#stay"/>
-        <RegExpr String="#s\.[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*" attribute="Hackmud Scriptor" context="#stay"/>
-        <RegExpr String="#db\.[a-z]+\b" attribute="Hackmud DB" context="#stay"/>
-        <RegExpr String="#D\b|#G\b|#FMCL\b|#4S\b" attribute="Hackmud Macro" context="#stay"/>
+        <!-- Hackmud Color Codes (#0-#9, #a-#z) - used in Xstring backtick syntax -->
+        <RegExpr String="#[0-9a-zA-Z]\b" attribute="Hackmud Color Code" context="#stay"/>
+        
+        <!-- ============================================ -->
+        <!-- TRUST SCRIPTS - Split coloring: prefix.username.script -->
+        <!-- Trust user = orange (#FF8000), script = green (#1EFF00) -->
+        <!-- ============================================ -->
+        
+        <!-- Trust script calls: #fs.TRUST_USER.script - orange user, green script -->
+        <!-- FULLSEC trust scripts (sys, accts, etc.) -->
+        <RegExpr String="#fs\." attribute="Scriptor Fullsec" context="TrustScriptorUser"/>
+        <!-- HIGHSEC trust scripts -->
+        <RegExpr String="#hs\." attribute="Scriptor Highsec" context="TrustScriptorUser"/>
+        <!-- MIDSEC trust scripts -->
+        <RegExpr String="#ms\." attribute="Scriptor Midsec" context="TrustScriptorUser"/>
+        <!-- LOWSEC trust scripts -->
+        <RegExpr String="#ls\." attribute="Scriptor Lowsec" context="TrustScriptorUser"/>
+        <!-- NULLSEC trust scripts -->
+        <RegExpr String="#ns\." attribute="Scriptor Nullsec" context="TrustScriptorUser"/>
+        <!-- Generic #s scriptor -->
+        <RegExpr String="#s\." attribute="Scriptor Generic" context="UserScriptorUser"/>
+        
+        <!-- Database access: #db.method() -->
+        <RegExpr String="#db\." attribute="Hackmud DB" context="DbMethod"/>
+        
+        <!-- Macros: #D(), #G, #FMCL, #4S -->
+        <RegExpr String="#D\b" attribute="Hackmud Macro" context="#stay"/>
+        <RegExpr String="#G\b" attribute="Hackmud Macro" context="#stay"/>
+        <RegExpr String="#FMCL\b" attribute="Hackmud Macro" context="#stay"/>
+        <RegExpr String="#4S\b" attribute="Hackmud Macro" context="#stay"/>
+        
+        <!-- Object/Parameter Key - identifier followed by colon (key: value) -->
+        <RegExpr String="[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*:)" attribute="Parameter Key" context="#stay"/>
         
         <!-- Arrow Function -->
         <RegExpr String="=&gt;" attribute="Arrow" context="#stay"/>
@@ -323,13 +453,74 @@
         <keyword String="object_methods" attribute="Method" context="#stay"/>
         <keyword String="string_methods" attribute="Method" context="#stay"/>
         <keyword String="math_members" attribute="Method" context="#stay"/>
+        <keyword String="scripts_lib_functions" attribute="Method" context="#stay"/>
         <keyword String="unsupported_methods" attribute="Unsupported" context="#stay"/>
         
         <!-- Identifiers -->
         <RegExpr String="[a-zA-Z_$][a-zA-Z0-9_$]*" attribute="Normal Text" context="#stay"/>
         
-        <!-- Operators -->
-        <AnyChar String="{}[]().,;:+-*/%&amp;|^~!&lt;&gt;=?" attribute="Symbol" context="#stay"/>
+        <!-- Brackets - structural, high visibility -->
+        <AnyChar String="{}[]()" attribute="Bracket" context="#stay"/>
+        
+        <!-- Punctuation - subtle separators -->
+        <AnyChar String=".,;:" attribute="Punctuation" context="#stay"/>
+        
+        <!-- Operators - math/logic/comparison -->
+        <AnyChar String="+-*/%&amp;|^~!&lt;&gt;=?" attribute="Operator" context="#stay"/>
+      </context>
+      
+      <!-- ============================================ -->
+      <!-- Context: Trust Scriptor Username (orange) -->
+      <!-- Matches trust usernames: sys, accts, chats, etc. -->
+      <!-- ============================================ -->
+      <context name="TrustScriptorUser" attribute="Trust Username" lineEndContext="#pop">
+        <!-- Known trust script prefixes get orange -->
+        <keyword String="trust_script_prefixes" attribute="Trust Username" context="TrustScriptorDot"/>
+        <!-- Fallback: any identifier as trust username -->
+        <RegExpr String="[a-z_][a-z0-9_]*" attribute="Trust Username" context="TrustScriptorDot"/>
+      </context>
+      
+      <!-- Dot after trust username -->
+      <context name="TrustScriptorDot" attribute="Punctuation" lineEndContext="#pop#pop">
+        <DetectChar char="." attribute="Punctuation" context="TrustScriptorScript"/>
+        <!-- No dot found, pop back -->
+        <RegExpr String="." attribute="Normal Text" context="#pop#pop" lookAhead="true"/>
+      </context>
+      
+      <!-- Script name after trust username (green) -->
+      <context name="TrustScriptorScript" attribute="Script Name" lineEndContext="#pop#pop#pop">
+        <!-- Known trust script names get green -->
+        <keyword String="trust_script_names" attribute="Script Name" context="#pop#pop#pop"/>
+        <!-- Any script name gets green -->
+        <RegExpr String="[a-z_][a-z0-9_]*" attribute="Script Name" context="#pop#pop#pop"/>
+      </context>
+      
+      <!-- ============================================ -->
+      <!-- Context: User Scriptor Username (gray) -->
+      <!-- For #s.username.script - regular user scripts -->
+      <!-- ============================================ -->
+      <context name="UserScriptorUser" attribute="User Username" lineEndContext="#pop">
+        <RegExpr String="[a-z_][a-z0-9_]*" attribute="User Username" context="UserScriptorDot"/>
+      </context>
+      
+      <!-- Dot after user username -->
+      <context name="UserScriptorDot" attribute="Punctuation" lineEndContext="#pop#pop">
+        <DetectChar char="." attribute="Punctuation" context="UserScriptorScript"/>
+        <RegExpr String="." attribute="Normal Text" context="#pop#pop" lookAhead="true"/>
+      </context>
+      
+      <!-- Script name after user username (green) -->
+      <context name="UserScriptorScript" attribute="Script Name" lineEndContext="#pop#pop#pop">
+        <RegExpr String="[a-z_][a-z0-9_]*" attribute="Script Name" context="#pop#pop#pop"/>
+      </context>
+      
+      <!-- ============================================ -->
+      <!-- Context: Database method -->
+      <!-- #db.f(), #db.i(), etc. -->
+      <!-- ============================================ -->
+      <context name="DbMethod" attribute="Hackmud DB" lineEndContext="#pop">
+        <keyword String="db_methods" attribute="Hackmud DB" context="#pop"/>
+        <RegExpr String="[a-zA-Z_][a-zA-Z0-9_]*" attribute="Hackmud DB" context="#pop"/>
       </context>
       
       <!-- Comments -->
@@ -378,12 +569,40 @@
       <itemData name="Number"                defStyleNum="dsDecVal"     spellChecking="false" color="#B5CEA8"/>
       <itemData name="Regular Expression"    defStyleNum="dsSpecialString" spellChecking="false" color="#D16969"/>
       <itemData name="Comment"               defStyleNum="dsComment"    spellChecking="true"  color="#6A9955" italic="true"/>
-      <itemData name="Symbol"                defStyleNum="dsOperator"   spellChecking="false" color="#D4D4D4"/>
+      <itemData name="Bracket"               defStyleNum="dsOperator"   spellChecking="false" color="#DA70D6"/>
+      <itemData name="Punctuation"          defStyleNum="dsOperator"   spellChecking="false" color="#808080"/>
+      <itemData name="Operator"             defStyleNum="dsOperator"   spellChecking="false" color="#B4B4B4"/>
       <itemData name="Arrow"                 defStyleNum="dsOperator"   spellChecking="false" color="#569CD6"/>
       <itemData name="Hackmud Global"        defStyleNum="dsVariable"   spellChecking="false" color="#9CDCFE"/>
-      <itemData name="Hackmud Scriptor"      defStyleNum="dsPreprocessor" spellChecking="false" color="#C586C0" bold="true"/>
+      
+      <!-- Trust-Level Scriptor Prefixes (the #fs, #hs, etc. part) -->
+      <itemData name="Scriptor Fullsec"     defStyleNum="dsPreprocessor" spellChecking="false" color="#1EFF00" bold="true"/>
+      <itemData name="Scriptor Highsec"     defStyleNum="dsPreprocessor" spellChecking="false" color="#4EC9B0" bold="true"/>
+      <itemData name="Scriptor Midsec"      defStyleNum="dsPreprocessor" spellChecking="false" color="#DCDCAA" bold="true"/>
+      <itemData name="Scriptor Lowsec"      defStyleNum="dsPreprocessor" spellChecking="false" color="#FF8000" bold="true"/>
+      <itemData name="Scriptor Nullsec"     defStyleNum="dsPreprocessor" spellChecking="false" color="#F44747" bold="true"/>
+      <itemData name="Scriptor Generic"     defStyleNum="dsPreprocessor" spellChecking="false" color="#808080"/>
+      
+      <!-- Scriptor Parts - Username and Script Name (hackmud wiki colors) -->
+      <!-- Trust username (sys, accts, etc.) = Orange #FF8000 (color F in hackmud) -->
+      <itemData name="Trust Username"       defStyleNum="dsPreprocessor" spellChecking="false" color="#FF8000" bold="true"/>
+      <!-- User username (regular users) = Gray #9B9B9B (color C in hackmud) -->
+      <itemData name="User Username"        defStyleNum="dsPreprocessor" spellChecking="false" color="#9B9B9B"/>
+      <!-- Script name = Green #1EFF00 (color L in hackmud) -->
+      <itemData name="Script Name"          defStyleNum="dsPreprocessor" spellChecking="false" color="#1EFF00" bold="true"/>
+      
+      <!-- Database and Macros -->
       <itemData name="Hackmud DB"            defStyleNum="dsPreprocessor" spellChecking="false" color="#C586C0"/>
       <itemData name="Hackmud Macro"         defStyleNum="dsPreprocessor" spellChecking="false" color="#C586C0" bold="true"/>
+      
+      <!-- Hackmud Color Codes (#0-#9) - same as hackmud in-game color syntax -->
+      <itemData name="Hackmud Color Code"   defStyleNum="dsPreprocessor" spellChecking="false" color="#9B9B9B"/>
+      
+      <!-- Parameter Highlighting (hackmud output style) -->
+      <!-- Parameter key = Cyan #00FFFF (color N in hackmud) -->
+      <itemData name="Parameter Key"        defStyleNum="dsAttribute"  spellChecking="false" color="#00FFFF"/>
+      
+      <!-- Errors -->
       <itemData name="Unsupported"           defStyleNum="dsError"      spellChecking="false" color="#F44747" underline="true" bold="true"/>
     </itemDatas>
   </highlighting>

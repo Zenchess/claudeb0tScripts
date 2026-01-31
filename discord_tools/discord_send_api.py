@@ -39,18 +39,12 @@ def send_message(channel_id: str, content: str, attachment: str = None):
 
 def main():
     parser = argparse.ArgumentParser(description='Send Discord message via API')
-    parser.add_argument('channel', nargs='?', default=DEFAULT_CHANNEL, help='Channel ID')
-    parser.add_argument('message', nargs='?', help='Message content')
-    parser.add_argument('-m', '--message', dest='msg_flag', help='Message content (alternative)')
+    parser.add_argument('--channel-id', required=True, help='Discord Channel ID')
+    parser.add_argument('--content', default="", help='Message content')
     parser.add_argument('-a', '--attach', help='File to attach')
     args = parser.parse_args()
 
-    message = args.message or args.msg_flag
-    if not message and not args.attach:
-        parser.print_help()
-        return
-
-    send_message(args.channel, message or "", args.attach)
+    send_message(args.channel_id, args.content, args.attach)
 
 if __name__ == '__main__':
     main()

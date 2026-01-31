@@ -8,10 +8,13 @@ Tests:
 3. read_window() with different line counts
 4. Multiple sequential reads
 5. Context manager vs manual
+6. Persistent connection vs recreate
+7. API vs CLI comparison
 """
 
 import sys
 import time
+import subprocess
 from pathlib import Path
 from typing import List, Tuple
 
@@ -218,6 +221,56 @@ def benchmark_persistent_connection():
     print()
 
 
+def benchmark_api_vs_cli():
+    """Compare API usage vs CLI subprocess invocation"""
+    print("=" * 70)
+    print("7. API vs CLI COMPARISON")
+    print("=" * 70)
+
+    # Get path to CLI script
+    cli_script = Path(__file__).parent / 'cli_read.py'
+
+    # Make CLI script executable
+    cli_script.chmod(0o755)
+
+    # Test 1: Direct API usage
+    api_times = []
+    for i in range(5):
+        def api_read():
+            with Scanner() as scanner:
+                return scanner.read_window('shell', lines=30)
+
+        duration, _ = time_function(api_read)
+        api_times.append(duration)
+
+    avg_api = sum(api_times) / len(api_times)
+    print(f"API usage (5 reads):           {avg_api:.2f}ms avg")
+    print(f"  Min: {min(api_times):.2f}ms, Max: {max(api_times):.2f}ms")
+
+    # Test 2: CLI subprocess invocation
+    cli_times = []
+    for i in range(5):
+        start = time.perf_counter()
+        result = subprocess.run(
+            [sys.executable, str(cli_script), 'shell', '30'],
+            capture_output=True,
+            text=True
+        )
+        end = time.perf_counter()
+        duration = (end - start) * 1000
+        cli_times.append(duration)
+
+    avg_cli = sum(cli_times) / len(cli_times)
+    print(f"\nCLI subprocess (5 reads):      {avg_cli:.2f}ms avg")
+    print(f"  Min: {min(cli_times):.2f}ms, Max: {max(cli_times):.2f}ms")
+
+    overhead = avg_cli - avg_api
+    slowdown = avg_cli / avg_api
+    print(f"\nCLI overhead: {overhead:.2f}ms ({slowdown:.1f}x slower)")
+    print(f"Reason: Process startup + Python interpreter load time")
+    print()
+
+
 def main():
     """Run all benchmarks"""
     print()
@@ -233,6 +286,7 @@ def main():
         benchmark_sequential_reads()
         benchmark_context_manager()
         benchmark_persistent_connection()
+        benchmark_api_vs_cli()
 
         print("=" * 70)
         print("BENCHMARK COMPLETE")
@@ -242,6 +296,8 @@ def main():
         print("- Use persistent connections for multiple operations")
         print("- Context manager (with Scanner()) is convenient with no overhead")
         print("- Config auto-generation adds ~5-10s on first run only")
+        print("- Direct API usage is much faster than CLI subprocess calls")
+        print("- Address caching provides 160x speedup for repeated connections")
         print()
 
     except Exception as e:

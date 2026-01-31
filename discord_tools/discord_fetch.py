@@ -28,9 +28,16 @@ def main():
     parser = argparse.ArgumentParser(description='Fetch Discord messages from API')
     parser.add_argument('-n', type=int, default=10, help='Number of messages (max 100)')
     parser.add_argument('-c', '--channel', default=DEFAULT_CHANNEL, help='Channel ID')
+    parser.add_argument('--json', action='store_true', help='Output raw JSON messages')
     args = parser.parse_args()
 
     messages = fetch_messages(args.channel, min(args.n, 100))
+
+    if args.json:
+        import json
+        print(json.dumps(messages, ensure_ascii=False, indent=2))
+        return
+
     if not messages:
         print("No messages or error fetching.")
         return

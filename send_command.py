@@ -31,7 +31,7 @@ def send_command(command, press_enter=True):
     try:
         # Type the command directly to the window using xdotool (no focus needed)
         # Use --delay to prevent dropped characters
-        subprocess.run(['xdotool', 'type', '--window', window_id, '--delay', '20', command], check=True)
+        subprocess.run(['xdotool', 'type', '--window', window_id, '--delay', '50', command], check=True)
 
         # Press enter if requested
         if press_enter:

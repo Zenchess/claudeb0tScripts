@@ -1,0 +1,215 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Hackmud JavaScript",
+  "scopeName": "source.hackmud",
+  "fileTypes": ["hm.js", "hackmud.js"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#regex" },
+    { "include": "#numbers" },
+    { "include": "#unsupported-syntax" },
+    { "include": "#hackmud-scriptor" },
+    { "include": "#hackmud-globals" },
+    { "include": "#keywords" },
+    { "include": "#unsupported-keywords" },
+    { "include": "#builtin-objects" },
+    { "include": "#unsupported-objects" },
+    { "include": "#arrow-function" },
+    { "include": "#operators" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.hackmud",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.hackmud",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.hackmud",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.hackmud",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.hackmud",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.hackmud",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.template.hackmud",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.hackmud",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.template.expression.hackmud",
+              "begin": "\\$\\{",
+              "end": "\\}",
+              "beginCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.begin.hackmud" }
+              },
+              "endCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.end.hackmud" }
+              },
+              "patterns": [
+                { "include": "source.hackmud" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "regex": {
+      "name": "string.regexp.hackmud",
+      "begin": "(?<=[=(:,\\[!&|?]|^|return|=>)\\s*(/)",
+      "end": "(/)[gimsuvy]*",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.string.begin.hackmud" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.hackmud" }
+      }
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.hackmud",
+          "match": "\\b0[xX][0-9a-fA-F]+n?\\b"
+        },
+        {
+          "name": "constant.numeric.octal.hackmud",
+          "match": "\\b0[oO][0-7]+n?\\b"
+        },
+        {
+          "name": "constant.numeric.binary.hackmud",
+          "match": "\\b0[bB][01]+n?\\b"
+        },
+        {
+          "name": "constant.numeric.decimal.hackmud",
+          "match": "\\b\\d+\\.?\\d*([eE][-+]?\\d+)?n?\\b"
+        },
+        {
+          "name": "constant.numeric.decimal.hackmud",
+          "match": "\\b\\.\\d+([eE][-+]?\\d+)?\\b"
+        }
+      ]
+    },
+    "unsupported-syntax": {
+      "patterns": [
+        {
+          "name": "invalid.illegal.unsupported.optional-chaining.hackmud",
+          "match": "\\?\\.(?=[a-zA-Z_$\\[])"
+        },
+        {
+          "name": "invalid.illegal.unsupported.nullish-coalescing.hackmud",
+          "match": "\\?\\?"
+        },
+        {
+          "name": "invalid.illegal.unsupported.exponentiation.hackmud",
+          "match": "\\*\\*"
+        }
+      ]
+    },
+    "hackmud-scriptor": {
+      "patterns": [
+        {
+          "name": "entity.name.function.scriptor.hackmud",
+          "match": "#[fhlmns]s\\.[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*"
+        },
+        {
+          "name": "entity.name.function.scriptor.hackmud",
+          "match": "#s\\.[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*"
+        },
+        {
+          "name": "entity.name.function.db.hackmud",
+          "match": "#db\\.(f|i|r|u|u1|us)\\b"
+        },
+        {
+          "name": "entity.name.function.macro.hackmud",
+          "match": "#(D|G|FMCL|4S)\\b"
+        }
+      ]
+    },
+    "hackmud-globals": {
+      "name": "variable.other.hackmud-global.hackmud",
+      "match": "\\b(context|args|_START|_END|_TIMEOUT|_G|_ST|_DB)\\b"
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.hackmud",
+          "match": "\\b(if|else|switch|case|default|for|while|do|break|continue|return|throw|try|catch|finally)\\b"
+        },
+        {
+          "name": "storage.type.hackmud",
+          "match": "\\b(var|let|const|function|class)\\b"
+        },
+        {
+          "name": "storage.modifier.hackmud",
+          "match": "\\b(static|extends|constructor|get|set)\\b"
+        },
+        {
+          "name": "keyword.operator.hackmud",
+          "match": "\\b(new|delete|typeof|instanceof|in|of|void)\\b"
+        },
+        {
+          "name": "variable.language.hackmud",
+          "match": "\\b(this|super)\\b"
+        },
+        {
+          "name": "constant.language.hackmud",
+          "match": "\\b(true|false|null|undefined|NaN|Infinity)\\b"
+        }
+      ]
+    },
+    "unsupported-keywords": {
+      "name": "invalid.illegal.unsupported.keyword.hackmud",
+      "match": "\\b(async|await|yield|import|export|from|as)\\b"
+    },
+    "builtin-objects": {
+      "name": "support.class.builtin.hackmud",
+      "match": "\\b(Object|Array|String|Number|Boolean|Function|Symbol|BigInt|Math|Date|RegExp|Error|TypeError|ReferenceError|SyntaxError|RangeError|JSON|Map|Set|WeakMap|WeakSet|ArrayBuffer|DataView|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array|WebAssembly)\\b"
+    },
+    "unsupported-objects": {
+      "name": "invalid.illegal.unsupported.object.hackmud",
+      "match": "\\b(Promise|Proxy|Reflect|globalThis|Generator|AsyncFunction|AsyncGenerator)\\b"
+    },
+    "arrow-function": {
+      "name": "storage.type.function.arrow.hackmud",
+      "match": "=>"
+    },
+    "operators": {
+      "name": "keyword.operator.hackmud",
+      "match": "===?|!==?|<=?|>=?|&&|\\|\\||[+\\-*/%&|^~!<>]=?"
+    },
+    "punctuation": {
+      "name": "punctuation.hackmud",
+      "match": "[{}\\[\\]();,.]"
+    }
+  }
+}

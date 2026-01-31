@@ -19,7 +19,8 @@ if(db.l0cket)r.l0cket=db.l0cket;else{i=gi("il");r.l0cket=L[i%8]}
 if(db.c003){r.c003=db.c003;r.c003_triad_1=TR[db.c003][0];r.c003_triad_2=TR[db.c003][1]}else{i=gi("ic3");r.c003=C[i%8];r.c003_triad_1=TR[r.c003][0];r.c003_triad_2=TR[r.c003][1]}
 if(db.DC)r.DATA_CHECK=db.DC;else if(db.dcq)r.DATA_CHECK="";
 R=t.call(r);s=""+JSON.stringify(R);
-if(s.indexOf("breach")>-1)return{ok:1,r:R};
+if(s.indexOf("breach")>-1||s.indexOf("Breach")>-1)return{ok:1,breached:true,r:R};
+if(s.indexOf("terminated")>-1||s.indexOf("Terminated")>-1)return{msg:"NPC connection terminated - may already be breached",r:R};
 var lP=s.indexOf("LOCK_UNLOCKED")>-1;
 if(lP){
 if(!db.EZ_21&&gi("i21")>0){sv({EZ_21:r.EZ_21});db.EZ_21=r.EZ_21}
@@ -48,5 +49,6 @@ if(s.indexOf("c001")>-1||s.indexOf("color name")>-1){i=gi("ic1")+1;sv({ic1:i});d
 if(s.indexOf("c002")>-1||s.indexOf("complement")>-1){i=gi("ic2")+1;sv({ic2:i});db.ic2=i;continue}
 if(s.indexOf("l0cket")>-1||s.indexOf("k3y")>-1){i=gi("il")+1;sv({il:i});db.il=i;continue}
 if(s.indexOf("c003")>-1||s.indexOf("triad")>-1){i=gi("ic3")+1;sv({ic3:i});db.ic3=i;continue}
-return{r:R,x:x}
+return{done:x,r:R,state:db}
 }}
+return{msg:"Max iterations reached",state:db}

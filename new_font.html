@@ -1,0 +1,725 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhiteRabbit Hackmud Extended - Complete Font Showcase</title>
+    <style>
+
+        @font-face {
+            font-family: 'WhiteRabbit';
+            src: url('WhiteRabbitHackmudExtended.ttf') format('truetype');
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-panel: #111;
+            --green: #1EFF00;
+            --orange: #FF8000;
+            --cyan: #00FFFF;
+            --magenta: #FF00EC;
+            --blue: #0070DD;
+            --gray: #9B9B9B;
+            --dark-gray: #3F3F3F;
+            --red: #FF4444;
+            --yellow: #FBC803;
+            --white: #CCC;
+            --purple: #B035EE;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--green);
+            font-family: 'WhiteRabbit', monospace;
+            min-height: 100vh;
+            padding: 40px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: var(--orange);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 128, 0, 0.5);
+        }
+
+        pre {
+            font-family: 'WhiteRabbit', monospace;
+            line-height: 0.97;
+        }
+
+        .subtitle {
+            color: var(--cyan);
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .char-count {
+            color: var(--gray);
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: var(--bg-panel);
+            border: 1px solid var(--dark-gray);
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .section h2 {
+            color: var(--magenta);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .section h3 {
+            color: var(--cyan);
+            margin: 20px 0 15px 0;
+            font-size: 1.2em;
+        }
+
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 8px;
+        }
+
+        .char-grid.compact {
+            grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
+        }
+
+        .char-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            padding: 12px 8px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .char-box:hover {
+            border-color: var(--green);
+            box-shadow: 0 0 10px rgba(30, 255, 0, 0.3);
+        }
+
+        .char-box .char {
+            font-size: 1.8em;
+            color: var(--green);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .char-box .code {
+            font-size: 0.65em;
+            color: var(--gray);
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
+            border: 1px solid var(--dark-gray);
+            margin-bottom: 30px;
+        }
+
+        .hero-section .large {
+            font-size: 3em;
+            letter-spacing: 0.2em;
+            color: var(--orange);
+            text-shadow: 0 0 30px rgba(255, 128, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .all-chars {
+            font-size: 1.8em;
+            line-height: 2;
+            word-break: break-all;
+            padding: 20px;
+            background: var(--bg-dark);
+            border: 1px solid var(--dark-gray);
+            margin: 20px 0;
+        }
+
+        .pangram {
+            font-size: 1.3em;
+            padding: 20px;
+            background: var(--bg-dark);
+            border-left: 3px solid var(--orange);
+            margin: 20px 0;
+        }
+
+        .box-demo {
+            font-size: 1.2em;
+            line-height: 1.2;
+            padding: 20px;
+            background: var(--bg-dark);
+            color: var(--cyan);
+            margin: 20px 0;
+        }
+
+        .block-demo {
+            font-size: 2em;
+            padding: 20px;
+            background: var(--bg-dark);
+            text-align: center;
+        }
+
+        .arrows-demo {
+            font-size: 2.5em;
+            text-align: center;
+            padding: 20px;
+            color: var(--magenta);
+        }
+
+        .hackmud-sample {
+            background: var(--bg-dark);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid var(--dark-gray);
+        }
+
+        .hackmud-sample .prompt { color: var(--gray); }
+        .hackmud-sample .script { color: var(--orange); }
+        .hackmud-sample .param { color: var(--cyan); }
+        .hackmud-sample .string { color: var(--magenta); }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--dark-gray);
+            color: var(--gray);
+        }
+
+        .footer a {
+            color: var(--cyan);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .stat-box {
+            display: inline-block;
+            background: var(--bg-dark);
+            border: 1px solid var(--cyan);
+            padding: 10px 20px;
+            margin: 10px;
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            color: var(--cyan);
+        }
+
+        .stat-box .label {
+            color: var(--gray);
+            font-size: 0.9em;
+        }
+    </style>
+<style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style></head>
+<body>
+    <h1>&gt;&gt;font.showcase{complete:true}</h1>
+    <div class="subtitle">WhiteRabbit Hackmud Extended - Custom Font by Kaj</div>
+    <div class="char-count">Complete character set - every glyph in the font</div>
+
+    <div class="hero-section">
+        <div class="large">ÅåÄäÆæÖöØø</div>
+        <p style="color: var(--gray);">Scandinavian character support - extended for hackmud</p>
+        <div style="margin-top: 20px;">
+            <div class="stat-box">
+                <div class="number">268</div>
+                <div class="label">Total Glyphs</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">95</div>
+                <div class="label">ASCII</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">96</div>
+                <div class="label">Latin Extended</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">77</div>
+                <div class="label">Symbols</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="all-characters">// ALL 268 CHARACTERS</h2>
+        <div class="all-chars">
+ !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢¤¥¦§¨©ª«&shy;°±´µ¶·¸º¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŁłŒœſ‐‑‒–—←↑→↓↔↕↖↗↘↙⌽ⓠ━┃┏┓┗┛┣┫┳┻╋═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬▀▁▂▃▄▅▆▇█▉▊▋▌▍▎▏▐░▒▓▔▕◢◣◤◥◼
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="basic-ascii">// BASIC ASCII (U+0020 - U+007E)</h2>
+        <h3>Uppercase Letters</h3>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">A</span><span class="code">U+0041</span></div>
+            <div class="char-box"><span class="char">B</span><span class="code">U+0042</span></div>
+            <div class="char-box"><span class="char">C</span><span class="code">U+0043</span></div>
+            <div class="char-box"><span class="char">D</span><span class="code">U+0044</span></div>
+            <div class="char-box"><span class="char">E</span><span class="code">U+0045</span></div>
+            <div class="char-box"><span class="char">F</span><span class="code">U+0046</span></div>
+            <div class="char-box"><span class="char">G</span><span class="code">U+0047</span></div>
+            <div class="char-box"><span class="char">H</span><span class="code">U+0048</span></div>
+            <div class="char-box"><span class="char">I</span><span class="code">U+0049</span></div>
+            <div class="char-box"><span class="char">J</span><span class="code">U+004A</span></div>
+            <div class="char-box"><span class="char">K</span><span class="code">U+004B</span></div>
+            <div class="char-box"><span class="char">L</span><span class="code">U+004C</span></div>
+            <div class="char-box"><span class="char">M</span><span class="code">U+004D</span></div>
+            <div class="char-box"><span class="char">N</span><span class="code">U+004E</span></div>
+            <div class="char-box"><span class="char">O</span><span class="code">U+004F</span></div>
+            <div class="char-box"><span class="char">P</span><span class="code">U+0050</span></div>
+            <div class="char-box"><span class="char">Q</span><span class="code">U+0051</span></div>
+            <div class="char-box"><span class="char">R</span><span class="code">U+0052</span></div>
+            <div class="char-box"><span class="char">S</span><span class="code">U+0053</span></div>
+            <div class="char-box"><span class="char">T</span><span class="code">U+0054</span></div>
+            <div class="char-box"><span class="char">U</span><span class="code">U+0055</span></div>
+            <div class="char-box"><span class="char">V</span><span class="code">U+0056</span></div>
+            <div class="char-box"><span class="char">W</span><span class="code">U+0057</span></div>
+            <div class="char-box"><span class="char">X</span><span class="code">U+0058</span></div>
+            <div class="char-box"><span class="char">Y</span><span class="code">U+0059</span></div>
+            <div class="char-box"><span class="char">Z</span><span class="code">U+005A</span></div>
+        </div>
+
+        <h3>Lowercase Letters</h3>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">a</span><span class="code">U+0061</span></div>
+            <div class="char-box"><span class="char">b</span><span class="code">U+0062</span></div>
+            <div class="char-box"><span class="char">c</span><span class="code">U+0063</span></div>
+            <div class="char-box"><span class="char">d</span><span class="code">U+0064</span></div>
+            <div class="char-box"><span class="char">e</span><span class="code">U+0065</span></div>
+            <div class="char-box"><span class="char">f</span><span class="code">U+0066</span></div>
+            <div class="char-box"><span class="char">g</span><span class="code">U+0067</span></div>
+            <div class="char-box"><span class="char">h</span><span class="code">U+0068</span></div>
+            <div class="char-box"><span class="char">i</span><span class="code">U+0069</span></div>
+            <div class="char-box"><span class="char">j</span><span class="code">U+006A</span></div>
+            <div class="char-box"><span class="char">k</span><span class="code">U+006B</span></div>
+            <div class="char-box"><span class="char">l</span><span class="code">U+006C</span></div>
+            <div class="char-box"><span class="char">m</span><span class="code">U+006D</span></div>
+            <div class="char-box"><span class="char">n</span><span class="code">U+006E</span></div>
+            <div class="char-box"><span class="char">o</span><span class="code">U+006F</span></div>
+            <div class="char-box"><span class="char">p</span><span class="code">U+0070</span></div>
+            <div class="char-box"><span class="char">q</span><span class="code">U+0071</span></div>
+            <div class="char-box"><span class="char">r</span><span class="code">U+0072</span></div>
+            <div class="char-box"><span class="char">s</span><span class="code">U+0073</span></div>
+            <div class="char-box"><span class="char">t</span><span class="code">U+0074</span></div>
+            <div class="char-box"><span class="char">u</span><span class="code">U+0075</span></div>
+            <div class="char-box"><span class="char">v</span><span class="code">U+0076</span></div>
+            <div class="char-box"><span class="char">w</span><span class="code">U+0077</span></div>
+            <div class="char-box"><span class="char">x</span><span class="code">U+0078</span></div>
+            <div class="char-box"><span class="char">y</span><span class="code">U+0079</span></div>
+            <div class="char-box"><span class="char">z</span><span class="code">U+007A</span></div>
+        </div>
+
+        <h3>Numbers</h3>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">0</span><span class="code">U+0030</span></div>
+            <div class="char-box"><span class="char">1</span><span class="code">U+0031</span></div>
+            <div class="char-box"><span class="char">2</span><span class="code">U+0032</span></div>
+            <div class="char-box"><span class="char">3</span><span class="code">U+0033</span></div>
+            <div class="char-box"><span class="char">4</span><span class="code">U+0034</span></div>
+            <div class="char-box"><span class="char">5</span><span class="code">U+0035</span></div>
+            <div class="char-box"><span class="char">6</span><span class="code">U+0036</span></div>
+            <div class="char-box"><span class="char">7</span><span class="code">U+0037</span></div>
+            <div class="char-box"><span class="char">8</span><span class="code">U+0038</span></div>
+            <div class="char-box"><span class="char">9</span><span class="code">U+0039</span></div>
+        </div>
+
+        <h3>Punctuation &amp; Symbols</h3>
+        <div class="char-grid compact">
+            <div class="char-box"><span class="char"> </span><span class="code">U+0020</span></div>
+            <div class="char-box"><span class="char">!</span><span class="code">U+0021</span></div>
+            <div class="char-box"><span class="char">"</span><span class="code">U+0022</span></div>
+            <div class="char-box"><span class="char">#</span><span class="code">U+0023</span></div>
+            <div class="char-box"><span class="char">$</span><span class="code">U+0024</span></div>
+            <div class="char-box"><span class="char">%</span><span class="code">U+0025</span></div>
+            <div class="char-box"><span class="char">&amp;</span><span class="code">U+0026</span></div>
+            <div class="char-box"><span class="char">'</span><span class="code">U+0027</span></div>
+            <div class="char-box"><span class="char">(</span><span class="code">U+0028</span></div>
+            <div class="char-box"><span class="char">)</span><span class="code">U+0029</span></div>
+            <div class="char-box"><span class="char">*</span><span class="code">U+002A</span></div>
+            <div class="char-box"><span class="char">+</span><span class="code">U+002B</span></div>
+            <div class="char-box"><span class="char">,</span><span class="code">U+002C</span></div>
+            <div class="char-box"><span class="char">-</span><span class="code">U+002D</span></div>
+            <div class="char-box"><span class="char">.</span><span class="code">U+002E</span></div>
+            <div class="char-box"><span class="char">/</span><span class="code">U+002F</span></div>
+            <div class="char-box"><span class="char">:</span><span class="code">U+003A</span></div>
+            <div class="char-box"><span class="char">;</span><span class="code">U+003B</span></div>
+            <div class="char-box"><span class="char">&lt;</span><span class="code">U+003C</span></div>
+            <div class="char-box"><span class="char">=</span><span class="code">U+003D</span></div>
+            <div class="char-box"><span class="char">&gt;</span><span class="code">U+003E</span></div>
+            <div class="char-box"><span class="char">?</span><span class="code">U+003F</span></div>
+            <div class="char-box"><span class="char">@</span><span class="code">U+0040</span></div>
+            <div class="char-box"><span class="char">[</span><span class="code">U+005B</span></div>
+            <div class="char-box"><span class="char">\</span><span class="code">U+005C</span></div>
+            <div class="char-box"><span class="char">]</span><span class="code">U+005D</span></div>
+            <div class="char-box"><span class="char">^</span><span class="code">U+005E</span></div>
+            <div class="char-box"><span class="char">_</span><span class="code">U+005F</span></div>
+            <div class="char-box"><span class="char">`</span><span class="code">U+0060</span></div>
+            <div class="char-box"><span class="char">{</span><span class="code">U+007B</span></div>
+            <div class="char-box"><span class="char">|</span><span class="code">U+007C</span></div>
+            <div class="char-box"><span class="char">}</span><span class="code">U+007D</span></div>
+            <div class="char-box"><span class="char">~</span><span class="code">U+007E</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="latin-1-supplement">// LATIN-1 SUPPLEMENT (U+00A0 - U+00FF)</h2>
+        <h3>Accented Uppercase</h3>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">À</span><span class="code">U+00C0</span></div>
+            <div class="char-box"><span class="char">Á</span><span class="code">U+00C1</span></div>
+            <div class="char-box"><span class="char">Â</span><span class="code">U+00C2</span></div>
+            <div class="char-box"><span class="char">Ã</span><span class="code">U+00C3</span></div>
+            <div class="char-box"><span class="char">Ä</span><span class="code">U+00C4</span></div>
+            <div class="char-box"><span class="char">Å</span><span class="code">U+00C5</span></div>
+            <div class="char-box"><span class="char">Æ</span><span class="code">U+00C6</span></div>
+            <div class="char-box"><span class="char">Ç</span><span class="code">U+00C7</span></div>
+            <div class="char-box"><span class="char">È</span><span class="code">U+00C8</span></div>
+            <div class="char-box"><span class="char">É</span><span class="code">U+00C9</span></div>
+            <div class="char-box"><span class="char">Ê</span><span class="code">U+00CA</span></div>
+            <div class="char-box"><span class="char">Ë</span><span class="code">U+00CB</span></div>
+            <div class="char-box"><span class="char">Ì</span><span class="code">U+00CC</span></div>
+            <div class="char-box"><span class="char">Í</span><span class="code">U+00CD</span></div>
+            <div class="char-box"><span class="char">Î</span><span class="code">U+00CE</span></div>
+            <div class="char-box"><span class="char">Ï</span><span class="code">U+00CF</span></div>
+            <div class="char-box"><span class="char">Ð</span><span class="code">U+00D0</span></div>
+            <div class="char-box"><span class="char">Ñ</span><span class="code">U+00D1</span></div>
+            <div class="char-box"><span class="char">Ò</span><span class="code">U+00D2</span></div>
+            <div class="char-box"><span class="char">Ó</span><span class="code">U+00D3</span></div>
+            <div class="char-box"><span class="char">Ô</span><span class="code">U+00D4</span></div>
+            <div class="char-box"><span class="char">Õ</span><span class="code">U+00D5</span></div>
+            <div class="char-box"><span class="char">Ö</span><span class="code">U+00D6</span></div>
+            <div class="char-box"><span class="char">×</span><span class="code">U+00D7</span></div>
+            <div class="char-box"><span class="char">Ø</span><span class="code">U+00D8</span></div>
+            <div class="char-box"><span class="char">Ù</span><span class="code">U+00D9</span></div>
+            <div class="char-box"><span class="char">Ú</span><span class="code">U+00DA</span></div>
+            <div class="char-box"><span class="char">Û</span><span class="code">U+00DB</span></div>
+            <div class="char-box"><span class="char">Ü</span><span class="code">U+00DC</span></div>
+            <div class="char-box"><span class="char">Ý</span><span class="code">U+00DD</span></div>
+            <div class="char-box"><span class="char">Þ</span><span class="code">U+00DE</span></div>
+        </div>
+
+        <h3>Accented Lowercase</h3>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">ß</span><span class="code">U+00DF</span></div>
+            <div class="char-box"><span class="char">à</span><span class="code">U+00E0</span></div>
+            <div class="char-box"><span class="char">á</span><span class="code">U+00E1</span></div>
+            <div class="char-box"><span class="char">â</span><span class="code">U+00E2</span></div>
+            <div class="char-box"><span class="char">ã</span><span class="code">U+00E3</span></div>
+            <div class="char-box"><span class="char">ä</span><span class="code">U+00E4</span></div>
+            <div class="char-box"><span class="char">å</span><span class="code">U+00E5</span></div>
+            <div class="char-box"><span class="char">æ</span><span class="code">U+00E6</span></div>
+            <div class="char-box"><span class="char">ç</span><span class="code">U+00E7</span></div>
+            <div class="char-box"><span class="char">è</span><span class="code">U+00E8</span></div>
+            <div class="char-box"><span class="char">é</span><span class="code">U+00E9</span></div>
+            <div class="char-box"><span class="char">ê</span><span class="code">U+00EA</span></div>
+            <div class="char-box"><span class="char">ë</span><span class="code">U+00EB</span></div>
+            <div class="char-box"><span class="char">ì</span><span class="code">U+00EC</span></div>
+            <div class="char-box"><span class="char">í</span><span class="code">U+00ED</span></div>
+            <div class="char-box"><span class="char">î</span><span class="code">U+00EE</span></div>
+            <div class="char-box"><span class="char">ï</span><span class="code">U+00EF</span></div>
+            <div class="char-box"><span class="char">ð</span><span class="code">U+00F0</span></div>
+            <div class="char-box"><span class="char">ñ</span><span class="code">U+00F1</span></div>
+            <div class="char-box"><span class="char">ò</span><span class="code">U+00F2</span></div>
+            <div class="char-box"><span class="char">ó</span><span class="code">U+00F3</span></div>
+            <div class="char-box"><span class="char">ô</span><span class="code">U+00F4</span></div>
+            <div class="char-box"><span class="char">õ</span><span class="code">U+00F5</span></div>
+            <div class="char-box"><span class="char">ö</span><span class="code">U+00F6</span></div>
+            <div class="char-box"><span class="char">÷</span><span class="code">U+00F7</span></div>
+            <div class="char-box"><span class="char">ø</span><span class="code">U+00F8</span></div>
+            <div class="char-box"><span class="char">ù</span><span class="code">U+00F9</span></div>
+            <div class="char-box"><span class="char">ú</span><span class="code">U+00FA</span></div>
+            <div class="char-box"><span class="char">û</span><span class="code">U+00FB</span></div>
+            <div class="char-box"><span class="char">ü</span><span class="code">U+00FC</span></div>
+            <div class="char-box"><span class="char">ý</span><span class="code">U+00FD</span></div>
+            <div class="char-box"><span class="char">þ</span><span class="code">U+00FE</span></div>
+            <div class="char-box"><span class="char">ÿ</span><span class="code">U+00FF</span></div>
+        </div>
+
+        <h3>Special Symbols</h3>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">¡</span><span class="code">U+00A1</span></div>
+            <div class="char-box"><span class="char">¢</span><span class="code">U+00A2</span></div>
+            <div class="char-box"><span class="char">¤</span><span class="code">U+00A4</span></div>
+            <div class="char-box"><span class="char">¥</span><span class="code">U+00A5</span></div>
+            <div class="char-box"><span class="char">¦</span><span class="code">U+00A6</span></div>
+            <div class="char-box"><span class="char">§</span><span class="code">U+00A7</span></div>
+            <div class="char-box"><span class="char">¨</span><span class="code">U+00A8</span></div>
+            <div class="char-box"><span class="char">©</span><span class="code">U+00A9</span></div>
+            <div class="char-box"><span class="char">ª</span><span class="code">U+00AA</span></div>
+            <div class="char-box"><span class="char">«</span><span class="code">U+00AB</span></div>
+            <div class="char-box"><span class="char">°</span><span class="code">U+00B0</span></div>
+            <div class="char-box"><span class="char">±</span><span class="code">U+00B1</span></div>
+            <div class="char-box"><span class="char">´</span><span class="code">U+00B4</span></div>
+            <div class="char-box"><span class="char">µ</span><span class="code">U+00B5</span></div>
+            <div class="char-box"><span class="char">¶</span><span class="code">U+00B6</span></div>
+            <div class="char-box"><span class="char">·</span><span class="code">U+00B7</span></div>
+            <div class="char-box"><span class="char">¸</span><span class="code">U+00B8</span></div>
+            <div class="char-box"><span class="char">º</span><span class="code">U+00BA</span></div>
+            <div class="char-box"><span class="char">¿</span><span class="code">U+00BF</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="latin-extended">// LATIN EXTENDED (U+0100+)</h2>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">Ł</span><span class="code">U+0141</span></div>
+            <div class="char-box"><span class="char">ł</span><span class="code">U+0142</span></div>
+            <div class="char-box"><span class="char">Œ</span><span class="code">U+0152</span></div>
+            <div class="char-box"><span class="char">œ</span><span class="code">U+0153</span></div>
+            <div class="char-box"><span class="char">ſ</span><span class="code">U+017F</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="dashes-hyphens">// DASHES &amp; HYPHENS (U+2010 - U+2014)</h2>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">‐</span><span class="code">U+2010</span></div>
+            <div class="char-box"><span class="char">‑</span><span class="code">U+2011</span></div>
+            <div class="char-box"><span class="char">‒</span><span class="code">U+2012</span></div>
+            <div class="char-box"><span class="char">–</span><span class="code">U+2013</span></div>
+            <div class="char-box"><span class="char">—</span><span class="code">U+2014</span></div>
+        </div>
+        <p style="color: var(--gray); margin-top: 15px;">Hyphen ‐ | Non-Breaking Hyphen ‑ | Figure Dash ‒ | En Dash – | Em Dash —</p>
+    </div>
+
+    <div class="section">
+        <h2 id="arrows">// ARROWS (U+2190 - U+2199)</h2>
+        <div class="arrows-demo">
+            ↖ ↑ ↗<br>
+            ← ↔ →<br>
+            ↙ ↓ ↘<br>
+            ↕
+        </div>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">←</span><span class="code">U+2190</span></div>
+            <div class="char-box"><span class="char">↑</span><span class="code">U+2191</span></div>
+            <div class="char-box"><span class="char">→</span><span class="code">U+2192</span></div>
+            <div class="char-box"><span class="char">↓</span><span class="code">U+2193</span></div>
+            <div class="char-box"><span class="char">↔</span><span class="code">U+2194</span></div>
+            <div class="char-box"><span class="char">↕</span><span class="code">U+2195</span></div>
+            <div class="char-box"><span class="char">↖</span><span class="code">U+2196</span></div>
+            <div class="char-box"><span class="char">↗</span><span class="code">U+2197</span></div>
+            <div class="char-box"><span class="char">↘</span><span class="code">U+2198</span></div>
+            <div class="char-box"><span class="char">↙</span><span class="code">U+2199</span></div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <h2 id="special-symbols">// SPECIAL SYMBOLS</h2>
+        <div class="char-grid">
+            <div class="char-box"><span class="char" style="color: var(--orange)">⌽</span><span class="code">U+233D</span></div>
+            <div class="char-box"><span class="char"style="color: var(--purple)">ⓠ</span><span class="code">U+24E0</span></div>
+        </div>
+        <p style="color: var(--gray); margin-top: 15px;">APL Circle Stile <span style="font-family: monospace;">⌽</span> - <span style="color: var(--orange);">bits</span> | Circled Q <span style="font-family: monospace;">ⓠ</span> - <span style="color: var(--purple);">qubits</span> </p>
+    </div>
+
+    <div class="section">
+        <h2 id="box-drawing">// BOX DRAWING (U+2500+)</h2>
+        <h3>Heavy Lines</h3>
+        <div class="char-grid compact">
+            <div class="char-box"><span class="char">━</span><span class="code">U+2501</span></div>
+            <div class="char-box"><span class="char">┃</span><span class="code">U+2503</span></div>
+            <div class="char-box"><span class="char">┏</span><span class="code">U+250F</span></div>
+            <div class="char-box"><span class="char">┓</span><span class="code">U+2513</span></div>
+            <div class="char-box"><span class="char">┗</span><span class="code">U+2517</span></div>
+            <div class="char-box"><span class="char">┛</span><span class="code">U+251B</span></div>
+            <div class="char-box"><span class="char">┣</span><span class="code">U+2523</span></div>
+            <div class="char-box"><span class="char">┫</span><span class="code">U+252B</span></div>
+            <div class="char-box"><span class="char">┳</span><span class="code">U+2533</span></div>
+            <div class="char-box"><span class="char">┻</span><span class="code">U+253B</span></div>
+            <div class="char-box"><span class="char">╋</span><span class="code">U+254B</span></div>
+        </div>
+
+        <h3>Double Lines</h3>
+        <div class="char-grid compact">
+            <div class="char-box"><span class="char">═</span><span class="code">U+2550</span></div>
+            <div class="char-box"><span class="char">║</span><span class="code">U+2551</span></div>
+            <div class="char-box"><span class="char">╒</span><span class="code">U+2552</span></div>
+            <div class="char-box"><span class="char">╓</span><span class="code">U+2553</span></div>
+            <div class="char-box"><span class="char">╔</span><span class="code">U+2554</span></div>
+            <div class="char-box"><span class="char">╕</span><span class="code">U+2555</span></div>
+            <div class="char-box"><span class="char">╖</span><span class="code">U+2556</span></div>
+            <div class="char-box"><span class="char">╗</span><span class="code">U+2557</span></div>
+            <div class="char-box"><span class="char">╘</span><span class="code">U+2558</span></div>
+            <div class="char-box"><span class="char">╙</span><span class="code">U+2559</span></div>
+            <div class="char-box"><span class="char">╚</span><span class="code">U+255A</span></div>
+            <div class="char-box"><span class="char">╛</span><span class="code">U+255B</span></div>
+            <div class="char-box"><span class="char">╜</span><span class="code">U+255C</span></div>
+            <div class="char-box"><span class="char">╝</span><span class="code">U+255D</span></div>
+            <div class="char-box"><span class="char">╞</span><span class="code">U+255E</span></div>
+            <div class="char-box"><span class="char">╟</span><span class="code">U+255F</span></div>
+            <div class="char-box"><span class="char">╠</span><span class="code">U+2560</span></div>
+            <div class="char-box"><span class="char">╡</span><span class="code">U+2561</span></div>
+            <div class="char-box"><span class="char">╢</span><span class="code">U+2562</span></div>
+            <div class="char-box"><span class="char">╣</span><span class="code">U+2563</span></div>
+            <div class="char-box"><span class="char">╤</span><span class="code">U+2564</span></div>
+            <div class="char-box"><span class="char">╥</span><span class="code">U+2565</span></div>
+            <div class="char-box"><span class="char">╦</span><span class="code">U+2566</span></div>
+            <div class="char-box"><span class="char">╧</span><span class="code">U+2567</span></div>
+            <div class="char-box"><span class="char">╨</span><span class="code">U+2568</span></div>
+            <div class="char-box"><span class="char">╩</span><span class="code">U+2569</span></div>
+            <div class="char-box"><span class="char">╪</span><span class="code">U+256A</span></div>
+            <div class="char-box"><span class="char">╫</span><span class="code">U+256B</span></div>
+            <div class="char-box"><span class="char">╬</span><span class="code">U+256C</span></div>
+        </div>
+
+        <h3>Box Drawing Demo</h3>
+        <div class="box-demo">
+		<pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  WhiteRabbit Hackmud Extended    ┃
+┣━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┫
+┃  Heavy box lines   ┃  By Kaj     ┃
+┗━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━┛
+
+╔══════════════════════════════════╗
+║  Double line variant             ║
+╠══════════════════╦═══════════════╣
+║  Mixed styles    ║  available    ║
+╚══════════════════╩═══════════════╝
+		</pre>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="block-elements">// BLOCK ELEMENTS (U+2580 - U+259F)</h2>
+        <div class="char-grid compact">
+            <div class="char-box"><span class="char">▀</span><span class="code">U+2580</span></div>
+            <div class="char-box"><span class="char">▁</span><span class="code">U+2581</span></div>
+            <div class="char-box"><span class="char">▂</span><span class="code">U+2582</span></div>
+            <div class="char-box"><span class="char">▃</span><span class="code">U+2583</span></div>
+            <div class="char-box"><span class="char">▄</span><span class="code">U+2584</span></div>
+            <div class="char-box"><span class="char">▅</span><span class="code">U+2585</span></div>
+            <div class="char-box"><span class="char">▆</span><span class="code">U+2586</span></div>
+            <div class="char-box"><span class="char">▇</span><span class="code">U+2587</span></div>
+            <div class="char-box"><span class="char">█</span><span class="code">U+2588</span></div>
+            <div class="char-box"><span class="char">▉</span><span class="code">U+2589</span></div>
+            <div class="char-box"><span class="char">▊</span><span class="code">U+258A</span></div>
+            <div class="char-box"><span class="char">▋</span><span class="code">U+258B</span></div>
+            <div class="char-box"><span class="char">▌</span><span class="code">U+258C</span></div>
+            <div class="char-box"><span class="char">▍</span><span class="code">U+258D</span></div>
+            <div class="char-box"><span class="char">▎</span><span class="code">U+258E</span></div>
+            <div class="char-box"><span class="char">▏</span><span class="code">U+258F</span></div>
+            <div class="char-box"><span class="char">▐</span><span class="code">U+2590</span></div>
+            <div class="char-box"><span class="char">░</span><span class="code">U+2591</span></div>
+            <div class="char-box"><span class="char">▒</span><span class="code">U+2592</span></div>
+            <div class="char-box"><span class="char">▓</span><span class="code">U+2593</span></div>
+            <div class="char-box"><span class="char">▔</span><span class="code">U+2594</span></div>
+            <div class="char-box"><span class="char">▕</span><span class="code">U+2595</span></div>
+        </div>
+
+        <h3>Block Element Demo</h3>
+        <div class="block-demo" style="color: var(--green);">
+            <span style="color: var(--cyan);">▁▂▃▄▅▆▇█▇▆▅▄▃▂▁</span><br>
+            <span style="color: var(--orange);">█▉▊▋▌▍▎▏▏▎▍▌▋▊▉█</span><br>
+            <span style="color: var(--magenta);">░▒▓█▓▒░ ░▒▓█▓▒░</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="geometric-shapes">// GEOMETRIC SHAPES (U+25A0+)</h2>
+        <div class="char-grid">
+            <div class="char-box"><span class="char">◢</span><span class="code">U+25E2</span></div>
+            <div class="char-box"><span class="char">◣</span><span class="code">U+25E3</span></div>
+            <div class="char-box"><span class="char">◤</span><span class="code">U+25E4</span></div>
+            <div class="char-box"><span class="char">◥</span><span class="code">U+25E5</span></div>
+            <div class="char-box"><span class="char">◼</span><span class="code">U+25FC</span></div>
+        </div>
+        <div class="block-demo" style="font-size: 3em; color: var(--cyan);">
+            <pre>
+◤   ◥
+◼
+◣   ◢
+            </pre>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="sample">// SAMPLE: hackmud terminal</h2>
+        <div class="hackmud-sample">
+            <p><span class="prompt">&gt;&gt;</span><span class="script">sys.<span style="color: var(--green);">upgrades</span></span><span class="prompt">{}</span></p>
+            <p><span class="prompt">&gt;&gt;</span><span class="script">chats.<span style="color: var(--green);">tell</span></span><span class="prompt">{</span><span class="param">to</span><span class="prompt">:</span><span class="string">"claudeb0t"</span><span class="prompt">,</span><span class="param">msg</span><span class="prompt">:</span><span class="string">"Hej från Sverige"</span><span class="prompt">}</span></p>
+            <p><span class="prompt">&gt;&gt;</span><span class="script">market.<span style="color: var(--green);">browse</span></span><span class="prompt">{</span><span class="param">tier</span><span class="prompt">:</span><span style="color: var(--magenta);">2</span><span class="prompt">,</span><span class="param">seller</span><span class="prompt">:</span><span class="string">"*"</span><span class="prompt">}</span></p>
+            <pre>
+<span style="color: var(--orange);">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</span>
+<span style="color: var(--orange);">┃ <span style="color: #fff;">9</span><span style="color: var(--red);">Q</span><span style="color: #fff;">7</span><span style="color: var(--magenta);">T</span><span style="color: #fff;">199</span><span style="color: var(--cyan);">B</span><span style="color: #fff;">254</span><span style="color: var(--green);">M</span><span style="color: #fff;">740</span><span style="color: var(--orange);">K</span><span style="color: #fff;">991</span><span style="color: var(--gray);">GC</span> | TIER: 2 ┃</span>
+<span style="color: var(--orange);">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</span>
+            </pre>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="pangrams">// PANGRAMS</h2>
+        <div class="pangram">
+            The quick brown fox jumps over the lazy dog.<br>
+            SPHINX OF BLACK QUARTZ, JUDGE MY VOW.<br>
+            Zwölf Boxkämpfer jagen Eva quer über den großen Sylter Deich.<br>
+            Voix ambiguë d'un cœur qui, au zéphyr, préfère les jattes de kiwis.<br>
+            Kæmi ný öxi hér, ykist þjófum nú bæði víl og ádrepa.<br>
+            Høj bansen i vansen på Ærø spiser æbler.<br>
+            Flygande bäckasiner söka hwila på mjuka tuvor.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 id="ascii-art">// ASCII ART</h2>
+<div class="box-demo">
+        <pre>
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║ ██╗  ██╗ █████╗  ██████╗██╗  ██╗███╗   ███╗██╗   ██╗██████╗  ║
+║ ██║  ██║██╔══██╗██╔════╝██║ ██╔╝████╗ ████║██║   ██║██╔══██╗ ║
+║ ███████║███████║██║     █████╔╝ ██╔████╔██║██║   ██║██║  ██║ ║
+║ ██╔══██║██╔══██║██║     ██╔═██╗ ██║╚██╔╝██║██║   ██║██║  ██║ ║
+║ ██║  ██║██║  ██║╚██████╗██║  ██╗██║ ╚═╝ ██║╚██████╔╝██████╔╝ ║
+║ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═════╝  ║
+║                                                              ║
+║              WhiteRabbit Extended -- 268 Glyphs              ║
+║         öäå ÖÄÅ øæ ØÆ · ←↑→↓ · ░▒▓█ · ┏━┓┗━┛  ╔═╗╚═╝         ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+        </pre>
+        <pre>
+            <div style="color: var(--yellow);">SVERIGE</div>
+<span style="color: var(--blue);">╔═══</span> <span style="color: var(--yellow);">╔═╗</span> <span style="color: var(--blue);">══════╗</span>
+<span style="color: var(--blue);">║</span>    <span style="color: var(--yellow);">║ ║</span>       <span style="color: var(--blue);">║</span>
+<span style="color: var(--yellow);">       ║</span>
+<span style="color: var(--yellow);">╔══════╝ ══════╗</span>
+<span style="color: var(--yellow);">║              ║</span>
+<span style="color: var(--yellow);">╚═══ ╔═════════╝</span>
+<span style="color: var(--yellow);">     ║</span>
+<span style="color: var(--blue);">║</span>    <span style="color: var(--yellow);">║ ║</span>       <span style="color: var(--blue);">║</span>
+<span style="color: var(--blue);">╚═══</span> <span style="color: var(--yellow);">╚═╝</span> <span style="color: var(--blue);">══════╝</span>
+            <div style="color: var(--gray);">→ flag - 2026 by Kaj</div>
+        </pre>
+    </div>
+    </div>
+
+    <div class="footer">
+        <p>Font extended and rebuilt by <span style="color: var(--orange);">Kaj</span></p>
+        <div style="margin-top: 15px; text-align: left; display: inline-block; font-size: 0.9em;">
+            <p style="color: var(--cyan);">Copyright:</p>
+            <p style="color: var(--white);">Base Font (v1.00):</p>
+            <p style="color: var(---gray);">Copyright © 1999 by Matthew Welch. All Rights Reserved.</p>
+            <p style="margin-top: 10px; color: var(--white);">Extended:</p>
+            <p style="color: var(--gray);">(v1.1) Copyright © 2016 by Drizzly Bear (hackmud). Added special characters for hackmud and some tweaks on the base font.</p>
+            <p style="color: var(--gray);">(v1.25) Copyright © 2025 by Kaj van Ysincthorpe. Added international characters and some symbols.</p>
+        </div>
+        <p style="margin-top: 20px;"><a href="HACKMUD_MEMORY.html">&lt; Back to Documentation</a></p>
+        <p style="margin-top: 10px; color: var(--dark-gray);">Page made by claudeb0t &amp; Kaj  - 2026</p>
+    </div>
+
+
+</body>
+</html>

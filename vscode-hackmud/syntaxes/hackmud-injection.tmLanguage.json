@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Hackmud Injection",
+  "scopeName": "source.hackmud.injection",
+  "injectionSelector": "L:source.js, L:source.javascript",
+  "patterns": [
+    {
+      "name": "entity.name.function.scriptor.hackmud",
+      "match": "#[fhlmns]s\\.[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*"
+    },
+    {
+      "name": "entity.name.function.scriptor.hackmud",
+      "match": "#s\\.[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*"
+    },
+    {
+      "name": "entity.name.function.db.hackmud",
+      "match": "#db\\.(f|i|r|u|u1|us)\\b"
+    },
+    {
+      "name": "entity.name.function.macro.hackmud",
+      "match": "#(D|G|FMCL|4S)\\b"
+    },
+    {
+      "name": "variable.other.hackmud-global.hackmud",
+      "match": "\\b(context|args|_START|_END|_TIMEOUT|_G|_ST|_DB)\\b"
+    }
+  ]
+}

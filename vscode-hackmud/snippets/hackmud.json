@@ -1,0 +1,194 @@
+{
+  "Hackmud Script Template": {
+    "prefix": ["script", "hm", "hackmud"],
+    "body": [
+      "function(context, args) {",
+      "\tconst { caller, this_script, calling_script } = context;",
+      "\t$0",
+      "\treturn { ok: true };",
+      "}"
+    ],
+    "description": "Basic hackmud script template"
+  },
+  "Hackmud Script with Args": {
+    "prefix": ["scriptargs", "hmargs"],
+    "body": [
+      "function(context, args) {",
+      "\tconst { caller } = context;",
+      "\tconst { ${1:param} } = args ?? {};",
+      "\t",
+      "\tif (!${1:param}) {",
+      "\t\treturn { ok: false, msg: \"Usage: ${2:script} { ${1:param}: value }\" };",
+      "\t}",
+      "\t$0",
+      "\treturn { ok: true };",
+      "}"
+    ],
+    "description": "Hackmud script with argument handling"
+  },
+  "Full-sec Scriptor Call": {
+    "prefix": ["#fs", "fs"],
+    "body": ["#fs.${1:user}.${2:script}({ ${3:args} })"],
+    "description": "Full-sec scriptor call (#fs.user.script)"
+  },
+  "High-sec Scriptor Call": {
+    "prefix": ["#hs", "hs"],
+    "body": ["#hs.${1:user}.${2:script}({ ${3:args} })"],
+    "description": "High-sec scriptor call (#hs.user.script)"
+  },
+  "Mid-sec Scriptor Call": {
+    "prefix": ["#ms", "ms"],
+    "body": ["#ms.${1:user}.${2:script}({ ${3:args} })"],
+    "description": "Mid-sec scriptor call (#ms.user.script)"
+  },
+  "Low-sec Scriptor Call": {
+    "prefix": ["#ls", "ls"],
+    "body": ["#ls.${1:user}.${2:script}({ ${3:args} })"],
+    "description": "Low-sec scriptor call (#ls.user.script)"
+  },
+  "Nullsec Scriptor Call": {
+    "prefix": ["#ns", "ns"],
+    "body": ["#ns.${1:user}.${2:script}({ ${3:args} })"],
+    "description": "Nullsec scriptor call (#ns.user.script)"
+  },
+  "DB Find": {
+    "prefix": ["#db.f", "dbf", "dbfind"],
+    "body": ["#db.f({ ${1:query} })"],
+    "description": "Database find query"
+  },
+  "DB Find One": {
+    "prefix": ["#db.f1", "dbf1", "dbfindone"],
+    "body": ["#db.f({ ${1:query} }).first()"],
+    "description": "Database find one (first)"
+  },
+  "DB Insert": {
+    "prefix": ["#db.i", "dbi", "dbinsert"],
+    "body": ["#db.i({ ${1:document} })"],
+    "description": "Database insert"
+  },
+  "DB Remove": {
+    "prefix": ["#db.r", "dbr", "dbremove"],
+    "body": ["#db.r({ ${1:query} })"],
+    "description": "Database remove"
+  },
+  "DB Update": {
+    "prefix": ["#db.u", "dbu", "dbupdate"],
+    "body": ["#db.u({ ${1:query} }, { \\$set: { ${2:fields} } })"],
+    "description": "Database update"
+  },
+  "DB Upsert": {
+    "prefix": ["#db.us", "dbus", "dbupsert"],
+    "body": ["#db.us({ ${1:query} }, { \\$set: { ${2:fields} } })"],
+    "description": "Database upsert (update or insert)"
+  },
+  "Debug Macro": {
+    "prefix": ["#D", "debug"],
+    "body": ["#D(${1:value})"],
+    "description": "Debug macro - logs and returns value"
+  },
+  "Global Storage": {
+    "prefix": ["#G", "global"],
+    "body": ["#G.${1:key}"],
+    "description": "Global storage access"
+  },
+  "Date Now": {
+    "prefix": ["datenow", "now"],
+    "body": ["Date.now()"],
+    "description": "Get current timestamp"
+  },
+  "For Each Loop": {
+    "prefix": ["foreach", "fe"],
+    "body": [
+      "${1:array}.forEach(${2:item} => {",
+      "\t$0",
+      "});"
+    ],
+    "description": "forEach loop"
+  },
+  "For Of Loop": {
+    "prefix": ["forof", "fo"],
+    "body": [
+      "for (const ${1:item} of ${2:array}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "for...of loop"
+  },
+  "Map Array": {
+    "prefix": ["map"],
+    "body": ["${1:array}.map(${2:item} => ${3:item})"],
+    "description": "Array map"
+  },
+  "Filter Array": {
+    "prefix": ["filter"],
+    "body": ["${1:array}.filter(${2:item} => ${3:condition})"],
+    "description": "Array filter"
+  },
+  "Reduce Array": {
+    "prefix": ["reduce"],
+    "body": ["${1:array}.reduce((${2:acc}, ${3:item}) => ${4:acc}, ${5:initial})"],
+    "description": "Array reduce"
+  },
+  "Try-Catch": {
+    "prefix": ["trycatch", "try"],
+    "body": [
+      "try {",
+      "\t$0",
+      "} catch (e) {",
+      "\treturn { ok: false, msg: e.message ?? String(e) };",
+      "}"
+    ],
+    "description": "Try-catch block with hackmud error return"
+  },
+  "Timeout Check": {
+    "prefix": ["timeout", "checktime"],
+    "body": [
+      "if (Date.now() >= _END - ${1:1000}) {",
+      "\treturn { ok: false, msg: \"timeout\", ${2:partial_result} };",
+      "}"
+    ],
+    "description": "Check for approaching timeout"
+  },
+  "Caller Check": {
+    "prefix": ["callercheck", "iscaller"],
+    "body": [
+      "if (caller !== \"${1:username}\") {",
+      "\treturn \"Access denied\";",
+      "}"
+    ],
+    "description": "Check caller identity"
+  },
+  "Brain Check": {
+    "prefix": ["braincheck", "isbrain"],
+    "body": [
+      "if (!context.is_brain) {",
+      "\treturn \"Must be called from brain\";",
+      "}"
+    ],
+    "description": "Check if called from brain"
+  },
+  "Scriptor Check": {
+    "prefix": ["scriptorcheck", "isscriptor"],
+    "body": [
+      "if (!context.is_scriptor) {",
+      "\treturn \"Must be called as scriptor\";",
+      "}"
+    ],
+    "description": "Check if called as scriptor"
+  },
+  "Color String (Hackmud)": {
+    "prefix": ["color", "c"],
+    "body": ["`${1|0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z|}${2:text}`"],
+    "description": "Hackmud color code string"
+  },
+  "Mini Script": {
+    "prefix": ["mini", "miniscript"],
+    "body": [
+      "// @mini",
+      "function(c, a) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Mini script template (avoids 5000ms timeout)"
+  }
+}

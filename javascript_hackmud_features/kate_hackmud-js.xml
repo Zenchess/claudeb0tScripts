@@ -21,7 +21,7 @@
   - https://wiki.hackmud.com/scripting/extensions
   - https://wiki.hackmud.com/scripting/syntax/colors
 -->
-<language name="JavaScript (Hackmud)" version="2.1" kateversion="5.0"
+<language name="JavaScript (Hackmud)" version="2.2" kateversion="5.0"
           section="Scripts" extensions="*.js" mimetype="text/javascript"
           author="claudeb0t" license="MIT" priority="15"
           firstLine="^function\s*\(.*$">
@@ -132,13 +132,63 @@
     
     <list name="hackmud_globals">
       <!-- Hackmud-specific globals from wiki/extensions -->
-      <item>context</item>
-      <item>args</item>
       <item>_START</item>
       <item>_END</item>
       <item>_TIMEOUT</item>
       <item>_RUN_ID</item>
       <item>DEEP_FREEZE</item>
+    </list>
+    
+    <list name="hackmud_context_param">
+      <!-- First parameter variations (context) - italic light blue -->
+      <!-- Standard -->
+      <item>context</item>
+      <item>ctx</item>
+      <item>c</item>
+      <!-- Uppercase -->
+      <item>CONTEXT</item>
+      <item>CTX</item>
+      <item>C</item>
+      <!-- Mixed case -->
+      <item>Context</item>
+      <item>Ctx</item>
+      <!-- Underscore prefix -->
+      <item>_context</item>
+      <item>_ctx</item>
+      <item>_c</item>
+      <!-- Underscore suffix -->
+      <item>context_</item>
+      <item>ctx_</item>
+      <!-- Other variations -->
+      <item>cont</item>
+      <item>cntx</item>
+      <item>cx</item>
+    </list>
+    
+    <list name="hackmud_args_param">
+      <!-- Second parameter variations (args) - italic yellow -->
+      <!-- Standard -->
+      <item>args</item>
+      <item>a</item>
+      <!-- Uppercase -->
+      <item>ARGS</item>
+      <item>A</item>
+      <!-- Mixed case -->
+      <item>Args</item>
+      <!-- Underscore prefix -->
+      <item>_args</item>
+      <item>_a</item>
+      <!-- Underscore suffix -->
+      <item>args_</item>
+      <!-- Other variations -->
+      <item>arg</item>
+      <item>params</item>
+      <item>p</item>
+      <item>input</item>
+      <item>opts</item>
+      <item>options</item>
+      <item>data</item>
+      <item>d</item>
     </list>
     
     <list name="trust_script_prefixes">
@@ -407,6 +457,11 @@
         <!-- Hackmud Globals -->
         <keyword String="hackmud_globals" attribute="Hackmud Global" context="#stay"/>
         
+        <!-- Hackmud Function Parameters - special italic highlighting -->
+        <!-- These are the common names for function(context, args) parameters -->
+        <keyword String="hackmud_context_param" attribute="Context Parameter" context="#stay"/>
+        <keyword String="hackmud_args_param" attribute="Args Parameter" context="#stay"/>
+        
         <!-- Hackmud Color Codes (#0-#9, #a-#z) - used in Xstring backtick syntax -->
         <RegExpr String="#[0-9a-zA-Z]\b" attribute="Hackmud Color Code" context="#stay"/>
         
@@ -575,6 +630,12 @@
       <itemData name="Operator"             defStyleNum="dsOperator"   spellChecking="false" color="#B4B4B4"/>
       <itemData name="Arrow"                 defStyleNum="dsOperator"   spellChecking="false" color="#569CD6"/>
       <itemData name="Hackmud Global"        defStyleNum="dsVariable"   spellChecking="false" color="#9CDCFE"/>
+      
+      <!-- Function Parameter Special Highlighting (italic + unique colors) -->
+      <!-- Context parameter = Light Blue #9CDCFE, italic -->
+      <itemData name="Context Parameter"    defStyleNum="dsVariable"   spellChecking="false" color="#9CDCFE" italic="true" bold="false"/>
+      <!-- Args parameter = Yellow #DCDCAA, italic -->
+      <itemData name="Args Parameter"       defStyleNum="dsVariable"   spellChecking="false" color="#DCDCAA" italic="true" bold="false"/>
       
       <!-- Trust-Level Scriptor Prefixes (the #fs, #hs, etc. part) -->
       <itemData name="Scriptor Fullsec"     defStyleNum="dsPreprocessor" spellChecking="false" color="#1EFF00" bold="true"/>

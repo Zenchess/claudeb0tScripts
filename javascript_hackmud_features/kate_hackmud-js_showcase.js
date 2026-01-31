@@ -87,19 +87,70 @@ let more = `#awhite #bred #corange #ddark #eblue #fpurple #g... #z...`
    Light blue highlighting (#9CDCFE)
    ═══════════════════════════════════════════════════════════════════════════ */
 
+let start_time = _START               // Script start timestamp
+let end_time = _END                   // Timeout deadline
+let timeout = _TIMEOUT                // Timeout value
+let run_id = _RUN_ID                  // Unique run identifier
+
+DEEP_FREEZE(some_object)              // Freeze object deeply
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION 5B: FUNCTION PARAMETER HIGHLIGHTING (NEW in v2.2!)
+   Special italic highlighting for context/args parameter variations
+   - Context variations → Light Blue italic (#9CDCFE)
+   - Args variations → Yellow italic (#DCDCAA)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// Standard naming
 function(context, args) {
-    let caller = context.caller           // Who called the script
-    let this_script = context.this_script // This script's name
-    let calling_script = context.calling_script
+    let caller = context.caller           // context = light blue italic
+    let user_args = args                  // args = yellow italic
+    return { ok: true }
+}
+
+// Short naming
+function(c, a) {
+    let caller = c.caller                 // c = light blue italic
+    let user_args = a                     // a = yellow italic
+}
+
+// Context variations (all light blue italic)
+function(ctx, args) { ctx.caller }        // ctx
+function(CONTEXT, ARGS) { CONTEXT.caller }  // UPPERCASE
+function(CTX, A) { CTX.caller }           // mixed
+function(Context, Args) { Context.caller }  // PascalCase
+function(_context, _args) { _context.caller }  // underscore prefix
+function(context_, args_) { context_.caller }  // underscore suffix
+function(cont, arg) { cont.caller }       // abbreviated
+function(cntx, params) { cntx.caller }    // other variations
+function(cx, p) { cx.caller }             // super short
+
+// Args/input variations (all yellow italic)
+function(c, params) { params.target }     // params
+function(c, input) { input.value }        // input
+function(c, opts) { opts.flag }           // opts
+function(c, options) { options.setting }  // options
+function(c, data) { data.payload }        // data
+function(c, d) { d.key }                  // d (short for data)
+
+// Complete example with all variations recognized
+function(context, args) {
+    // These will all be highlighted as parameters:
+    let ctx = context           // context → light blue italic
+    let c = context             // c → light blue italic
+    let a = args                // args, a → yellow italic
+    let params = args           // params → yellow italic
+    let input = args            // input → yellow italic
     
-    let user_args = args                  // Arguments passed to script
+    // Using context variations
+    if (ctx.caller == c.caller && context.this_script) {
+        // All recognized as the same semantic meaning
+    }
     
-    let start_time = _START               // Script start timestamp
-    let end_time = _END                   // Timeout deadline
-    let timeout = _TIMEOUT                // Timeout value
-    let run_id = _RUN_ID                  // Unique run identifier
-    
-    DEEP_FREEZE(some_object)              // Freeze object deeply
+    // Using args variations  
+    if (a.target == args.target && params.value && input.data) {
+        // All recognized as args-like parameters
+    }
     
     return { ok: true }
 }
